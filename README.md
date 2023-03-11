@@ -7,8 +7,6 @@
  - Страница отдельной работы художника
  - Чат
  - Поисковая выдача
-Optional:
- - Система оплаты
 ### Диаграмма ганта:
 https://docs.google.com/spreadsheets/d/14OZumUvYDyPBog4PSBGLDfvenpr_oTND39_t1MktJ54/edit?usp=sharing
 
