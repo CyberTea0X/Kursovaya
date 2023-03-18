@@ -32,31 +32,32 @@ class ClientThread(threading.Thread):
 
             elif msg[0] == '@auth':
                 self.csocket.send(bytes('Происходит авторизация', 'UTF-8'))
-                self.email = msg[1]
-                self.password = msg[2]
-                print(f'логин {self.email}pass {self.password}')
+                email = msg[1]
+                password = msg[2]
+                print(f'логин {email}pass {password}')
 
             elif msg[0] == '@registration':
-                self.csocket.send(bytes('Происходит регистрация', 'UTF-8'))
-                self.name = str(msg[1])
-                self.surname = str(msg[2])
-                self.password = str(msg[3])
-                self.email = str(msg[4])
-                self.logo = str(msg[5])
-                self.about = str(msg[6])
 
-                self.red_data = datetime.datetime.now().date()
+                self.csocket.send(bytes('Происходит регистрация', 'UTF-8'))
+                name = str(msg[1])
+                surname = str(msg[2])
+                password = str(msg[3])
+                email = str(msg[4])
+                logo = str(msg[5])
+                about = str(msg[6])
+
+                red_data = datetime.datetime.now().date()
                 # self.csocket.send(bytes(f'логин {self.login}, pass {self.password}', 'UTF-8'))
                 # print(f'мыло {self.email}\npass {self.password}')
 
                 rand_text = [
                     random.choice(string.ascii_lowercase + string.digits if i != 5 else string.ascii_uppercase) for
                     i in range(32)]
-                self.random_name = ''.join(rand_text)
-                img_data = requests.get(self.logo).content
-                with open(str(self.random_name) + '.png', 'wb') as handler:
+                random_name = ''.join(rand_text)
+                img_data = requests.get(logo).content
+                with open(str(random_name) + '.png', 'wb') as handler:
                     handler.write(img_data)
-                    print(f'Image saved successfully as: {self.random_name}.jpg')
+                    print(f'Image saved successfully as: {random_name}.jpg')
                 try:
                     connection = pymysql.connect(host=config.host,
                                                  port=config.dbport,
@@ -72,9 +73,9 @@ class ClientThread(threading.Thread):
                             # id_now = cursor.execute("SELECT `id` FROM `users WHERE MAX(id) FROM users`")
                             insert_query = f"INSERT INTO `users`(id, first_name, last_name, email, logo_id, " \
                                            "raiting, about_user, chats_folder, login, password, reg_date, " \
-                                           f"is_online) VALUES ('','{self.name}','{self.surname}','{self.email}'," \
-                                           f"'{self.random_name}.jpg','0','{self.about}','CHAT_FOLDER_TO_DO','?', " \
-                                           f"'{self.password}','{self.red_data}','1');"
+                                           f"is_online) VALUES ('','{name}','{surname}','{email}'," \
+                                           f"'{random_name}.jpg','0','{about}','CHAT_FOLDER_TO_DO','?', " \
+                                           f"'{password}','{red_data}','1');"
                             cursor.execute(insert_query)
                             connection.commit()
                     finally:
