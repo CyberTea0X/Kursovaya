@@ -8,18 +8,18 @@ SERVER = '195.93.160.52'
 PORT = 25567
 
 
-# client.sendall(bytes(input('Ведите сообщение') , 'UTF-8'))
 def work():
     print(111)
-    '''client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client.connect((SERVER, PORT))
+    #client.sendall(bytes('@BREAKCON', 'UTF-8'))
+
+    '''TO_DO: СДЕЛАТЬ ПО ЧЕЛОВЕЧЕСКИ'''
     while True:
+        client.sendall(bytes(input('inp = '), 'UTF-8'))
         inp_data = client.recv(4096)
         msg = inp_data.decode()
-        answer = input('\nВаш ответ: ')
-        client.sendall(bytes(answer, 'UTF-8'))'''
-
-
+        print(msg)
 
 
 def authorisation():
@@ -55,7 +55,6 @@ def authorisation():
                 break
             else:
                 print(usr_id)
-                break
         authorisation()
 
 
@@ -76,11 +75,14 @@ def authorisation():
     while True:
         in_data = client.recv(4096)
         print(in_data.decode())
-
-        if str(in_data.decode()) == 'ACCESS GRANTED\n':
+        s = ''  # КОСТЫЛЬ ИБО НЕ РАБОТАЕТ ПО ДРУГОМУ
+        s = s.join(in_data.decode())  # КОСТЫЛЬ
+        s = s.split('\n')  # КОСТЫЛЬ
+        if 'ACCESS GRANTED' in s:  # КОСТЫЛЬ
             work()
             break
-        else: pass
+        else:
+            pass
 
 
 t1 = Thread(target=authorisation)
