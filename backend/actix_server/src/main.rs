@@ -4,6 +4,8 @@ use serde_json::json;
 
 mod database;
 mod passwords;
+mod email;
+mod jwt;
 
 #[post("/login/{email}/{password}")] // <- define path parameters
 async fn login_service(
@@ -13,6 +15,9 @@ async fn login_service(
     let (email, password) = path.into_inner();
 
     let (status, fail_reason) = (|| {
+        if !email::is_valid_email(email.as_str()) {
+            return  ("FAILED", "Invalid email adresss")
+        }
         if !passwords::is_valid_password(&password) {
             return ("FAILED", "Password contains invalid characters or too small");
         }
@@ -47,6 +52,9 @@ async fn register(
 ) -> ActxResult<impl Responder> {
     let (first_name, last_name, password, email, logo, about) = path.into_inner();
     let (status, fail_reason) = (||{
+        if !email::is_valid_email(email.as_str()) {
+            return  ("FAILED", "Invalid email adresss")
+        }
         if !passwords::is_valid_password(&password) {
             return  ("FAILED", "Password contains invalid characters or too small")
         }
@@ -87,6 +95,9 @@ async fn fetch_user_profile(
     let email = path.into_inner();
     let (status, fail_reason, user) = (||{
         let connection = database::try_connect(&db_config, 3);
+        if !email::is_valid_email(email.as_str()) {
+            return  ("FAILED", "Invalid email adresss", database::User::default())
+        }
         if connection.is_err() {
             println!("Failed to connect to database");
             return ("FAILED", "Failed to connect to database", database::User::default());
@@ -119,11 +130,14 @@ async fn config(db_config: web::Data<DBconfig>) -> ActxResult<String> {
 async fn main() -> std::io::Result<()> {
     HttpServer::new(|| {
         App::new()
-            .app_data(web::Data::new(database::parse_config()))
-            .service(login_service)
-            .service(register)
-            .service(fetch_user_profile)
-            .service(config)
+        .app_data(web::Data::new(database::parse_config()))
+            .service(
+                web::scope("/api")
+                .service(login_service)
+                .service(register)
+                .service(fetch_user_profile)
+                .service(config)
+            )
     })
     .bind(("127.0.0.1", 8080))?
     .run()
