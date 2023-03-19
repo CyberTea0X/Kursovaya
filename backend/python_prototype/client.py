@@ -85,11 +85,13 @@ def authorisation():
             pass
 
 
-t1 = Thread(target=authorisation)
-#
 
+t1 = Thread(target=authorisation)
 t1.start()
+t1.join()
+
+
 # t2.start()
 
-t1.join()
+
 # t2.join()
