@@ -1,7 +1,10 @@
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder, Result as ActxResult};
 use database::DBconfig;
+use mysql::Conn;
+use serde_json::json;
 
 mod database;
+mod passwords;
 
 #[post("/login/{login}/{password}")] // <- define path parameters
 async fn login_service(path: web::Path<(String, String)>) -> ActxResult<String> {
@@ -13,29 +16,39 @@ async fn login_service(path: web::Path<(String, String)>) -> ActxResult<String> 
 #[post("/registration/{first_name}/{last_name}/{password}/{email}/{logo}/{about}")]
 async fn register(
     path: web::Path<(String, String, String, String, String, String)>,
-    db_config: web::Data<DBconfig>,
-) -> ActxResult<String> {
+    connection: web::Data<database::DBconnection>,
+) -> ActxResult<impl Responder> {
     let (first_name, last_name, password, email, logo, about) = path.into_inner();
-    let db_config = db_config.get_ref().clone();
-    let status = if database::register_user(
-        db_config,
-        &first_name,
-        &last_name,
-        &password,
-        &email,
-        &logo,
-        &about,
-    ) {
-        "OK"
-    } else {
-        "FAILED"
-    };
-    let responce = format!(
-        "Register name: {}\nsurname: {}\npassword: {}\n\
-    email: {}\nlogo: {}\nabout: {}\nstatus: {}",
-        first_name, last_name, password, email, logo, about, status
-    );
-    Ok(responce)
+    let (status, fail_reason) = (||{
+        if !passwords::is_valid_password(&password) {
+            return  ("FAILED", "Password contains invalid characters or too small")
+        }
+        if !connection.lock().unwrap().ping() {
+            if !database::try_reconnect(&mut connection.lock().unwrap()) {
+                return ("FAILED", "Failed to connect to database");
+            }
+        }
+        if database::is_registered(&mut connection.lock().unwrap(), &email) {
+            return ("FAILED", "User already registered");
+        }
+        if database::register_user(
+            &mut connection.lock().unwrap(),
+            &first_name,
+            &last_name,
+            &password,
+            &email,
+            &logo,
+            &about,
+        ) {
+            return ("OK", "")
+        } else {
+            return ("FAILED", "Database error")
+        };
+    })();
+    Ok(web::Json(json!({
+        "status": status,
+        "reason": fail_reason,
+    })))
 }
 
 #[post("/profile/{user_id}")] // <- define path parameters
@@ -58,7 +71,17 @@ async fn config(db_config: web::Data<DBconfig>) -> ActxResult<String> {
 async fn main() -> std::io::Result<()> {
     HttpServer::new(|| {
         App::new()
-            .app_data(web::Data::new(database::parse_config()))
+            .app_data(web::Data::new(
+                loop {
+                    let con = database::connect_to_db(database::parse_config());
+                    if con.is_ok() {
+                        break con.unwrap();
+                    }
+                    else {
+                        println!("Failed to connect to database, retrying...");
+                    }
+                }
+            ))
             .service(login_service)
             .service(register)
             .service(fetch_user_profile)
