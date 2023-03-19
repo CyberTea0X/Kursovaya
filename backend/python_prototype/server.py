@@ -4,7 +4,7 @@ import random
 import socket
 import string
 import threading
-
+import time
 import config
 import requests
 
@@ -40,9 +40,30 @@ class ClientThread(threading.Thread):
         status = 'NON_AUTHORIZED'
         while True:
             data = self.csocket.recv(4096)
+            # if not data:
+            #     print(f'Thread {newthread} stopped')
+            #     break
+
             msg = data.decode()
-            # print(msg)
+            uuid = ''
             msg = str(msg).split('℻') if status == 'NON_AUTHORIZED' else print(msg)
+            if msg[0] == '@auth':
+                uuid = msg[3]
+            print(msg, status)
+
+            try:
+                conn_to_db()
+                try:
+                    with conn_to_db().cursor() as cursor:
+                        cursor.execute(f"SELECT * FROM `users` WHERE id={uuid}")
+                        result = cursor.fetchall()
+
+
+                finally:
+                    conn_to_db().close()
+            except Exception as ex:
+                print(f'CONNECTION FAILED \n {ex}')
+            #msg = str(msg).split('℻') if status == 'NON_AUTHORIZED' else print(msg)
             if msg[0] == '':
                 print('diconnection')
                 break
@@ -67,25 +88,30 @@ class ClientThread(threading.Thread):
                         with connection.cursor() as cursor:
                             cursor.execute(f"SELECT * FROM `users` WHERE id={uuid}")
                             result = cursor.fetchall()
-
                             mail = result[0]["email"]
                             pas = result[0]["password"]
                             if (mail == email) and (pas == password):
                                 self.csocket.send(bytes(f'ACCESS GRANTED\n', 'UTF-8'))
+                                cursor.execute(f"UPDATE `users` SET authorized = 'AUTHORIZED' WHERE id={uuid}")
+                                connection.commit()
+                                cursor.execute(f"SELECT * FROM `users` WHERE id={uuid}")
+                                result = cursor.fetchall()
+                                status = result[0]["authorized"]
                                 self.csocket.send(
                                     bytes(
                                         "-" * 40 + '\nКуда отправимся)? \n1. Профиль \n2. Чатик \n3. Список всех '
                                                    'участников\n' + "-" * 40,
                                         'UTF-8'))
                                 print(f'ACCESS GRANTED FOR USER id{uuid}')
-                                status = 'AUTHORIZED'
-                                print(f'USER id{uuid} is {status}')
+
                                 break
                             else:
                                 print(f'ACCESS DENIED FOR USER id{uuid}')
                         break
                     finally:
+                        #time.sleep(0.5)
                         connection.close()
+                        print(f'USER id{uuid} is {status}')
 
                 except Exception as ex:
                     print(f'CONNECTION FAILED \n {ex}')
@@ -127,7 +153,7 @@ class ClientThread(threading.Thread):
                         with connection.cursor() as cursor:
                             # id_now = cursor.execute("SELECT `id` FROM `users WHERE MAX(id) FROM users`")
                             insert_query = f"INSERT INTO `users`(id, first_name, last_name, email, logo_id, " \
-                                           "raiting, about_user, chats_folder, login, password, reg_date, " \
+                                           "raiting, about_user, chats_folder, authorized, password, reg_date, " \
                                            f"is_online) VALUES ('','{name}','{surname}','{email}'," \
                                            f"'{random_name}.jpg','0','{about}','CHAT_FOLDER_TO_DO','?', " \
                                            f"'{password}','{red_data}','1');"
@@ -153,5 +179,7 @@ while True:
     server.listen(1)
     clientsock, clientAddress = server.accept()
     newthread = ClientThread(clientAddress, clientsock)
-    print(f'Newthread {newthread} starter')
+    print(f'Newthread {newthread} started')
     newthread.start()
+
+
