@@ -13,3 +13,6 @@ Cargo.lock
 .idea
 .vscode
 .code
+
+# Confidentional Data
+DBconfig.json
