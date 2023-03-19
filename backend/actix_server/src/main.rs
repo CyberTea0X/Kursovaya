@@ -117,14 +117,14 @@ async fn fetch_user_profile(
     })))
 }
 
-#[post("/config")] // <- define path parameters
-async fn config(db_config: web::Data<DBconfig>) -> ActxResult<String> {
-    let responce = format!(
-        "ip: {}\nport: {}\nuser: {}\npassword: {},\ndatabase: {}",
-        db_config.ip, db_config.port, db_config.user, db_config.password, db_config.database
-    );
-    Ok(responce)
-}
+// #[post("/config")] // <- define path parameters
+// async fn config(db_config: web::Data<DBconfig>) -> ActxResult<String> {
+//     let responce = format!(
+//         "ip: {}\nport: {}\nuser: {}\npassword: {},\ndatabase: {}",
+//         db_config.ip, db_config.port, db_config.user, db_config.password, db_config.database
+//     );
+//     Ok(responce)
+// }
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -136,7 +136,6 @@ async fn main() -> std::io::Result<()> {
                 .service(login_service)
                 .service(register)
                 .service(fetch_user_profile)
-                .service(config)
             )
     })
     .bind(("127.0.0.1", 8080))?
