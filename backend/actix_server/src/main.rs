@@ -1,38 +1,66 @@
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder, Result as ActxResult};
 use database::DBconfig;
-use mysql::Conn;
 use serde_json::json;
 
 mod database;
 mod passwords;
 
-#[post("/login/{login}/{password}")] // <- define path parameters
-async fn login_service(path: web::Path<(String, String)>) -> ActxResult<String> {
-    let (login, password) = path.into_inner();
-    let responce = format!("Trying to login {}, password {}", login, password);
-    Ok(responce)
+#[post("/login/{email}/{password}")] // <- define path parameters
+async fn login_service(
+    path: web::Path<(String, String)>,
+    db_config: web::Data<DBconfig>,
+) -> ActxResult<impl Responder> {
+    let (email, password) = path.into_inner();
+
+    let (status, fail_reason) = (|| {
+        if !passwords::is_valid_password(&password) {
+            return ("FAILED", "Password contains invalid characters or too small");
+        }
+        let connection = database::try_connect(&db_config, 3);
+        if connection.is_err() {
+            println!("Failed to connect to database");
+            return ("FAILED", "Failed to connect to database");
+        }
+        let mut connection = connection.unwrap();
+        let user = database::find_user(&mut connection, &email);
+        if user.is_none() {
+            return ("FAILED", "User does not exist");
+        }
+        let user = user.unwrap();
+        if user.password == password {
+            return ("OK", "");
+        }
+        else {
+            return ("FAILED", "Invalid password");
+        }
+    })();
+    Ok(web::Json(json!({
+        "status": status,
+        "reason": fail_reason,
+    })))
 }
 
 #[post("/registration/{first_name}/{last_name}/{password}/{email}/{logo}/{about}")]
 async fn register(
     path: web::Path<(String, String, String, String, String, String)>,
-    connection: web::Data<database::DBconnection>,
+    db_config: web::Data<DBconfig>,
 ) -> ActxResult<impl Responder> {
     let (first_name, last_name, password, email, logo, about) = path.into_inner();
     let (status, fail_reason) = (||{
         if !passwords::is_valid_password(&password) {
             return  ("FAILED", "Password contains invalid characters or too small")
         }
-        if !connection.lock().unwrap().ping() {
-            if !database::try_reconnect(&mut connection.lock().unwrap()) {
-                return ("FAILED", "Failed to connect to database");
-            }
+        let connection = database::try_connect(&db_config, 3);
+        if connection.is_err() {
+            println!("Failed to connect to database");
+            return ("FAILED", "Failed to connect to database");
         }
-        if database::is_registered(&mut connection.lock().unwrap(), &email) {
+        let mut connection = connection.unwrap();
+        if database::user_exists(&mut connection, &email) {
             return ("FAILED", "User already registered");
         }
         if database::register_user(
-            &mut connection.lock().unwrap(),
+            &mut connection,
             &first_name,
             &last_name,
             &password,
@@ -51,11 +79,31 @@ async fn register(
     })))
 }
 
-#[post("/profile/{user_id}")] // <- define path parameters
-async fn fetch_user_profile(path: web::Path<u32>) -> ActxResult<String> {
-    let user_id = path.into_inner();
-    let responce = format!("Fectching profile from Database {}", user_id);
-    Ok(responce)
+#[post("/profile/{email}")] // <- define path parameters
+async fn fetch_user_profile(
+    path: web::Path<String>,
+    db_config: web::Data<DBconfig>,
+) -> ActxResult<impl Responder> {
+    let email = path.into_inner();
+    let (status, fail_reason, user) = (||{
+        let connection = database::try_connect(&db_config, 3);
+        if connection.is_err() {
+            println!("Failed to connect to database");
+            return ("FAILED", "Failed to connect to database", database::User::default());
+        }
+        let mut connection = connection.unwrap();
+        let user = database::find_user(&mut connection, &email);
+        if user.is_none() {
+            return ("FAILED", "User does not exist", database::User::default());
+        }
+        let user = user.unwrap();
+        return ("OK", "", user);
+    })();
+    Ok(web::Json(json!({
+        "status": status,
+        "reason": fail_reason,
+        "user": user,
+    })))
 }
 
 #[post("/config")] // <- define path parameters
@@ -71,17 +119,7 @@ async fn config(db_config: web::Data<DBconfig>) -> ActxResult<String> {
 async fn main() -> std::io::Result<()> {
     HttpServer::new(|| {
         App::new()
-            .app_data(web::Data::new(
-                loop {
-                    let con = database::connect_to_db(database::parse_config());
-                    if con.is_ok() {
-                        break con.unwrap();
-                    }
-                    else {
-                        println!("Failed to connect to database, retrying...");
-                    }
-                }
-            ))
+            .app_data(web::Data::new(database::parse_config()))
             .service(login_service)
             .service(register)
             .service(fetch_user_profile)

@@ -3,8 +3,6 @@ use mysql::{params, Conn, OptsBuilder};
 use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::io::Read;
-use std::ops::Deref;
-use std::sync::Mutex;
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct DBconfig {
@@ -15,30 +13,29 @@ pub struct DBconfig {
     pub database: String,
 }
 
-pub struct DBconnection {
-    conn: Mutex<Conn>, // <- Mutex is necessary to mutate safely across threads
+#[derive(Serialize, Deserialize, Default)]
+pub struct User {
+    pub id: u32,
+    pub first_name: String,
+    pub last_name: String,
+    pub email: String,
+    pub logo_id: String,
+    pub rating: String,
+    pub about_user: String,
+    pub chats_folder: String,
+    pub login: String,
+    pub password: String,
+    pub reg_date: String,
 }
-impl Deref for DBconnection {
-    type Target = Mutex<Conn>;
 
-    fn deref(&self) -> &Self::Target {
-        &self.conn
-    }
-}
-impl DBconnection {
-    pub fn new(conn: Conn) -> Self {
-        DBconnection { conn: Mutex::new(conn) }
-    }
-}
-
-pub fn connect_to_db(db_config: DBconfig) -> Result<DBconnection, mysql::Error> {
+pub fn connect_to_db(db_config: &DBconfig) -> Result<Conn, mysql::Error> {
     let opts = OptsBuilder::new()
-    .ip_or_hostname(Some(db_config.ip))
+    .ip_or_hostname(Some(&db_config.ip))
     .tcp_port(db_config.port)
-    .user(Some(db_config.user))
-    .pass(Some(db_config.password))
-    .db_name(Some(db_config.database));
-    Ok(DBconnection::new(Conn::new(opts)?))
+    .user(Some(&db_config.user))
+    .pass(Some(&db_config.password))
+    .db_name(Some(&db_config.database));
+    Conn::new(opts)
 }
 
 pub fn register_user(
@@ -78,7 +75,7 @@ pub fn register_user(
     true
 }
 
-pub fn is_registered(
+pub fn user_exists(
     connection: &mut Conn,
     email: &str
 ) -> bool {
@@ -96,6 +93,37 @@ pub fn is_registered(
  
 }
 
+pub fn find_user(
+    connection: &mut Conn,
+    email: &str
+) -> Option<User> {
+    let query_result = connection.query_map(
+        format!("SELECT id, first_name, last_name, email, logo_id,
+            raiting, about_user, chats_folder, login, password, reg_date 
+            FROM `users` WHERE email = \"{}\"", email),
+        |(
+            id, first_name, last_name, email, logo_id,
+            rating, about_user, chats_folder, login, password, reg_date
+        )| {
+            User {id, first_name, last_name, email, logo_id, rating, about_user, chats_folder, login, password, reg_date}
+        },
+    );
+    match query_result {
+        Ok(mut query) => {
+            let user = query.pop();
+            if user.is_some() {
+                return Some(user.unwrap());
+            }
+            return None;
+        }
+        Err(err) => {
+            println!("{:?}", err);
+            return None;
+        }
+    }
+ 
+}
+
 pub fn parse_config() -> DBconfig {
     let mut file = File::open("DBconfig.json").unwrap();
     let mut data = String::new();
@@ -104,13 +132,29 @@ pub fn parse_config() -> DBconfig {
     db_config
 }
 
-pub fn try_reconnect(connection: &mut Conn) -> bool{
-    let mut connected = false;
-    for _ in 0..3 {
-        if connection.reset().is_ok() {
-            connected = true;
-            break;
+// pub fn try_reconnect(connection: &mut Conn) -> bool{
+//     let mut connected = false;
+//     for _ in 0..3 {
+//         if connection.reset().is_ok() {
+//             connected = true;
+//             break;
+//         }
+//     }
+//     connected
+// }
+
+pub fn try_connect(
+    db_config: &DBconfig,
+    number_of_retries: u32
+) -> Result<Conn, mysql::Error>
+{
+    for i in 0..(number_of_retries) {
+        let connection = connect_to_db(db_config);
+        if connection.is_ok() {
+            return connection;
         }
+        println!("Trying to connect to database. Retries: {}", i)
     }
-    connected
+    println!("Trying to connect to database. Retries: {}", number_of_retries);
+    return connect_to_db(db_config);
 }
