@@ -34,7 +34,36 @@ class ClientThread(threading.Thread):
                 self.csocket.send(bytes('Происходит авторизация', 'UTF-8'))
                 email = msg[1]
                 password = msg[2]
+                uuid = msg[3]
                 print(f'логин {email}pass {password}')
+                try:
+                    connection = pymysql.connect(host=config.host,
+                                                 port=config.dbport,
+                                                 user=config.user,
+                                                 password=config.password,
+                                                 database=config.db,
+                                                 cursorclass=pymysql.cursors.DictCursor
+                                                 )
+                    print('connected to db')
+                    try:
+                        with connection.cursor() as cursor:
+                            cursor.execute(f"SELECT * FROM `users` WHERE id={uuid}")
+                            result = cursor.fetchall()
+                            uid = result[0]["id"]
+                            mail = result[0]["email"]
+                            pas = result[0]["password"]
+                            print(uid, mail, pas)
+                            print(email, password)
+                            if (mail == email) and (pas == password):
+                                self.csocket.send(bytes(f'ACCESS GRANTED', 'UTF-8'))
+                                print(f'ACCESS GRANTED FOR USER id{uuid}')
+                            else:
+                                print(f'ACCESS DENIED FOR USER id{uuid}')
+
+                    finally:
+                        connection.close()
+                except Exception as ex:
+                    print(f'CONNECTION FAILED \n {ex}')
 
             elif msg[0] == '@registration':
 
@@ -55,7 +84,7 @@ class ClientThread(threading.Thread):
                     i in range(32)]
                 random_name = ''.join(rand_text)
                 img_data = requests.get(logo).content
-                with open(str(random_name) + '.png', 'wb') as handler:
+                with open(f'/Users/fedor/PycharmProjects/pythonProject14/user_images/{random_name}.png', 'wb') as handler:
                     handler.write(img_data)
                     print(f'Image saved successfully as: {random_name}.jpg')
                 try:
@@ -78,6 +107,9 @@ class ClientThread(threading.Thread):
                                            f"'{password}','{red_data}','1');"
                             cursor.execute(insert_query)
                             connection.commit()
+                            usr_id = cursor.execute("SELECT `id` FROM `users`")
+                            self.csocket.send(bytes(f'{usr_id}', 'UTF-8'))
+                            print(usr_id)
                     finally:
                         connection.close()
 
