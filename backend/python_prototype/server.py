@@ -19,8 +19,23 @@ class ClientThread(threading.Thread):
         self.csocket = clientsocket
         print(f'new connection: address: {clientAddress}')
 
+    def work(self, uuid):
+
+        '''self.csocket.send(
+            bytes("-" * 40 + '\nКуда отправимся)? \n1. Профиль \n2. Чатик \n3. Список всех участниуов\n' + "-" * 40,
+                  'UTF-8'))'''
+        print(uuid)
+        ''' 
+        while True:
+            data = self.csocket.recv(4096)
+            msg = data.decode()
+            print(msg)
+            if msg == '1':
+                self.csocket.send(bytes('111111111111', 'UTF-8'))
+                '''
+        print('111')
+
     def run(self):
-        msg = ''
         while True:
             data = self.csocket.recv(4096)
             msg = data.decode()
@@ -35,7 +50,8 @@ class ClientThread(threading.Thread):
                 email = msg[1]
                 password = msg[2]
                 uuid = msg[3]
-                print(f'логин {email}pass {password}')
+                print(f'Авторизация клиента id{uuid}')
+                print(f'логин {email}\npass {password}')
                 try:
                     connection = pymysql.connect(host=config.host,
                                                  port=config.dbport,
@@ -52,16 +68,17 @@ class ClientThread(threading.Thread):
                             uid = result[0]["id"]
                             mail = result[0]["email"]
                             pas = result[0]["password"]
-                            print(uid, mail, pas)
-                            print(email, password)
                             if (mail == email) and (pas == password):
-                                self.csocket.send(bytes(f'ACCESS GRANTED', 'UTF-8'))
+                                self.csocket.send(bytes(f'ACCESS GRANTED\n', 'UTF-8'))
                                 print(f'ACCESS GRANTED FOR USER id{uuid}')
+                                ClientThread.work(self, uuid)
+                                break
                             else:
                                 print(f'ACCESS DENIED FOR USER id{uuid}')
 
                     finally:
                         connection.close()
+                        break
                 except Exception as ex:
                     print(f'CONNECTION FAILED \n {ex}')
 
@@ -84,7 +101,8 @@ class ClientThread(threading.Thread):
                     i in range(32)]
                 random_name = ''.join(rand_text)
                 img_data = requests.get(logo).content
-                with open(f'/Users/fedor/PycharmProjects/pythonProject14/user_images/{random_name}.png', 'wb') as handler:
+                with open(f'/Users/fedor/PycharmProjects/pythonProject14/user_images/{random_name}.png',
+                          'wb') as handler:
                     handler.write(img_data)
                     print(f'Image saved successfully as: {random_name}.jpg')
                 try:
@@ -121,4 +139,5 @@ while True:
     server.listen(1)
     clientsock, clientAddress = server.accept()
     newthread = ClientThread(clientAddress, clientsock)
+    print(f'Newthread {newthread} starter')
     newthread.start()
