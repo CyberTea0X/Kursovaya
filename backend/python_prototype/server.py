@@ -37,33 +37,33 @@ class ClientThread(threading.Thread):
         print(f'new connection: address: {clientAddress}')
 
     def run(self):
-        status = 'NON_AUTHORIZED'
+        status = 'AUTHORIZED'
         while True:
-            data = self.csocket.recv(4096)
-            # if not data:
-            #     print(f'Thread {newthread} stopped')
-            #     break
 
+            data = self.csocket.recv(4096)
             msg = data.decode()
             uuid = ''
-            msg = str(msg).split('℻') if status == 'NON_AUTHORIZED' else print(msg)
-            if msg[0] == '@auth':
+            msg = str(msg).split('℻')
+            a = ''
+            a = a.join(msg)
+            a = a.split()
+            if '@auth' in a:
                 uuid = msg[3]
-            print(msg, status)
+                print(uuid, msg, status)
 
-            try:
-                conn_to_db()
                 try:
-                    with conn_to_db().cursor() as cursor:
-                        cursor.execute(f"SELECT * FROM `users` WHERE id={uuid}")
-                        result = cursor.fetchall()
+                    conn_to_db()
+                    try:
+                        with conn_to_db().cursor() as cursor:
+                            cursor.execute(f"SELECT * FROM `users` WHERE id={uuid}")
+                            result = cursor.fetchall()
 
 
-                finally:
-                    conn_to_db().close()
-            except Exception as ex:
-                print(f'CONNECTION FAILED \n {ex}')
-            #msg = str(msg).split('℻') if status == 'NON_AUTHORIZED' else print(msg)
+                    finally:
+                        conn_to_db().close()
+                except Exception as ex:
+                    print(f'CONNECTION FAILED \n {ex}')
+                #msg = str(msg).split('℻') if status == 'NON_AUTHORIZED' else print(msg)
             if msg[0] == '':
                 print('diconnection')
                 break
@@ -76,16 +76,9 @@ class ClientThread(threading.Thread):
                 print(f'Авторизация клиента id{uuid}')
                 print(f'логин {email}\npass {password}')
                 try:
-                    connection = pymysql.connect(host=config.host,
-                                                 port=config.dbport,
-                                                 user=config.user,
-                                                 password=config.password,
-                                                 database=config.db,
-                                                 cursorclass=pymysql.cursors.DictCursor
-                                                 )
-                    print('connected to db')
+                    conn_to_db()
                     try:
-                        with connection.cursor() as cursor:
+                        with conn_to_db().cursor() as cursor:
                             cursor.execute(f"SELECT * FROM `users` WHERE id={uuid}")
                             result = cursor.fetchall()
                             mail = result[0]["email"]
@@ -93,7 +86,7 @@ class ClientThread(threading.Thread):
                             if (mail == email) and (pas == password):
                                 self.csocket.send(bytes(f'ACCESS GRANTED\n', 'UTF-8'))
                                 cursor.execute(f"UPDATE `users` SET authorized = 'AUTHORIZED' WHERE id={uuid}")
-                                connection.commit()
+                                conn_to_db().commit()
                                 cursor.execute(f"SELECT * FROM `users` WHERE id={uuid}")
                                 result = cursor.fetchall()
                                 status = result[0]["authorized"]
@@ -104,13 +97,13 @@ class ClientThread(threading.Thread):
                                         'UTF-8'))
                                 print(f'ACCESS GRANTED FOR USER id{uuid}')
 
-                                break
+                                #break
                             else:
                                 print(f'ACCESS DENIED FOR USER id{uuid}')
                         break
                     finally:
                         #time.sleep(0.5)
-                        connection.close()
+                        conn_to_db().close()
                         print(f'USER id{uuid} is {status}')
 
                 except Exception as ex:
@@ -140,17 +133,10 @@ class ClientThread(threading.Thread):
                     handler.write(img_data)
                     print(f'Image saved successfully as: {random_name}.jpg')
                 try:
-                    connection = pymysql.connect(host=config.host,
-                                                 port=config.dbport,
-                                                 user=config.user,
-                                                 password=config.password,
-                                                 database=config.db,
-                                                 cursorclass=pymysql.cursors.DictCursor
-                                                 )
-                    print('connected to db')
+                    conn_to_db()
 
                     try:
-                        with connection.cursor() as cursor:
+                        with conn_to_db().cursor() as cursor:
                             # id_now = cursor.execute("SELECT `id` FROM `users WHERE MAX(id) FROM users`")
                             insert_query = f"INSERT INTO `users`(id, first_name, last_name, email, logo_id, " \
                                            "raiting, about_user, chats_folder, authorized, password, reg_date, " \
@@ -158,12 +144,12 @@ class ClientThread(threading.Thread):
                                            f"'{random_name}.jpg','0','{about}','CHAT_FOLDER_TO_DO','?', " \
                                            f"'{password}','{red_data}','1');"
                             cursor.execute(insert_query)
-                            connection.commit()
+                            conn_to_db().commit()
                             usr_id = cursor.execute("SELECT `id` FROM `users`")
                             self.csocket.send(bytes(f'{usr_id}', 'UTF-8'))
                             print(usr_id)
                     finally:
-                        connection.close()
+                        conn_to_db().close()
 
                 except Exception as ex:
                     print(f'CONNECTION FAILED \n {ex}')
