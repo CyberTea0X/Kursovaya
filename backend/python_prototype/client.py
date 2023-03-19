@@ -9,6 +9,17 @@ PORT = 25567
 
 
 # client.sendall(bytes(input('Ведите сообщение') , 'UTF-8'))
+def work():
+    print(111)
+    '''client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    client.connect((SERVER, PORT))
+    while True:
+        inp_data = client.recv(4096)
+        msg = inp_data.decode()
+        answer = input('\nВаш ответ: ')
+        client.sendall(bytes(answer, 'UTF-8'))'''
+
+
 
 
 def authorisation():
@@ -44,7 +55,9 @@ def authorisation():
                 break
             else:
                 print(usr_id)
+                break
         authorisation()
+
 
     else:
         with open("messenger_cash.dsrv", "r") as messanger_cash:
@@ -64,28 +77,14 @@ def authorisation():
         in_data = client.recv(4096)
         print(in_data.decode())
 
-
-def work():
-    if authorisation():
-        pass
-
-
-'''client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-client.connect((SERVER, PORT))
-def task():
-
-    while True:
-
-        in_data = client.recv(4096)
-        print('Ответ от сервера:', in_data.decode())'''
+        if str(in_data.decode()) == 'ACCESS GRANTED\n':
+            work()
+            break
+        else: pass
 
 
-def experiment():
-    authorisation()
-
-
-t1 = Thread(target=experiment, daemon=True)
-# t2 = Thread(target=task)
+t1 = Thread(target=authorisation)
+#
 
 t1.start()
 # t2.start()
