@@ -1,7 +1,12 @@
-import socket, threading, pymysql, urllib, random, string
 import datetime
-import requests
+import pymysql
+import random
+import socket
+import string
+import threading
+
 import config
+import requests
 
 LOCALHOST = "192.168.31.46"
 PORT = config.con_port
@@ -13,34 +18,31 @@ server.bind((LOCALHOST, PORT))
 print('Server started successfully')
 
 
+def conn_to_db():
+    connection = pymysql.connect(host=config.host,
+                                 port=config.dbport,
+                                 user=config.user,
+                                 password=config.password,
+                                 database=config.db,
+                                 cursorclass=pymysql.cursors.DictCursor
+                                 )
+    print('connected to db')
+    return connection
+
+
 class ClientThread(threading.Thread):
     def __init__(self, clientAddress, clientsocket):
         threading.Thread.__init__(self)
         self.csocket = clientsocket
         print(f'new connection: address: {clientAddress}')
 
-    def work(self, uuid):
-
-        '''self.csocket.send(
-            bytes("-" * 40 + '\nКуда отправимся)? \n1. Профиль \n2. Чатик \n3. Список всех участниуов\n' + "-" * 40,
-                  'UTF-8'))'''
-        print(uuid)
-        ''' 
-        while True:
-            data = self.csocket.recv(4096)
-            msg = data.decode()
-            print(msg)
-            if msg == '1':
-                self.csocket.send(bytes('111111111111', 'UTF-8'))
-                '''
-        print('111')
-
     def run(self):
+        status = 'NON_AUTHORIZED'
         while True:
             data = self.csocket.recv(4096)
             msg = data.decode()
             # print(msg)
-            msg = str(msg).split('℻')
+            msg = str(msg).split('℻') if status == 'NON_AUTHORIZED' else print(msg)
             if msg[0] == '':
                 print('diconnection')
                 break
@@ -65,20 +67,26 @@ class ClientThread(threading.Thread):
                         with connection.cursor() as cursor:
                             cursor.execute(f"SELECT * FROM `users` WHERE id={uuid}")
                             result = cursor.fetchall()
-                            uid = result[0]["id"]
+
                             mail = result[0]["email"]
                             pas = result[0]["password"]
                             if (mail == email) and (pas == password):
                                 self.csocket.send(bytes(f'ACCESS GRANTED\n', 'UTF-8'))
+                                self.csocket.send(
+                                    bytes(
+                                        "-" * 40 + '\nКуда отправимся)? \n1. Профиль \n2. Чатик \n3. Список всех '
+                                                   'участников\n' + "-" * 40,
+                                        'UTF-8'))
                                 print(f'ACCESS GRANTED FOR USER id{uuid}')
-                                ClientThread.work(self, uuid)
+                                status = 'AUTHORIZED'
+                                print(f'USER id{uuid} is {status}')
                                 break
                             else:
                                 print(f'ACCESS DENIED FOR USER id{uuid}')
-
+                        break
                     finally:
                         connection.close()
-                        break
+
                 except Exception as ex:
                     print(f'CONNECTION FAILED \n {ex}')
 
@@ -133,6 +141,12 @@ class ClientThread(threading.Thread):
 
                 except Exception as ex:
                     print(f'CONNECTION FAILED \n {ex}')
+
+            elif (str(msg[0]) == '1. Профиль') and (status == "AUTHORIZED"):
+                self.csocket.send(bytes('TO_DO', 'UTF-8'))
+
+            elif (str(msg[0]) == '2. Чатик') and (status == "AUTHORIZED"):
+                self.csocket.send(bytes('TO_DO', 'UTF-8'))
 
 
 while True:
