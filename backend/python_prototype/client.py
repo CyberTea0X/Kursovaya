@@ -80,7 +80,7 @@ def authorisation():
         s = s.split('\n')  # КОСТЫЛЬ
         if 'ACCESS GRANTED' in s:  # КОСТЫЛЬ
             work()
-            break
+            #break
         else:
             pass
 
@@ -90,7 +90,13 @@ t1 = Thread(target=authorisation)
 t1.start()
 t1.join()
 
-
+while True:
+    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    client.connect((SERVER, PORT))
+    client.sendall(bytes(input('inp = '), 'UTF-8'))
+    inp_data = client.recv(4096)
+    msg = inp_data.decode()
+    print(msg)
 # t2.start()
 
 
