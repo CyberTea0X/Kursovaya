@@ -18,15 +18,6 @@ server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 server.bind((LOCALHOST, PORT))
 print('Server started successfully')
 
-debug = False
-
-
-
-def debug_func():
-    pass
-
-if debug == True:
-    threading.Thread(target=debug_func).start()
 
 class ClientThread(threading.Thread):
     def __init__(self, clientAddress, clientsocket):
@@ -62,7 +53,7 @@ class ClientThread(threading.Thread):
 
 
     def run(self):
-        #global uuid
+
         status = 'AUTHORIZED'
         while True:
 
@@ -70,6 +61,7 @@ class ClientThread(threading.Thread):
             msg = data.decode()
 
             msg = str(msg).split('℻')
+            print(msg)
             a = ''
             a = a.join(msg)
             a = a.split()
@@ -83,7 +75,6 @@ class ClientThread(threading.Thread):
                 self.csocket.send(bytes('Происходит авторизация', 'UTF-8'))
                 email = msg[1]
                 password = msg[2]
-                #ClientThread.uuid = msg[3]
 
                 try:
                     connection = pymysql.connect(host=config.host,
@@ -96,7 +87,7 @@ class ClientThread(threading.Thread):
                     try:
                         with connection.cursor() as cursor:
                             client_ip = str(clientAddress[0])
-                            cursor.execute(f"SELECT * FROM `users` WHERE ip='{client_ip}'")
+                            cursor.execute(f"SELECT * FROM `users` WHERE email='{email}'")
                             result = cursor.fetchall()
                             mail = result[0]["email"]
                             pas = result[0]["password"]
@@ -120,15 +111,58 @@ class ClientThread(threading.Thread):
 
                                 # break
                             else:
-                                print(f'ACCESS DENIED FOR USER id{email}')
-                                self.csocket.send(bytes(f'ACCESS GRANTED\n', 'UTF-8'))
-                        break
+                                print(f'ACCESS DENIED FOR USER {email}, {client_ip}')
+                                self.csocket.send(bytes(f'ACCESS DENIED', 'UTF-8'))
+                        #break
                     finally:
                         # time.sleep(0.5)
                         connection.close()
 
                 except Exception as ex:
                     print(f'CONNECTION FAILED \n {ex}')
+
+            elif msg[0] == '@reauth':
+                self.csocket.send(bytes('Происходит повторная авторизация', 'UTF-8'))
+                email = msg[1]
+                password = msg[2]
+                print(f'Повторная авторизация пользователя {email} {clientAddress[0]}')
+                print(f'Email {email}\npass {password}')
+
+                try:
+                    connection = pymysql.connect(host=config.host,
+                                                 port=config.dbport,
+                                                 user=config.user,
+                                                 password=config.password,
+                                                 database=config.db,
+                                                 cursorclass=pymysql.cursors.DictCursor
+                                                 )
+                    try:
+                        with connection.cursor() as cursor:
+                            client_ip = str(clientAddress[0])
+                            cursor.execute(f"SELECT * FROM `users` WHERE email='{email}'")
+                            result = cursor.fetchall()
+                            mail = result[0]["email"]
+                            pas = result[0]["password"]
+                            ip = result[0]["ip"]
+                            if (mail == email) and (pas == password):
+                                cursor.execute(f"UPDATE `users` SET ip='{client_ip}' WHERE ip='{ip}'")
+                                connection.commit()
+                                self.csocket.send(bytes(f'ACCESS GRANTED\n', 'UTF-8'))
+                                self.csocket.send(
+                                    bytes(
+                                        "-" * 40 + '\nКуда отправимся)? \n1. Профиль \n2. Чатик \n3. Список всех '
+                                                   'участников\n' + "-" * 40,
+                                        'UTF-8'))
+                            else:
+                                print(f'ACCESS DENIED FOR USER {email}, {client_ip}')
+                                self.csocket.send(bytes(f'ACCESS DENIED', 'UTF-8'))
+                        #break
+                    finally:
+                        # time.sleep(0.5)
+                        connection.close()
+
+                except Exception as ex:
+                    print(f'CONNECTION FAILED \n{ex}')
 
             elif msg[0] == '@registration':
 

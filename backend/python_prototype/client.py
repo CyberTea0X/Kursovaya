@@ -6,7 +6,8 @@ import hashlib
 import validators
 from email_validate import validate
 
-SERVER = '195.93.160.52'
+#SERVER = '195.93.160.52'
+SERVER = '192.168.31.46'
 PORT = 25567
 
 
@@ -88,15 +89,16 @@ def authorisation():
             while not 'ACCESS GRANTED' in s:
                 # os.remove("auth")
                 # os.mkdir("auth")
-                os.chdir("auth")
+                #os.chdir("auth")
                 print('Упс... Что-то пошло не так:( \nВведите данные заново:')
-                email = input('Введите email')  # 1
-                password = input('Введите пароль')  # 2
+                email = input('Введите email: ')  # 1
+                password = input('Введите пароль: ')  # 2
+                password = hashlib.md5(password.encode('utf-8')).hexdigest()
                 file = open(f"messenger_cash.dsrv", "w+", encoding='UTF-8')
                 text = f'{email}\n{password}'
                 file.write(text)
                 file.close()
-                client.sendall(bytes(f'@auth℻{email}℻{password}', 'UTF-8'))
+                client.sendall(bytes(f'@reauth℻{email}℻{password}', 'UTF-8'))
 
 
 t1 = Thread(target=authorisation)
