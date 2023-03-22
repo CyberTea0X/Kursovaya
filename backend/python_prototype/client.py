@@ -80,10 +80,12 @@ def authorisation():
         # time.sleep(1)
         if 'ACCESS GRANTED' in s:  # КОСТЫЛЬ
             while True:
-                client.sendall(bytes(input('inp = '), 'UTF-8'))
+
                 inp_data = client.recv(4096)
                 msg = inp_data.decode()
                 print(msg)
+                client.sendall(bytes(input('inp = '), 'UTF-8'))
+
             # break
         elif 'ACCESS DENIED' in s:
             while not 'ACCESS GRANTED' in s:
