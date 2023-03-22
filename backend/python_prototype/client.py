@@ -6,11 +6,9 @@ import hashlib
 import validators
 from email_validate import validate
 
-#SERVER = '195.93.160.52'
+# SERVER = '195.93.160.52'
 SERVER = '192.168.31.46'
 PORT = 25567
-
-
 
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client.connect((SERVER, PORT))
@@ -77,10 +75,8 @@ def authorisation():
         s = ''  # КОСТЫЛЬ ИБО НЕ РАБОТАЕТ ПО ДРУГОМУ
         s = s.join(in_data.decode())  # КОСТЫЛЬ
         s = s.split('\n')  # КОСТЫЛЬ
-        # time.sleep(1)
         if 'ACCESS GRANTED' in s:  # КОСТЫЛЬ
             while True:
-
                 inp_data = client.recv(4096)
                 msg = inp_data.decode()
                 print(msg)
@@ -88,10 +84,7 @@ def authorisation():
 
             # break
         elif 'ACCESS DENIED' in s:
-            while not 'ACCESS GRANTED' in s:
-                # os.remove("auth")
-                # os.mkdir("auth")
-                #os.chdir("auth")
+            while 'ACCESS GRANTED' not in s:
                 print('Упс... Что-то пошло не так:( \nВведите данные заново:')
                 email = input('Введите email: ')  # 1
                 password = input('Введите пароль: ')  # 2
@@ -103,14 +96,18 @@ def authorisation():
                 client.sendall(bytes(f'@reauth℻{email}℻{password}', 'UTF-8'))
 
 
-t1 = Thread(target=authorisation)
-t1.start()
-t1.join()
+def listener():
+    while True:
+        inp_data = client.recv(4096)
+        msg = inp_data.decode()
+        print(msg)
 
-'''while True:
-    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client.connect((SERVER, PORT))
-    client.sendall(bytes(input('inp = '), 'UTF-8'))
-    inp_data = client.recv(4096)
-    msg = inp_data.decode()
-    print(msg)'''
+
+t1 = Thread(target=authorisation)
+#t2 = Thread(target=listener)
+t1.start()
+#t2.start()
+
+t1.join()
+#t2.join()
+
