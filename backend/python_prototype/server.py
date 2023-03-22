@@ -59,8 +59,11 @@ class ClientThread(threading.Thread):
 
             data = self.csocket.recv(4096)
             msg = data.decode()
-
-            msg = str(msg).split('℻')
+            #℻
+            if (msg.find('@registration') == 0) or (msg.find('@reauth') == 0) or (msg.find('@auth') == 0):
+                msg = str(msg).split('℻')
+            else:
+                msg = str(msg).split(' ')
             print(msg)
             a = ''
             a = a.join(msg)
@@ -215,11 +218,83 @@ class ClientThread(threading.Thread):
 
                 except Exception as ex:
                     print(f'CONNECTION FAILED \n {ex}')
+            elif (str(msg[1]) == 'Профиль') and (''.join(msg).find('@id') != -1):
+                u_id = str(msg[2])[3:]
+                try:
+                    connection = pymysql.connect(host=config.host,
+                                                 port=config.dbport,
+                                                 user=config.user,
+                                                 password=config.password,
+                                                 database=config.db,
+                                                 cursorclass=pymysql.cursors.DictCursor
+                                                 )
+                    try:
+                        with connection.cursor() as cursor:
+                            cursor.execute(f"SELECT * FROM `users` WHERE id='{u_id}'")
+                            result = cursor.fetchall()
+                            logo = result[0]["logo_id"] #
+                            id = result[0]["id"] #
+                            name = result[0]["first_name"] #
+                            surname = result[0]["last_name"] #
+                            rating = result[0]["raiting"]
+                            about = result[0]["about_user"]
+                            reg_date = result[0]["reg_date"]
 
-            elif (str(msg[0]) == '1. Профиль') and (status == "AUTHORIZED"):
-                self.csocket.send(bytes('TO_DO', 'UTF-8'))
 
-            elif (str(msg[0]) == '2. Чатик'):
+                    finally:
+
+                        connection.close()
+                        time.sleep(0.5)
+                        self.csocket.send(
+                            bytes('\n\n' + '-' * 40 + f'\nПрофиль {rating}★ | {name} {surname} @id{id}' +
+                                  f'\nЛоготип(фронт привет) {logo}\n' +
+                                  '-' * 13 + f'О пользователе' + '-' * 13 +
+                                  f'\n{about}\n' +
+                                  f'-' * 40 +
+                                  f'\nЗарегистрирован: {reg_date}\n\n', 'UTF-8'))
+                except Exception as ex:
+                    print(f'CONNECTION FAILED \n {ex}')
+
+            elif (str(msg[1]) == 'Профиль') and (''.join(msg).find('@id') == -1):
+                try:
+                    connection = pymysql.connect(host=config.host,
+                                                 port=config.dbport,
+                                                 user=config.user,
+                                                 password=config.password,
+                                                 database=config.db,
+                                                 cursorclass=pymysql.cursors.DictCursor
+                                                 )
+                    try:
+                        with connection.cursor() as cursor:
+                            cursor.execute(f"SELECT * FROM `users` WHERE ip='{clientAddress[0]}'")
+                            result = cursor.fetchall()
+                            logo = result[0]["logo_id"] #
+                            id = result[0]["id"] #
+                            name = result[0]["first_name"] #
+                            surname = result[0]["last_name"] #
+                            rating = result[0]["raiting"]
+                            about = result[0]["about_user"]
+                            reg_date = result[0]["reg_date"]
+
+                    finally:
+
+                        connection.close()
+                        time.sleep(0.5)
+                        self.csocket.send(
+                            bytes('\n\n' + '-' * 40 + f'\nПрофиль {rating}★ | {name} {surname} @id{id}' +
+                                  f'\nЛоготип(фронт привет) {logo}\n' +
+                                  '-' * 13 + f'О пользователе' + '-' * 13 +
+                                  f'\n{about}\n' +
+                                  f'-' * 40 +
+                                  f'\nЗарегистрирован: {reg_date}\n\n', 'UTF-8'))
+                        self.csocket.send(
+                            bytes(f'\n\nЧтобы узнать информацию о пользователе используйте: 1. Профиль @id1234',
+                                  'UTF-8'))
+                except Exception as ex:
+                    print(f'CONNECTION FAILED \n {ex}')
+
+
+            elif (str(msg[0]) == '2. Чатик') :
                 folder_id = f'id{ClientThread.uuid}'
                 folder = f'C:/Users/fedor/PycharmProjects/pythonProject14/user_chats/{folder_id}'
                 if not os.path.exists(folder):
@@ -229,15 +304,16 @@ class ClientThread(threading.Thread):
                     try:
                         os.mkdir(f'C:/Users/fedor/PycharmProjects/pythonProject14/user_chats/{folder_id}')
                         print(f'Successfully created folder: {folder_id}')
-                        time.sleep(3)
+                        time.sleep(1)
                         self.csocket.send(bytes('Успех', 'UTF-8'))
+                        self.csocket.send(bytes('Кому напишем? использование: ', 'UTF-8'))
                     except Exception as ex:
                         print(f'FAIL:\n {ex}')
                     print('flag')
                     #ClientThread.chatting(self)
                 else:
-                    self.csocket.send(bytes('Кому напишем? использование: ', 'UTF-8'))
-                    pass
+                    self.csocket.send(bytes('Кому напишем? использование @id... Например: @id1234 чтоб перейти к диалогу с пользователем: ', 'UTF-8'))
+
 
             else:
                 self.csocket.send(bytes('Не понимаю команду', 'UTF-8'))
