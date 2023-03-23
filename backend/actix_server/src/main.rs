@@ -9,6 +9,7 @@ pub mod jwt;
 pub mod passwords;
 pub mod register;
 pub mod user;
+pub mod search;
 
 #[post("/login/{email}/{password}")] // <- define path parameters
 async fn login_service(
@@ -72,6 +73,11 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .app_data(web::Data::new(database::parse_config()))
             .service(
+                web::scope("/api/search")
+                    .service(search::search_login)
+                    .service(search::search_popular)
+            )
+            .service(
                 web::scope("/api")
                     .service(login_service)
                     .service(register::register_service)
@@ -79,7 +85,7 @@ async fn main() -> std::io::Result<()> {
                     .service(check_db_status)
                     .service(user::edit_user_service)
                     .service(user::delete_user_service)
-                    .service(user::visit_user_service),
+                    .service(user::visit_user_service)
             )
     })
     .bind(("127.0.0.1", 8080))?
