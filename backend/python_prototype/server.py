@@ -25,7 +25,9 @@ class ClientThread(threading.Thread):
 
         self.csocket = clientsocket
         print(f'new connection: address: {clientAddress}')
+
     uuid = ''
+
     # ID работает криво, пока что нет идей как исправить. Прикол в том что он теперь берет id последнего подключившегося
     # юзера, что странно, поскольку при подключении пользователя класс с ним запихивается в отдельный поток
 
@@ -51,15 +53,14 @@ class ClientThread(threading.Thread):
             self.csocket.send(bytes('Кому напишем? использование: ', 'UTF-8'))
             pass
 
-
     def run(self):
 
-        status = 'AUTHORIZED'
+        # status = 'AUTHORIZED'
         while True:
 
             data = self.csocket.recv(4096)
             msg = data.decode()
-            #℻
+            # ℻
             if (msg.find('@registration') == 0) or (msg.find('@reauth') == 0) or (msg.find('@auth') == 0):
                 msg = str(msg).split('℻')
             else:
@@ -71,7 +72,7 @@ class ClientThread(threading.Thread):
 
             # msg = str(msg).split('℻') if status == 'NON_AUTHORIZED' else print(msg)
             if msg[0] == '':
-                print('diconnection')
+                print('disconnection')
                 break
 
             elif msg[0] == '@auth':
@@ -102,13 +103,14 @@ class ClientThread(threading.Thread):
                                 self.csocket.send(bytes(f'ACCESS GRANTED\n', 'UTF-8'))
                                 cursor.execute(f"UPDATE `users` SET authorized = 'AUTHORIZED' WHERE ip='{client_ip}'")
                                 connection.commit()
-                                cursor.execute(f"SELECT * FROM `users` WHERE ip='{client_ip}'")
-                                result = cursor.fetchall()
-                                status = result[0]["authorized"]
+                                # cursor.execute(f"SELECT * FROM `users` WHERE ip='{client_ip}'")
+                                # result = cursor.fetchall()
+                                # status = result[0]["authorized"]
                                 self.csocket.send(
                                     bytes(
                                         "-" * 40 + '\nКуда отправимся)? \n1. Профиль \n2. Чатик \n3. Список всех '
-                                                   'участников\n' + "-" * 40,
+                                                   'пользователей\n4. Найти '
+                                                   'пользователей\n' + "-" * 40,
                                         'UTF-8'))
                                 print(f'ACCESS GRANTED FOR USER id{ClientThread.uuid}')
 
@@ -116,7 +118,7 @@ class ClientThread(threading.Thread):
                             else:
                                 print(f'ACCESS DENIED FOR USER {email}, {client_ip}')
                                 self.csocket.send(bytes(f'ACCESS DENIED', 'UTF-8'))
-                        #break
+                        # break
                     finally:
                         # time.sleep(0.5)
                         connection.close()
@@ -154,12 +156,13 @@ class ClientThread(threading.Thread):
                                 self.csocket.send(
                                     bytes(
                                         "-" * 40 + '\nКуда отправимся)? \n1. Профиль \n2. Чатик \n3. Список всех '
-                                                   'участников\n' + "-" * 40,
+                                                   'пользователей\n4. Найти '
+                                                   'пользователей\n' + "-" * 40,
                                         'UTF-8'))
                             else:
                                 print(f'ACCESS DENIED FOR USER {email}, {client_ip}')
                                 self.csocket.send(bytes(f'ACCESS DENIED', 'UTF-8'))
-                        #break
+                        # break
                     finally:
                         # time.sleep(0.5)
                         connection.close()
@@ -176,7 +179,6 @@ class ClientThread(threading.Thread):
                 email = str(msg[4])
                 logo = str(msg[5])
                 about = str(msg[6])
-
                 red_data = datetime.datetime.now().date()
                 # self.csocket.send(bytes(f'логин {self.login}, pass {self.password}', 'UTF-8'))
                 # print(f'мыло {self.email}\npass {self.password}')
@@ -232,17 +234,15 @@ class ClientThread(threading.Thread):
                         with connection.cursor() as cursor:
                             cursor.execute(f"SELECT * FROM `users` WHERE id='{u_id}'")
                             result = cursor.fetchall()
-                            logo = result[0]["logo_id"] #
-                            id = result[0]["id"] #
-                            name = result[0]["first_name"] #
-                            surname = result[0]["last_name"] #
+                            logo = result[0]["logo_id"]  #
+                            id = result[0]["id"]  #
+                            name = result[0]["first_name"]  #
+                            surname = result[0]["last_name"]  #
                             rating = result[0]["raiting"]
                             about = result[0]["about_user"]
                             reg_date = result[0]["reg_date"]
 
-
                     finally:
-
                         connection.close()
                         time.sleep(0.5)
                         self.csocket.send(
@@ -255,7 +255,7 @@ class ClientThread(threading.Thread):
                 except Exception as ex:
                     print(f'CONNECTION FAILED \n {ex}')
 
-            elif (str(msg[1]) == 'Профиль') and (''.join(msg).find('@id') == -1):
+            elif (str(msg[1]) == 'Профиль') and (''.join(msg).find('@id') < 0):
                 try:
                     connection = pymysql.connect(host=config.host,
                                                  port=config.dbport,
@@ -268,10 +268,10 @@ class ClientThread(threading.Thread):
                         with connection.cursor() as cursor:
                             cursor.execute(f"SELECT * FROM `users` WHERE ip='{clientAddress[0]}'")
                             result = cursor.fetchall()
-                            logo = result[0]["logo_id"] #
-                            id = result[0]["id"] #
-                            name = result[0]["first_name"] #
-                            surname = result[0]["last_name"] #
+                            logo = result[0]["logo_id"]  #
+                            id = result[0]["id"]  #
+                            name = result[0]["first_name"]  #
+                            surname = result[0]["last_name"]  #
                             rating = result[0]["raiting"]
                             about = result[0]["about_user"]
                             reg_date = result[0]["reg_date"]
@@ -293,8 +293,7 @@ class ClientThread(threading.Thread):
                 except Exception as ex:
                     print(f'CONNECTION FAILED \n {ex}')
 
-
-            elif (str(msg[0]) == '2. Чатик') :
+            elif str(msg[0]) == '2. Чатик':
                 folder_id = f'id{ClientThread.uuid}'
                 folder = f'C:/Users/fedor/PycharmProjects/pythonProject14/user_chats/{folder_id}'
                 if not os.path.exists(folder):
@@ -304,23 +303,69 @@ class ClientThread(threading.Thread):
                     try:
                         os.mkdir(f'C:/Users/fedor/PycharmProjects/pythonProject14/user_chats/{folder_id}')
                         print(f'Successfully created folder: {folder_id}')
-                        time.sleep(1)
-                        self.csocket.send(bytes('Успех', 'UTF-8'))
-                        self.csocket.send(bytes('Кому напишем? использование: ', 'UTF-8'))
+                        time.sleep(0.5)
+                        self.csocket.send(bytes('Успех\nКому напишем? использование@id... Например: @id1234 чтоб '
+                                                'перейти к диалогу с пользователем: ', 'UTF-8'))
                     except Exception as ex:
-                        print(f'FAIL:\n {ex}')
-                    print('flag')
-                    #ClientThread.chatting(self)
+                        print(f'!!!FAIL!!!:\n {ex}')
                 else:
-                    self.csocket.send(bytes('Кому напишем? использование @id... Например: @id1234 чтоб перейти к диалогу с пользователем: ', 'UTF-8'))
+                    self.csocket.send(bytes(
+                        'Кому напишем? использование Переписка @id... Например: Переписка @id1234 чтоб перейти к '
+                        'диалогу с пользователем: ',
+                        'UTF-8'))
+            elif str(msg[0]) == 'Переписка':
+                uid = msg[1]
+                pass
+            elif (str(msg[1]) == 'Найти') and str(msg[2]) == 'пользователей':
+                self.csocket.send(bytes(f'Кого будем искать? \nИспользование: Найти ИМЯ ФАМИЛИЯ (Фамилию можно не указывать)', 'UTF-8'))
 
+            elif str(msg[0]) == 'Найти':
+
+                try:
+                    connection = pymysql.connect(host=config.host,
+                                                 port=config.dbport,
+                                                 user=config.user,
+                                                 password=config.password,
+                                                 database=config.db,
+                                                 cursorclass=pymysql.cursors.DictCursor
+                                                 )
+                    print('connected to db')
+
+                    try:
+                        # name = 'Dobrinya'
+                        # surname = 'Martin'
+                        with connection.cursor() as cursor:
+                            if len(msg) == 3:
+                                name = msg[1]
+                                surname = msg[2]
+                                cursor.execute(
+                                    f"SELECT * FROM `users` WHERE first_name = '{name}' AND last_name = '{surname}'")
+                                result = cursor.fetchall()
+                            if len(msg) == 2:
+                                name = msg[1]
+                                cursor.execute(
+                                    f"SELECT * FROM `users` WHERE first_name = '{name}' OR last_name = '{name}'")
+                                result = cursor.fetchall()
+                            if len(result) == 0:
+                                self.csocket.send(bytes(f'Ничего не удалось найти:( Попробуйте спросить по другому', 'UTF-8'))
+                            if len(result) % 10 == 1:
+                                self.csocket.send(bytes(f'Найдено {len(result)} результат:', 'UTF-8'))
+                            elif len(result) % 10 in [2, 3, 4]:
+                                self.csocket.send(bytes(f'Найдено {len(result)} результата:', 'UTF-8'))
+                            elif (len(result) % 10 in [5, 6, 7, 8, 9, 0]) and (len(result) != 0):
+                                self.csocket.send(bytes(f'Найдено {len(result)} результатов:', 'UTF-8'))
+                            for i in range(len(result)):
+                                time.sleep(0.5)
+                                self.csocket.send(bytes(
+                                    f'{i + 1}. {result[i]["first_name"]} {result[i]["last_name"]} @id{result[i]["id"]}\т', 'UTF-8'))
+                    finally:
+                        connection.close()
+                except Exception as ex:
+                    print(f'CONNECTION FAILED \n{ex}')
 
             else:
                 self.csocket.send(bytes('Не понимаю команду', 'UTF-8'))
-
-
-
-
+# Найти Адольфъ Гуталинович
 
 while True:
     server.listen(1)
@@ -328,4 +373,3 @@ while True:
     newthread = ClientThread(clientAddress, clientsock)
     print(f'Newthread {newthread} started')
     newthread.start()
-
