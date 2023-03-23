@@ -58,6 +58,12 @@ pub(crate) async fn edit_user_service(
 ) -> ActxResult<impl Responder> {
     let (email, password) = path.into_inner();
     let (status, fail_reason) = (|| {
+        if info.rating.is_some() {
+            return (
+                "FAILED".to_string(),
+                "You have not enough permissions to modify rating".to_string(),
+            );
+        }
         let raw_info = [
             info.username.as_ref(),
             info.email.as_ref(),
@@ -138,10 +144,10 @@ pub(crate) async fn fetch_user_profile(
 ) -> ActxResult<impl Responder> {
     let email = path.into_inner();
     let (status, fail_reason, user) = (|| {
-        let connection = database::try_connect(&db_config, 3);
         if !email::is_valid_email(email.as_str()) {
             return ("FAILED", "Invalid email adresss", database::User::default());
         }
+        let connection = database::try_connect(&db_config, 3);
         if connection.is_err() {
             println!("Failed to connect to database");
             return (
@@ -163,5 +169,63 @@ pub(crate) async fn fetch_user_profile(
         "status": status,
         "reason": fail_reason,
         "user": user,
+    })))
+}
+
+#[post("/visit/{visitor_email}/{visitor_password}/{visited_email}")] // <- define path parameters
+pub(crate) async fn visit_user_service(
+    path: web::Path<(String, String, String)>,
+    db_config: web::Data<DBconfig>,
+) -> ActxResult<impl Responder> {
+    let (email, password, visited_email)= path.into_inner();
+    let (status, fail_reason) = (|| {
+        if !email::is_valid_email(email.as_str()) {
+            return ("FAILED".to_string(), "Invalid email adresss".to_string());
+        }
+        if !passwords::is_valid_password(&password) {
+            return (
+                "FAILED".to_string(),
+                "Password contains invalid characters or too small".to_string(),
+            );
+        }
+        let connection = database::try_connect(&db_config, 3);
+        if connection.is_err() {
+            println!("Failed to connect to database");
+            return (
+                "FAILED".to_string(),
+                "Failed to connect to database".to_string(),
+            );
+        }
+        let mut connection = connection.unwrap();
+        let user = database::find_user(&mut connection, &email);
+        if user.is_none() {
+            return ("FAILED".to_string(), "Visitor does not exist".to_string());
+        }
+        let user = user.unwrap();
+        if user.password != password {
+            return ("FAILED".to_string(), "Invalid password".to_string());
+        }
+        let user2 = database::find_user(&mut connection, &visited_email);
+        if user2.is_none() {
+            return ("FAILED".to_string(), "Visited does not exist".to_string());
+        }
+        let user2 = user2.unwrap();
+        if database::visit_exists(&mut connection, user.id, user2.id) {
+            return ("FAILED".to_string(), "Already visited".to_string());
+        }
+        let info = database::EditRequest 
+        { username: None, email: None, password: None, firstname: None, lastname: None, rating: Some(user.rating.unwrap()+1),
+             about: None, age: None, gender: None, reg_date: None };
+        if database::add_visit(&mut connection, user.id, user2.id).is_err() {
+            return ("FAILED".to_string(), "Database error".to_string());
+        }
+        if database::edit_user(&mut connection, &email, &info).is_err() {
+            return ("FAILED".to_string(), "Database error".to_string());
+        }
+        return ("OK".to_string(), "".to_string());
+    })();
+    Ok(web::Json(json!({
+        "status": status,
+        "reason": fail_reason,
     })))
 }

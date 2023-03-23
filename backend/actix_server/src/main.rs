@@ -78,7 +78,8 @@ async fn main() -> std::io::Result<()> {
                     .service(user::fetch_user_profile)
                     .service(check_db_status)
                     .service(user::edit_user_service)
-                    .service(user::delete_user_service),
+                    .service(user::delete_user_service)
+                    .service(user::visit_user_service),
             )
     })
     .bind(("127.0.0.1", 8080))?

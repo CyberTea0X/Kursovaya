@@ -22,6 +22,7 @@ pub struct User {
     pub password: String,
     pub firstname: Option<String>,
     pub lastname: Option<String>,
+    pub rating: Option<u32>,
     pub about: Option<String>,
     pub age: Option<String>,
     pub gender: Option<String>,
@@ -35,6 +36,7 @@ pub struct EditRequest {
     pub password: Option<String>,
     pub firstname: Option<String>,
     pub lastname: Option<String>,
+    pub rating: Option<u32>,
     pub about: Option<String>,
     pub age: Option<String>,
     pub gender: Option<String>,
@@ -71,7 +73,7 @@ pub fn register_user(
         values (:id, :username, :email, :password, :firstname,
         :lastname, :about, :age, :gender, :reg_date)",
         params! {
-            "id" => None::<i32>,
+            "id" => None::<u32>,
             "username" => username,
             "email" => email,
             "password" => password,
@@ -91,7 +93,7 @@ pub fn edit_user(
     info: &EditRequest,
 ) -> Result<(), mysql::Error> {
     let mut expression = format!(
-        "UPDATE USERS SET {}{}{}{}{}{}{}{} WHERE email = :email",
+        "UPDATE USERS SET {}{}{}{}{}{}{}{}{} WHERE email = :email",
         if info.username.is_some() {
             format!("username=\"{}\", ", info.username.as_ref().unwrap())
         } else {
@@ -114,6 +116,11 @@ pub fn edit_user(
         },
         if info.lastname.is_some() {
             format!("lastname=\"{}\", ", info.lastname.as_ref().unwrap())
+        } else {
+            "".to_string()
+        },
+        if info.rating.is_some() {
+            format!("rating=\"{}\", ", info.rating.as_ref().unwrap())
         } else {
             "".to_string()
         },
@@ -166,21 +173,49 @@ pub fn user_exists(connection: &mut Conn, email: &str) -> bool {
     }
 }
 
+pub fn visit_exists(connection: &mut Conn, visitor_id: u32, visiting_id: u32) -> bool {
+    match connection.query::<String, String>(format!(
+        "SELECT `visitor_id` FROM `visits` WHERE visitor_id = \"{}\" AND visiting_id = \"{}\"",
+        visitor_id, visiting_id
+    )) {
+        Ok(visitors) => !visitors.is_empty(),
+        Err(err) => {
+            println!("{:?}", err);
+            true
+        }
+    }
+}
+
+pub fn add_visit(connection: &mut Conn, visitor_id: u32, visiting_id: u32) -> Result<(), mysql::Error> {
+    let visit_date = chrono::offset::Local::now();
+    let visit_date = visit_date.format("%Y-%m-%d").to_string();
+    connection.exec_drop(
+        r"INSERT INTO VISITS (visitor_id, visiting_id, visit_date)
+        values (:visitor_id, :visiting_id, :visit_date)",
+        params! {
+            "visitor_id" => visitor_id,
+            "visiting_id" => visiting_id,
+            "visit_date" => visit_date
+        },
+    )
+}
+
 pub fn find_user(connection: &mut Conn, email: &str) -> Option<User> {
     let query_result = connection.query_map(
         format!(
             "SELECT id, username, email, password, firstname,
-        lastname, about, age, gender, reg_date 
+        lastname, rating, about, age, gender, reg_date 
             FROM `users` WHERE email = \"{}\"",
             email
         ),
-        |(id, username, email, password, firstname, lastname, about, age, gender, reg_date)| User {
+        |(id, username, email, password, firstname, lastname, rating, about, age, gender, reg_date)| User {
             id,
             username,
             email,
             password,
             firstname,
             lastname,
+            rating,
             about,
             age,
             gender,
