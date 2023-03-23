@@ -1,3 +1,4 @@
+use crate::register::RegisterInfo;
 use mysql::prelude::Queryable;
 use mysql::{params, Conn, OptsBuilder};
 use serde::{Deserialize, Serialize};
@@ -16,96 +17,174 @@ pub struct DBconfig {
 #[derive(Serialize, Deserialize, Default)]
 pub struct User {
     pub id: u32,
-    pub first_name: String,
-    pub last_name: String,
+    pub username: String,
     pub email: String,
-    pub logo_id: String,
-    pub rating: String,
-    pub about_user: String,
-    pub chats_folder: String,
-    pub login: String,
     pub password: String,
-    pub reg_date: String,
+    pub firstname: Option<String>,
+    pub lastname: Option<String>,
+    pub about: Option<String>,
+    pub age: Option<String>,
+    pub gender: Option<String>,
+    pub reg_date: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Default)]
+pub struct EditRequest {
+    pub username: Option<String>,
+    pub email: Option<String>,
+    pub password: Option<String>,
+    pub firstname: Option<String>,
+    pub lastname: Option<String>,
+    pub about: Option<String>,
+    pub age: Option<String>,
+    pub gender: Option<String>,
+    pub reg_date: Option<String>,
+}
+
+pub fn is_valid_sql(text: &str) -> bool {
+    let restricted_chars = ['\\', '/', ':', ';', '\"', '\''];
+    text.chars().all(|ch| !restricted_chars.contains(&ch))
 }
 
 pub fn connect_to_db(db_config: &DBconfig) -> Result<Conn, mysql::Error> {
     let opts = OptsBuilder::new()
-    .ip_or_hostname(Some(&db_config.ip))
-    .tcp_port(db_config.port)
-    .user(Some(&db_config.user))
-    .pass(Some(&db_config.password))
-    .db_name(Some(&db_config.database));
+        .ip_or_hostname(Some(&db_config.ip))
+        .tcp_port(db_config.port)
+        .user(Some(&db_config.user))
+        .pass(Some(&db_config.password))
+        .db_name(Some(&db_config.database));
     Conn::new(opts)
 }
 
 pub fn register_user(
     connection: &mut Conn,
-    first_name: &str,
-    last_name: &str,
-    password: &str,
+    username: &str,
     email: &str,
-    logo: &str,
-    about: &str,
-) -> bool {
+    password: &str,
+    info: &RegisterInfo,
+) -> Result<(), mysql::Error> {
     let register_date = chrono::offset::Local::now();
     let reg_date = register_date.format("%Y-%m-%d").to_string();
-    let status = connection.exec_drop(
-        r"INSERT INTO USERS (id, first_name, last_name, email, logo_id,
-        raiting, about_user, chats_folder, login, password, reg_date)
-        values (:id, :first_name, :last_name, :email, :logo_id, :rating, :about_user, :chats_folder,
-         :login, :password, :reg_date)",
+    connection.exec_drop(
+        r"INSERT INTO USERS (id, username, email, password, firstname,
+        lastname, about, age, gender, reg_date)
+        values (:id, :username, :email, :password, :firstname,
+        :lastname, :about, :age, :gender, :reg_date)",
         params! {
-            "id" => "",
-            "first_name" => first_name,
-            "last_name" => last_name,
+            "id" => None::<i32>,
+            "username" => username,
             "email" => email,
-            "logo_id" => logo,
-            "rating" => "0",
-            "about_user" => about,
-            "chats_folder" => "CHAT_FOLDER_TO_DO",
-            "login" => "?",
             "password" => password,
+            "firstname" => &info.firstname,
+            "lastname" => &info.lastname,
+            "about" => &info.about,
+            "age" => &info.age,
+            "gender" => &info.gender,
             "reg_date" => reg_date,
         },
-    );
-    if status.is_err() {
-        println!("{:?}", status);
-        return false;
-    }
-    true
+    )
 }
 
-pub fn user_exists(
+pub fn edit_user(
     connection: &mut Conn,
-    email: &str
-) -> bool {
-    match connection.query::<String, String>(
-        format!("SELECT `email` FROM `users` WHERE email = \"{}\"", email)
-    ) {
-        Ok(registered) => {
-            !registered.is_empty()
-        }
+    email: &str,
+    info: &EditRequest,
+) -> Result<(), mysql::Error> {
+    let mut expression = format!(
+        "UPDATE USERS SET {}{}{}{}{}{}{}{} WHERE email = :email",
+        if info.username.is_some() {
+            format!("username=\"{}\", ", info.username.as_ref().unwrap())
+        } else {
+            "".to_string()
+        },
+        if info.email.is_some() {
+            format!("email=\"{}\", ", info.email.as_ref().unwrap())
+        } else {
+            "".to_string()
+        },
+        if info.password.is_some() {
+            format!("password=\"{}\", ", info.password.as_ref().unwrap())
+        } else {
+            "".to_string()
+        },
+        if info.firstname.is_some() {
+            format!("firstname=\"{}\", ", info.firstname.as_ref().unwrap())
+        } else {
+            "".to_string()
+        },
+        if info.lastname.is_some() {
+            format!("lastname=\"{}\", ", info.lastname.as_ref().unwrap())
+        } else {
+            "".to_string()
+        },
+        if info.about.is_some() {
+            format!("about=\"{}\", ", info.about.as_ref().unwrap())
+        } else {
+            "".to_string()
+        },
+        if info.age.is_some() {
+            format!("age=\"{}\", ", info.age.as_ref().unwrap())
+        } else {
+            "".to_string()
+        },
+        if info.gender.is_some() {
+            format!("gender=\"{}\", ", info.gender.as_ref().unwrap())
+        } else {
+            "".to_string()
+        },
+    );
+    let trailing_comma = expression.rfind(',').unwrap();
+    expression.remove(trailing_comma);
+    connection.exec_drop(
+        expression,
+        params! {
+            "email" => email,
+        },
+    )
+}
+
+pub fn delete_user(connection: &mut Conn, email: &str) -> Result<(), mysql::Error> {
+    connection.exec_drop(
+        "DELETE FROM USERS
+    WHERE email=:email",
+        params! {
+            "email" => email
+        },
+    )
+}
+
+pub fn user_exists(connection: &mut Conn, email: &str) -> bool {
+    match connection.query::<String, String>(format!(
+        "SELECT `email` FROM `users` WHERE email = \"{}\"",
+        email
+    )) {
+        Ok(registered) => !registered.is_empty(),
         Err(err) => {
             println!("{:?}", err);
             true
         }
-    } 
- 
+    }
 }
 
-pub fn find_user(
-    connection: &mut Conn,
-    email: &str
-) -> Option<User> {
+pub fn find_user(connection: &mut Conn, email: &str) -> Option<User> {
     let query_result = connection.query_map(
-        format!("SELECT id, first_name, last_name, email, logo_id,
-            raiting, about_user, chats_folder, login, password, reg_date 
-            FROM `users` WHERE email = \"{}\"", email),
-        |(
-            id, first_name, last_name, email, logo_id,
-            rating, about_user, chats_folder, login, password, reg_date
-        )| {
-            User {id, first_name, last_name, email, logo_id, rating, about_user, chats_folder, login, password, reg_date}
+        format!(
+            "SELECT id, username, email, password, firstname,
+        lastname, about, age, gender, reg_date 
+            FROM `users` WHERE email = \"{}\"",
+            email
+        ),
+        |(id, username, email, password, firstname, lastname, about, age, gender, reg_date)| User {
+            id,
+            username,
+            email,
+            password,
+            firstname,
+            lastname,
+            about,
+            age,
+            gender,
+            reg_date,
         },
     );
     match query_result {
@@ -121,11 +200,10 @@ pub fn find_user(
             return None;
         }
     }
- 
 }
 
 pub fn parse_config() -> DBconfig {
-    let mut file = File::open("DBconfig.json").unwrap();
+    let mut file = File::open("DB2config.json").unwrap();
     let mut data = String::new();
     file.read_to_string(&mut data).unwrap();
     let db_config: DBconfig = serde_json::from_str(&data).unwrap();
@@ -143,11 +221,7 @@ pub fn parse_config() -> DBconfig {
 //     connected
 // }
 
-pub fn try_connect(
-    db_config: &DBconfig,
-    number_of_retries: u32
-) -> Result<Conn, mysql::Error>
-{
+pub fn try_connect(db_config: &DBconfig, number_of_retries: u32) -> Result<Conn, mysql::Error> {
     for i in 0..(number_of_retries) {
         let connection = connect_to_db(db_config);
         if connection.is_ok() {
@@ -155,6 +229,9 @@ pub fn try_connect(
         }
         println!("Trying to connect to database. Retries: {}", i)
     }
-    println!("Trying to connect to database. Retries: {}", number_of_retries);
+    println!(
+        "Trying to connect to database. Retries: {}",
+        number_of_retries
+    );
     return connect_to_db(db_config);
 }

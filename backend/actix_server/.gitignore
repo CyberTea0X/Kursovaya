@@ -16,3 +16,5 @@ Cargo.lock
 
 # Confidentional Data
 DBconfig.json
+DB2config.json
+JWTconfig.json
