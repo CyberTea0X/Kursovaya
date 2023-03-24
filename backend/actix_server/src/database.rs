@@ -1,10 +1,11 @@
 use crate::register::RegisterInfo;
+use mysql;
 use mysql::prelude::Queryable;
 use mysql::{params, Conn, OptsBuilder};
 use serde::{Deserialize, Serialize};
+use similar_string::{self, compare_similarity};
 use std::fs::File;
 use std::io::Read;
-
 #[derive(Serialize, Deserialize, Clone)]
 pub struct DBconfig {
     pub ip: String,
@@ -22,7 +23,7 @@ pub struct User {
     pub password: String,
     pub firstname: Option<String>,
     pub lastname: Option<String>,
-    pub rating: Option<u32>,
+    pub rating: u32,
     pub about: Option<String>,
     pub age: Option<String>,
     pub gender: Option<String>,
@@ -41,6 +42,52 @@ pub struct EditRequest {
     pub age: Option<String>,
     pub gender: Option<String>,
     pub reg_date: Option<String>,
+}
+
+pub fn search_login(connection: &mut Conn, login: &str) -> Result<Vec<User>, mysql::Error> {
+    let mut query_result = get_all_users(connection)?;
+    query_result
+        .sort_by_key(|user| -f64::round(compare_similarity(&user.username, &login) * 10.0) as i32);
+    Ok(query_result)
+}
+
+pub fn search_popular(connection: &mut Conn) -> Result<Vec<User>, mysql::Error> {
+    let mut query_result = get_all_users(connection)?;
+    query_result.sort_by_key(|user| -(user.rating as i32));
+    Ok(query_result)
+}
+
+pub fn get_all_users(connection: &mut Conn) -> Result<Vec<User>, mysql::Error> {
+    connection.query_map(
+        r"SELECT id, username, email, password, firstname,
+    lastname, rating, about, age, gender, reg_date 
+        FROM `users`",
+        |(
+            id,
+            username,
+            email,
+            password,
+            firstname,
+            lastname,
+            rating,
+            about,
+            age,
+            gender,
+            reg_date,
+        )| User {
+            id,
+            username,
+            email,
+            password,
+            firstname,
+            lastname,
+            rating,
+            about,
+            age,
+            gender,
+            reg_date,
+        },
+    )
 }
 
 pub fn is_valid_sql(text: &str) -> bool {
@@ -186,7 +233,11 @@ pub fn visit_exists(connection: &mut Conn, visitor_id: u32, visiting_id: u32) ->
     }
 }
 
-pub fn add_visit(connection: &mut Conn, visitor_id: u32, visiting_id: u32) -> Result<(), mysql::Error> {
+pub fn add_visit(
+    connection: &mut Conn,
+    visitor_id: u32,
+    visiting_id: u32,
+) -> Result<(), mysql::Error> {
     let visit_date = chrono::offset::Local::now();
     let visit_date = visit_date.format("%Y-%m-%d").to_string();
     connection.exec_drop(
@@ -201,40 +252,12 @@ pub fn add_visit(connection: &mut Conn, visitor_id: u32, visiting_id: u32) -> Re
 }
 
 pub fn find_user(connection: &mut Conn, email: &str) -> Option<User> {
-    let query_result = connection.query_map(
-        format!(
-            "SELECT id, username, email, password, firstname,
-        lastname, rating, about, age, gender, reg_date 
-            FROM `users` WHERE email = \"{}\"",
-            email
-        ),
-        |(id, username, email, password, firstname, lastname, rating, about, age, gender, reg_date)| User {
-            id,
-            username,
-            email,
-            password,
-            firstname,
-            lastname,
-            rating,
-            about,
-            age,
-            gender,
-            reg_date,
-        },
-    );
-    match query_result {
-        Ok(mut query) => {
-            let user = query.pop();
-            if user.is_some() {
-                return Some(user.unwrap());
-            }
-            return None;
-        }
-        Err(err) => {
-            println!("{:?}", err);
-            return None;
-        }
+    let query_result = get_all_users(connection);
+    if query_result.is_err() {
+        return None;
     }
+    let query_result = query_result.unwrap();
+    query_result.into_iter().find(|user| user.email == email)
 }
 
 pub fn parse_config() -> DBconfig {

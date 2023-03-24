@@ -177,7 +177,7 @@ pub(crate) async fn visit_user_service(
     path: web::Path<(String, String, String)>,
     db_config: web::Data<DBconfig>,
 ) -> ActxResult<impl Responder> {
-    let (email, password, visited_email)= path.into_inner();
+    let (email, password, visited_email) = path.into_inner();
     let (status, fail_reason) = (|| {
         if !email::is_valid_email(email.as_str()) {
             return ("FAILED".to_string(), "Invalid email adresss".to_string());
@@ -213,9 +213,18 @@ pub(crate) async fn visit_user_service(
         if database::visit_exists(&mut connection, user.id, user2.id) {
             return ("FAILED".to_string(), "Already visited".to_string());
         }
-        let info = database::EditRequest 
-        { username: None, email: None, password: None, firstname: None, lastname: None, rating: Some(user.rating.unwrap()+1),
-             about: None, age: None, gender: None, reg_date: None };
+        let info = database::EditRequest {
+            username: None,
+            email: None,
+            password: None,
+            firstname: None,
+            lastname: None,
+            rating: Some(user.rating + 1),
+            about: None,
+            age: None,
+            gender: None,
+            reg_date: None,
+        };
         if database::add_visit(&mut connection, user.id, user2.id).is_err() {
             return ("FAILED".to_string(), "Database error".to_string());
         }
