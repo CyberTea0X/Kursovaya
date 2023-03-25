@@ -26,6 +26,7 @@ pub struct User {
     pub about: Option<String>,
     pub age: Option<String>,
     pub gender: Option<String>,
+    pub last_online: Option<String>,
     pub reg_date: Option<String>,
 }
 
@@ -49,7 +50,7 @@ pub fn get_all_users(
 ) -> Result<Vec<User>, mysql::Error> {
     connection.query_map(
         r"SELECT id, username, email, password, firstname,
-    lastname, rating, about, age, gender, reg_date 
+    lastname, rating, about, age, gender, last_online, reg_date
         FROM `users`",
         |(
             id,
@@ -62,6 +63,7 @@ pub fn get_all_users(
             about,
             age,
             gender,
+            last_online,
             reg_date,
         )| {
             let password = if hide_passwords {
@@ -80,6 +82,7 @@ pub fn get_all_users(
                 about,
                 age,
                 gender,
+                last_online,
                 reg_date,
             }
         },
@@ -110,11 +113,13 @@ pub fn register_user(
 ) -> Result<(), mysql::Error> {
     let register_date = chrono::offset::Local::now();
     let reg_date = register_date.format("%Y-%m-%d").to_string();
+    let last_online = register_date.format("%Y-%m-%d %H-%M-%S").to_string();
+
     connection.exec_drop(
         r"INSERT INTO USERS (id, username, email, password, firstname,
-        lastname, about, age, gender, reg_date)
+        lastname, about, age, gender, last_online, reg_date)
         values (:id, :username, :email, :password, :firstname,
-        :lastname, :about, :age, :gender, :reg_date)",
+        :lastname, :about, :age, :gender, :last_online, :reg_date)",
         params! {
             "id" => None::<u32>,
             "username" => username,
@@ -125,7 +130,21 @@ pub fn register_user(
             "about" => &info.about,
             "age" => &info.age,
             "gender" => &info.gender,
+            "last_online" => last_online,
             "reg_date" => reg_date,
+        },
+    )
+}
+
+pub fn make_user_online(connection: &mut Conn, email: &str) -> Result<(), mysql::Error> {
+    let last_online = chrono::offset::Local::now()
+        .format("%Y-%m-%d %H-%M-%S")
+        .to_string();
+    connection.exec_drop(
+        "UPDATE USERS SET last_online=:last_online WHERE email = :email",
+        params! {
+            "last_online" => last_online,
+            "email" => email
         },
     )
 }

@@ -181,8 +181,10 @@ pub fn search_name(connection: &mut Conn, info: &SeachName) -> Result<Vec<User>,
 
 pub fn search_login(connection: &mut Conn, login: &str) -> Result<Vec<User>, mysql::Error> {
     let mut query_result = database::get_all_users(connection, true)?;
-    query_result
-        .sort_by_key(|user| -f64::round(compare_similarity(&user.username.to_lowercase(), &login.to_lowercase()) * 10.0) as i32);
+    query_result.sort_by_key(|user| {
+        -f64::round(compare_similarity(&user.username.to_lowercase(), &login.to_lowercase()) * 10.0)
+            as i32
+    });
     Ok(query_result)
 }
 

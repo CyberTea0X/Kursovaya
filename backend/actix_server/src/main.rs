@@ -2,6 +2,7 @@ use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder, Result
 use database::DBconfig;
 use serde_json::json;
 
+pub mod chat;
 pub mod claims;
 pub mod database;
 pub mod email;
@@ -89,6 +90,7 @@ async fn main() -> std::io::Result<()> {
                     .service(user::delete_user_service)
                     .service(user::visit_user_service),
             )
+            .service(web::scope("/chat"))
     })
     .bind(("127.0.0.1", 8080))?
     .run()
