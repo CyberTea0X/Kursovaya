@@ -74,8 +74,10 @@ async fn main() -> std::io::Result<()> {
             .app_data(web::Data::new(database::parse_config()))
             .service(
                 web::scope("/api/search")
-                    .service(search::search_login)
-                    .service(search::search_popular),
+                    .service(search::search_login_service)
+                    .service(search::search_popular_service)
+                    .service(search::search_name_service)
+                    .service(search::search_text_service),
             )
             .service(
                 web::scope("/api")

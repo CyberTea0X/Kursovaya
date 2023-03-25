@@ -3,7 +3,6 @@ use mysql;
 use mysql::prelude::Queryable;
 use mysql::{params, Conn, OptsBuilder};
 use serde::{Deserialize, Serialize};
-use similar_string::{self, compare_similarity};
 use std::fs::File;
 use std::io::Read;
 #[derive(Serialize, Deserialize, Clone)]
@@ -44,20 +43,10 @@ pub struct EditRequest {
     pub reg_date: Option<String>,
 }
 
-pub fn search_login(connection: &mut Conn, login: &str) -> Result<Vec<User>, mysql::Error> {
-    let mut query_result = get_all_users(connection)?;
-    query_result
-        .sort_by_key(|user| -f64::round(compare_similarity(&user.username, &login) * 10.0) as i32);
-    Ok(query_result)
-}
-
-pub fn search_popular(connection: &mut Conn) -> Result<Vec<User>, mysql::Error> {
-    let mut query_result = get_all_users(connection)?;
-    query_result.sort_by_key(|user| -(user.rating as i32));
-    Ok(query_result)
-}
-
-pub fn get_all_users(connection: &mut Conn) -> Result<Vec<User>, mysql::Error> {
+pub fn get_all_users(
+    connection: &mut Conn,
+    hide_passwords: bool,
+) -> Result<Vec<User>, mysql::Error> {
     connection.query_map(
         r"SELECT id, username, email, password, firstname,
     lastname, rating, about, age, gender, reg_date 
@@ -74,18 +63,25 @@ pub fn get_all_users(connection: &mut Conn) -> Result<Vec<User>, mysql::Error> {
             age,
             gender,
             reg_date,
-        )| User {
-            id,
-            username,
-            email,
-            password,
-            firstname,
-            lastname,
-            rating,
-            about,
-            age,
-            gender,
-            reg_date,
+        )| {
+            let password = if hide_passwords {
+                "secret".to_string()
+            } else {
+                password
+            };
+            User {
+                id,
+                username,
+                email,
+                password,
+                firstname,
+                lastname,
+                rating,
+                about,
+                age,
+                gender,
+                reg_date,
+            }
         },
     )
 }
@@ -220,10 +216,10 @@ pub fn user_exists(connection: &mut Conn, email: &str) -> bool {
     }
 }
 
-pub fn visit_exists(connection: &mut Conn, visitor_id: u32, visiting_id: u32) -> bool {
+pub fn visit_exists(connection: &mut Conn, visitor_email: &str, visiting_id: u32) -> bool {
     match connection.query::<String, String>(format!(
-        "SELECT `visitor_id` FROM `visits` WHERE visitor_id = \"{}\" AND visiting_id = \"{}\"",
-        visitor_id, visiting_id
+        "SELECT `visitor_email` FROM `visits` WHERE visitor_email = \"{}\" AND visiting_id = \"{}\"",
+        visitor_email, visiting_id
     )) {
         Ok(visitors) => !visitors.is_empty(),
         Err(err) => {
@@ -235,24 +231,24 @@ pub fn visit_exists(connection: &mut Conn, visitor_id: u32, visiting_id: u32) ->
 
 pub fn add_visit(
     connection: &mut Conn,
-    visitor_id: u32,
+    visitor_email: &str,
     visiting_id: u32,
 ) -> Result<(), mysql::Error> {
     let visit_date = chrono::offset::Local::now();
     let visit_date = visit_date.format("%Y-%m-%d").to_string();
     connection.exec_drop(
-        r"INSERT INTO VISITS (visitor_id, visiting_id, visit_date)
-        values (:visitor_id, :visiting_id, :visit_date)",
+        r"INSERT INTO VISITS (visitor_email, visiting_id, visit_date)
+        values (:visitor_email, :visiting_id, :visit_date)",
         params! {
-            "visitor_id" => visitor_id,
+            "visitor_email" => visitor_email,
             "visiting_id" => visiting_id,
             "visit_date" => visit_date
         },
     )
 }
 
-pub fn find_user(connection: &mut Conn, email: &str) -> Option<User> {
-    let query_result = get_all_users(connection);
+pub fn find_user(connection: &mut Conn, email: &str, hide_password: bool) -> Option<User> {
+    let query_result = get_all_users(connection, hide_password);
     if query_result.is_err() {
         return None;
     }

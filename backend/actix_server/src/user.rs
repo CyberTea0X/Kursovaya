@@ -157,13 +157,11 @@ pub(crate) async fn fetch_user_profile(
             );
         }
         let mut connection = connection.unwrap();
-        let user = database::find_user(&mut connection, &email);
+        let user = database::find_user(&mut connection, &email, true);
         if user.is_none() {
             return ("FAILED", "User does not exist", database::User::default());
         }
-        let mut user = user.unwrap();
-        user.password = "secret!".to_string();
-        return ("OK", "", user);
+        return ("OK", "", user.unwrap());
     })();
     Ok(web::Json(json!({
         "status": status,
@@ -197,7 +195,7 @@ pub(crate) async fn visit_user_service(
             );
         }
         let mut connection = connection.unwrap();
-        let user = database::find_user(&mut connection, &email);
+        let user = database::find_user(&mut connection, &email, false);
         if user.is_none() {
             return ("FAILED".to_string(), "Visitor does not exist".to_string());
         }
@@ -205,12 +203,12 @@ pub(crate) async fn visit_user_service(
         if user.password != password {
             return ("FAILED".to_string(), "Invalid password".to_string());
         }
-        let user2 = database::find_user(&mut connection, &visited_email);
+        let user2 = database::find_user(&mut connection, &visited_email, false);
         if user2.is_none() {
             return ("FAILED".to_string(), "Visited does not exist".to_string());
         }
         let user2 = user2.unwrap();
-        if database::visit_exists(&mut connection, user.id, user2.id) {
+        if database::visit_exists(&mut connection, &user.email, user2.id) {
             return ("FAILED".to_string(), "Already visited".to_string());
         }
         let info = database::EditRequest {
@@ -225,7 +223,7 @@ pub(crate) async fn visit_user_service(
             gender: None,
             reg_date: None,
         };
-        if database::add_visit(&mut connection, user.id, user2.id).is_err() {
+        if database::add_visit(&mut connection, &user.email, user2.id).is_err() {
             return ("FAILED".to_string(), "Database error".to_string());
         }
         if database::edit_user(&mut connection, &email, &info).is_err() {
