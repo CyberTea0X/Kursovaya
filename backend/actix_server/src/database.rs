@@ -45,6 +45,83 @@ pub struct EditRequest {
     pub reg_date: Option<String>,
 }
 
+#[derive(Serialize, Deserialize, Default, Debug)]
+pub struct Chat {
+    id: u32,
+    userid1: u32,
+    userid2: u32,
+    created_at: Option<String>,
+}
+
+pub fn get_user_chats(connection: &mut Conn, userid1: u32) -> Result<Vec<Chat>, mysql::Error> {
+    connection.query_map(
+        format!("SELECT * FROM chats WHERE userid1 = {0} OR userid2 = {0}", userid1),
+        |(
+            id,
+            userid1,
+            userid2,
+            created_at
+        )|
+            Chat {
+                id,
+                userid1,
+                userid2,
+                created_at
+            }
+        )
+}
+
+pub fn create_chat(connection: &mut Conn, userid1: u32, userid2: u32) -> Result<(), mysql::Error> {
+    let created_at = chrono::offset::Local::now().format("%Y-%m-%d").to_string();
+    connection.exec_drop(
+        "INSERT INTO chats (userid1, userid2, created_at) VALUES (:userid1, :userid2, :created_at)",
+        params! {
+            "userid1" => userid1,
+            "userid2" => userid2,
+            "created_at" => created_at,
+        },
+    )
+}
+
+pub fn delete_chat(connection: &mut Conn, userid1: u32, userid2: u32) -> Result<(), mysql::Error> {
+    connection.exec_drop(
+        r"DELETE FROM chats WHERE (userid1 = :userid1 AND userid2 = :userid2)
+        OR (userid1 = :userid2 AND userid2 = :userid1)", params! { 
+            "userid1" => userid1,
+            "userid2" => userid2
+        }
+    )
+}
+
+pub fn is_chat_exists(connection: &mut Conn, userid1: u32, userid2: u32) -> bool {
+    let chat = find_chats(connection, userid1, userid2);
+    if chat.is_err() {
+        println!("{:?}", chat);
+        return true;
+    }
+    chat.unwrap().last().is_some()
+}
+
+pub fn find_chats(connection: &mut Conn, userid1: u32, userid2: u32) -> Result<Vec<Chat>, mysql::Error> {
+    connection.query_map(
+        format!("SELECT id, userid1, userid2, created_at FROM chats WHERE (userid1 = {0} AND userid2 = {1})
+        OR (userid1 = {1} AND userid2 = {0})", userid1, userid2),
+        |(
+            id,
+            userid1,
+            userid2,
+            created_at,
+        )|
+            Chat {
+                id,
+                userid1,
+                userid2,
+                created_at,
+                ..Default::default()
+            }
+        )
+}
+
 pub fn get_all_users(
     connection: &mut Conn,
     hide_passwords: bool,
@@ -157,15 +234,32 @@ pub fn edit_user(
 ) -> Result<(), mysql::Error> {
     let mut expression = format!(
         "UPDATE USERS SET {}{}{}{}{}{}{}{}{} WHERE email = :email",
-        info.username.as_deref().map_or(String::new(), |u| format!("username=\"{}\", ", u)),
-        info.email.as_deref().map_or(String::new(), |e| format!("email=\"{}\", ", e)),
-        info.password.as_deref().map_or(String::new(), |p| format!("password=\"{}\", ", p)),
-        info.firstname.as_deref().map_or(String::new(), |f| format!("firstname=\"{}\", ", f)),
-        info.lastname.as_deref().map_or(String::new(), |l| format!("lastname=\"{}\", ", l)),
-        info.rating.map_or(String::new(), |r| format!("rating=\"{}\", ", r)),
-        info.about.as_deref().map_or(String::new(), |a| format!("about=\"{}\", ", a)),
-        info.age.as_deref().map_or(String::new(), |a| format!("age=\"{}\", ", a)),
-        info.gender.as_deref().map_or(String::new(), |g| format!("gender=\"{}\", ", g))
+        info.username
+            .as_deref()
+            .map_or(String::new(), |u| format!("username=\"{}\", ", u)),
+        info.email
+            .as_deref()
+            .map_or(String::new(), |e| format!("email=\"{}\", ", e)),
+        info.password
+            .as_deref()
+            .map_or(String::new(), |p| format!("password=\"{}\", ", p)),
+        info.firstname
+            .as_deref()
+            .map_or(String::new(), |f| format!("firstname=\"{}\", ", f)),
+        info.lastname
+            .as_deref()
+            .map_or(String::new(), |l| format!("lastname=\"{}\", ", l)),
+        info.rating
+            .map_or(String::new(), |r| format!("rating=\"{}\", ", r)),
+        info.about
+            .as_deref()
+            .map_or(String::new(), |a| format!("about=\"{}\", ", a)),
+        info.age
+            .as_deref()
+            .map_or(String::new(), |a| format!("age=\"{}\", ", a)),
+        info.gender
+            .as_deref()
+            .map_or(String::new(), |g| format!("gender=\"{}\", ", g))
     );
     let trailing_comma = expression.rfind(',').unwrap();
     expression.remove(trailing_comma);

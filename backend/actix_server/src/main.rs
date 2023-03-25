@@ -74,6 +74,12 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .app_data(web::Data::new(database::parse_config()))
             .service(
+                web::scope("api/chat")
+                    .service(chat::create_chat_service)
+                    .service(chat::delete_chat_service)
+                    .service(chat::get_user_chats_service)
+                )
+            .service(
                 web::scope("/api/search")
                     .service(search::search_login_service)
                     .service(search::search_popular_service)
@@ -90,7 +96,6 @@ async fn main() -> std::io::Result<()> {
                     .service(user::delete_user_service)
                     .service(user::visit_user_service),
             )
-            .service(web::scope("/chat"))
     })
     .bind(("127.0.0.1", 8080))?
     .run()
