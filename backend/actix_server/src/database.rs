@@ -1,3 +1,4 @@
+use crate::email;
 use crate::register::RegisterInfo;
 use mysql;
 use mysql::prelude::Queryable;
@@ -156,51 +157,15 @@ pub fn edit_user(
 ) -> Result<(), mysql::Error> {
     let mut expression = format!(
         "UPDATE USERS SET {}{}{}{}{}{}{}{}{} WHERE email = :email",
-        if info.username.is_some() {
-            format!("username=\"{}\", ", info.username.as_ref().unwrap())
-        } else {
-            "".to_string()
-        },
-        if info.email.is_some() {
-            format!("email=\"{}\", ", info.email.as_ref().unwrap())
-        } else {
-            "".to_string()
-        },
-        if info.password.is_some() {
-            format!("password=\"{}\", ", info.password.as_ref().unwrap())
-        } else {
-            "".to_string()
-        },
-        if info.firstname.is_some() {
-            format!("firstname=\"{}\", ", info.firstname.as_ref().unwrap())
-        } else {
-            "".to_string()
-        },
-        if info.lastname.is_some() {
-            format!("lastname=\"{}\", ", info.lastname.as_ref().unwrap())
-        } else {
-            "".to_string()
-        },
-        if info.rating.is_some() {
-            format!("rating=\"{}\", ", info.rating.as_ref().unwrap())
-        } else {
-            "".to_string()
-        },
-        if info.about.is_some() {
-            format!("about=\"{}\", ", info.about.as_ref().unwrap())
-        } else {
-            "".to_string()
-        },
-        if info.age.is_some() {
-            format!("age=\"{}\", ", info.age.as_ref().unwrap())
-        } else {
-            "".to_string()
-        },
-        if info.gender.is_some() {
-            format!("gender=\"{}\", ", info.gender.as_ref().unwrap())
-        } else {
-            "".to_string()
-        },
+        info.username.as_deref().map_or(String::new(), |u| format!("username=\"{}\", ", u)),
+        info.email.as_deref().map_or(String::new(), |e| format!("email=\"{}\", ", e)),
+        info.password.as_deref().map_or(String::new(), |p| format!("password=\"{}\", ", p)),
+        info.firstname.as_deref().map_or(String::new(), |f| format!("firstname=\"{}\", ", f)),
+        info.lastname.as_deref().map_or(String::new(), |l| format!("lastname=\"{}\", ", l)),
+        info.rating.map_or(String::new(), |r| format!("rating=\"{}\", ", r)),
+        info.about.as_deref().map_or(String::new(), |a| format!("about=\"{}\", ", a)),
+        info.age.as_deref().map_or(String::new(), |a| format!("age=\"{}\", ", a)),
+        info.gender.as_deref().map_or(String::new(), |g| format!("gender=\"{}\", ", g))
     );
     let trailing_comma = expression.rfind(',').unwrap();
     expression.remove(trailing_comma);
