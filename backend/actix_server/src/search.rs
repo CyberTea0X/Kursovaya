@@ -1,6 +1,6 @@
 use crate::database::{self, DBconfig, User};
 use actix_web::{
-    dev::ConnectionInfo, get, post, web, App, HttpResponse, HttpServer, Responder,
+    post, web, Responder,
     Result as ActxResult,
 };
 use mysql::Conn;

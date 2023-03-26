@@ -1,4 +1,4 @@
-use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder, Result as ActxResult};
+use actix_web::{get, post, web, App, HttpServer, Responder, Result as ActxResult};
 use database::DBconfig;
 use serde_json::json;
 

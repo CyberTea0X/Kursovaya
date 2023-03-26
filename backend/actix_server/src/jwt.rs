@@ -1,7 +1,6 @@
 use crate::claims::JwtConfig;
 use crate::claims::{create_jwt, Claims};
 use actix_web::Error;
-use serde::Deserialize;
 
 pub fn create_token(
     email: &str,

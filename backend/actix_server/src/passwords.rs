@@ -1,6 +1,6 @@
 use mysql::Conn;
 
-use crate::database::{self, FindUserRequest};
+use crate::database::{self};
 
 pub fn is_valid_password(password: &str) -> bool {
     let restricted_chars = ['\\', '/', ':', ';', '\"', '\''];

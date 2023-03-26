@@ -2,7 +2,7 @@ use crate::{
     database::{self, DBconfig},
     email, passwords,
 };
-use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder, Result as ActxResult};
+use actix_web::{post, web, Responder, Result as ActxResult};
 use serde::Deserialize;
 use serde_json::json;
 

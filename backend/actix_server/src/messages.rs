@@ -1,15 +1,12 @@
 use std::collections::HashMap;
 
-use crate::database::{self, Chat, DBconfig, User, ReadMessagesRequest};
-use crate::{email, passwords, user};
+use crate::database::{self, DBconfig, ReadMessagesRequest};
+use crate::{email, passwords};
 use actix_web::{
-    dev::ConnectionInfo, get, post, web, App, HttpResponse, HttpServer, Responder,
+    post, web, Responder,
     Result as ActxResult,
 };
-use mysql::Conn;
-use serde::{Deserialize, Serialize};
 use serde_json::json;
-use similar_string::compare_similarity;
 #[post("/read/{email1}/{password}/{email2}")]
 pub async fn read_messages_service(
     path: web::Path<(String, String, String)>,

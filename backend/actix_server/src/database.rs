@@ -1,4 +1,3 @@
-use crate::email;
 use crate::register::RegisterInfo;
 use mysql;
 use mysql::prelude::{FromRow, Queryable};
