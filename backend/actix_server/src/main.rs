@@ -85,7 +85,8 @@ async fn main() -> std::io::Result<()> {
                 web::scope("api/messages")
                     .service(messages::send_message_service)
                     .service(messages::get_messages_service)
-                )
+                    .service(messages::read_messages_service),
+            )
             .service(
                 web::scope("/api/search")
                     .service(search::search_login_service)

@@ -123,6 +123,11 @@ pub struct Message {
     pub is_read: bool,
 }
 
+#[derive(Serialize, Deserialize, Default, Debug)]
+pub struct ReadMessagesRequest {
+    pub id_list: Option<Vec<u32>>,
+}
+
 impl FromRow for Message {
     fn from_row(row: mysql::Row) -> Self {
         let (id, chat_id, content, owner_id, owner_name, send_time, is_read) = mysql::from_row(row);
@@ -153,6 +158,24 @@ impl FromRow for Message {
             is_read,
         })
     }
+}
+
+pub fn mark_messages_as_read(
+    connection: &mut Conn,
+    chat_id: u32,
+    messages: &Vec<u32>
+) -> Result<(), mysql::Error> {
+    if messages.is_empty() {
+        return Ok(());
+    }
+    let items = messages.iter().map(|i| i.to_string()).collect::<Vec<String>>().join(",");
+    let stmt = format!("UPDATE MESSAGES SET is_read=true WHERE id IN ({}) AND chat_id=:chat_id", items);
+    connection.exec_drop(
+        stmt,
+        params! {
+            chat_id,
+        }
+    )
 }
 
 pub fn get_messages(

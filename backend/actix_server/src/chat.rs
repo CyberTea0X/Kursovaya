@@ -60,7 +60,7 @@ pub async fn get_user_chats_service(
         if chats.is_err() {
             return ("FAILED".to_owned(), "Database error".to_owned(), Vec::new());
         }
-        return ("Ok".to_owned(), "".to_owned(), chats.unwrap());
+        return ("OK".to_owned(), "".to_owned(), chats.unwrap());
     })();
     Ok(web::Json(json!({
         "status": status,
@@ -122,7 +122,7 @@ pub async fn delete_chat_service(
         if !database::delete_chat(&mut connection, user1.id, user2.id).is_ok() {
             return ("FAILED".to_owned(), "Database error".to_owned());
         }
-        return ("Ok".to_owned(), "".to_owned());
+        return ("OK".to_owned(), "".to_owned());
     })();
     Ok(web::Json(json!({
         "status": status,
@@ -183,7 +183,7 @@ pub async fn create_chat_service(
         if !database::create_chat(&mut connection, user1.id, user2.id).is_ok() {
             return ("FAILED".to_owned(), "Database error".to_owned());
         }
-        return ("Ok".to_owned(), "".to_owned());
+        return ("OK".to_owned(), "".to_owned());
     })();
     Ok(web::Json(json!({
         "status": status,
@@ -241,7 +241,7 @@ pub async fn is_chat_exists_service(
         if database::is_chat_exists(&mut connection, user1.id, user2.id) {
             return ("OK".to_owned(), "Exists".to_owned());
         }
-        return ("Ok".to_owned(), "Does not exist".to_owned());
+        return ("OK".to_owned(), "Does not exist".to_owned());
     })();
     Ok(web::Json(json!({
         "status": status,
