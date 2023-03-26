@@ -151,12 +151,20 @@ pub fn delete_chat(connection: &mut Conn, userid1: u32, userid2: u32) -> Result<
 }
 
 pub fn is_chat_exists(connection: &mut Conn, userid1: u32, userid2: u32) -> bool {
-    let chat = find_chats(connection, userid1, userid2);
+    let chat = find_chat(connection, userid1, userid2);
     if chat.is_err() {
         println!("{:?}", chat);
         return true;
     }
-    chat.unwrap().last().is_some()
+    chat.unwrap().is_some()
+}
+
+pub fn find_chat(
+    connection: &mut Conn,
+    userid1: u32,
+    userid2: u32,
+) -> Result<Option<Chat>, mysql::Error> {
+    Ok(find_chats(connection, userid1, userid2)?.pop())
 }
 
 pub fn find_chats(
