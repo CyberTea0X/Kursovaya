@@ -7,6 +7,7 @@ pub mod claims;
 pub mod database;
 pub mod email;
 pub mod jwt;
+pub mod messages;
 pub mod passwords;
 pub mod register;
 pub mod search;
@@ -79,6 +80,7 @@ async fn main() -> std::io::Result<()> {
                     .service(chat::delete_chat_service)
                     .service(chat::get_user_chats_service),
             )
+            .service(web::scope("api/messages").service(messages::send_message_service))
             .service(
                 web::scope("/api/search")
                     .service(search::search_login_service)

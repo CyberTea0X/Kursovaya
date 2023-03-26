@@ -106,10 +106,34 @@ pub struct EditRequest {
 
 #[derive(Serialize, Deserialize, Default, Debug)]
 pub struct Chat {
-    id: u32,
-    userid1: u32,
-    userid2: u32,
-    created_at: Option<String>,
+    pub id: u32,
+    pub userid1: u32,
+    pub userid2: u32,
+    pub created_at: Option<String>,
+}
+
+pub fn send_message(
+    connection: &mut Conn,
+    chat_id: u32,
+    owner_id: u32,
+    owner_name: &str,
+    content: &str,
+) -> Result<(), mysql::Error> {
+    let send_time = chrono::offset::Local::now()
+        .format("%Y-%m-%d %H-%M-%S")
+        .to_string();
+    connection.exec_drop(
+        "INSERT INTO messages (chat_id, content, owner_id, owner_name, send_time, is_read)
+        VALUES(:chat_id, :content, :owner_id, :owner_name, :send_time, :is_read)",
+        params! {
+            chat_id,
+            content,
+            owner_id,
+            owner_name,
+            send_time,
+            "is_read" => false,
+        },
+    )
 }
 
 pub fn get_user_chats(connection: &mut Conn, userid1: u32) -> Result<Vec<Chat>, mysql::Error> {
