@@ -1,11 +1,18 @@
 use crate::email;
 use crate::register::RegisterInfo;
 use mysql;
-use mysql::prelude::Queryable;
+use mysql::prelude::{FromRow, Queryable};
 use mysql::{params, Conn, OptsBuilder};
 use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::io::Read;
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct FindUserRequest {
+    email: Option<String>,
+    id: Option<u32>,
+}
+
 #[derive(Serialize, Deserialize, Clone)]
 pub struct DBconfig {
     pub ip: String,
@@ -29,6 +36,58 @@ pub struct User {
     pub gender: Option<String>,
     pub last_online: Option<String>,
     pub reg_date: Option<String>,
+}
+
+impl FromRow for User {
+    fn from_row(row: mysql::Row) -> Self {
+        Self {
+            id: row.get("id").unwrap(),
+            username: row.get("username").unwrap(),
+            email: row.get("email").unwrap(),
+            password: row.get("password").unwrap(),
+            firstname: row.get("firstname").unwrap(),
+            lastname: row.get("lastname").unwrap(),
+            rating: row.get("rating").unwrap(),
+            about: row.get("about").unwrap(),
+            age: row.get("age").unwrap(),
+            gender: row.get("gender").unwrap(),
+            last_online: row.get("last_online").unwrap(),
+            reg_date: row.get("reg_date").unwrap(),
+        }
+    }
+    fn from_row_opt(row: mysql::Row) -> Result<Self, mysql::FromRowError>
+    where
+        Self: Sized,
+    {
+        let (
+            id,
+            username,
+            email,
+            password,
+            firstname,
+            lastname,
+            rating,
+            about,
+            age,
+            gender,
+            last_online,
+            reg_date,
+        ) = mysql::from_row_opt(row)?;
+        Ok(Self {
+            id,
+            username,
+            email,
+            password,
+            firstname,
+            lastname,
+            rating,
+            about,
+            age,
+            gender,
+            last_online,
+            reg_date,
+        })
+    }
 }
 
 #[derive(Serialize, Deserialize, Default)]
@@ -55,20 +114,17 @@ pub struct Chat {
 
 pub fn get_user_chats(connection: &mut Conn, userid1: u32) -> Result<Vec<Chat>, mysql::Error> {
     connection.query_map(
-        format!("SELECT * FROM chats WHERE userid1 = {0} OR userid2 = {0}", userid1),
-        |(
+        format!(
+            "SELECT * FROM chats WHERE userid1 = {0} OR userid2 = {0}",
+            userid1
+        ),
+        |(id, userid1, userid2, created_at)| Chat {
             id,
             userid1,
             userid2,
-            created_at
-        )|
-            Chat {
-                id,
-                userid1,
-                userid2,
-                created_at
-            }
-        )
+            created_at,
+        },
+    )
 }
 
 pub fn create_chat(connection: &mut Conn, userid1: u32, userid2: u32) -> Result<(), mysql::Error> {
@@ -86,10 +142,11 @@ pub fn create_chat(connection: &mut Conn, userid1: u32, userid2: u32) -> Result<
 pub fn delete_chat(connection: &mut Conn, userid1: u32, userid2: u32) -> Result<(), mysql::Error> {
     connection.exec_drop(
         r"DELETE FROM chats WHERE (userid1 = :userid1 AND userid2 = :userid2)
-        OR (userid1 = :userid2 AND userid2 = :userid1)", params! { 
+        OR (userid1 = :userid2 AND userid2 = :userid1)",
+        params! {
             "userid1" => userid1,
             "userid2" => userid2
-        }
+        },
     )
 }
 
@@ -102,7 +159,11 @@ pub fn is_chat_exists(connection: &mut Conn, userid1: u32, userid2: u32) -> bool
     chat.unwrap().last().is_some()
 }
 
-pub fn find_chats(connection: &mut Conn, userid1: u32, userid2: u32) -> Result<Vec<Chat>, mysql::Error> {
+pub fn find_chats(
+    connection: &mut Conn,
+    userid1: u32,
+    userid2: u32,
+) -> Result<Vec<Chat>, mysql::Error> {
     connection.query_map(
         format!("SELECT id, userid1, userid2, created_at FROM chats WHERE (userid1 = {0} AND userid2 = {1})
         OR (userid1 = {1} AND userid2 = {0})", userid1, userid2),
@@ -130,39 +191,12 @@ pub fn get_all_users(
         r"SELECT id, username, email, password, firstname,
     lastname, rating, about, age, gender, last_online, reg_date
         FROM `users`",
-        |(
-            id,
-            username,
-            email,
-            password,
-            firstname,
-            lastname,
-            rating,
-            about,
-            age,
-            gender,
-            last_online,
-            reg_date,
-        )| {
-            let password = if hide_passwords {
-                "secret".to_string()
-            } else {
-                password
-            };
-            User {
-                id,
-                username,
-                email,
-                password,
-                firstname,
-                lastname,
-                rating,
-                about,
-                age,
-                gender,
-                last_online,
-                reg_date,
+        |user| {
+            let mut user: User = user;
+            if hide_passwords {
+                user.password = "secret".to_owned();
             }
+            user
         },
     )
 }
@@ -325,13 +359,29 @@ pub fn add_visit(
     )
 }
 
-pub fn find_user(connection: &mut Conn, email: &str, hide_password: bool) -> Option<User> {
-    let query_result = get_all_users(connection, hide_password);
-    if query_result.is_err() {
-        return None;
+pub fn find_user(
+    connection: &mut Conn,
+    email: Option<&str>,
+    id: Option<u32>,
+    hide_password: bool,
+) -> Option<User> {
+    email
+        .and_then(|e| find_user_by_email(connection, e, hide_password))
+        .or_else(|| id.and_then(|i| find_user_by_id(connection, i, hide_password)))
+}
+
+pub fn find_user_by_id(connection: &mut Conn, id: u32, hide_password: bool) -> Option<User> {
+    match get_all_users(connection, hide_password) {
+        Ok(users) => users.into_iter().find(|user| user.id == id),
+        Err(_) => None,
     }
-    let query_result = query_result.unwrap();
-    query_result.into_iter().find(|user| user.email == email)
+}
+
+pub fn find_user_by_email(connection: &mut Conn, email: &str, hide_password: bool) -> Option<User> {
+    match get_all_users(connection, hide_password) {
+        Ok(users) => users.into_iter().find(|user| user.email == email),
+        Err(_) => None,
+    }
 }
 
 pub fn parse_config() -> DBconfig {

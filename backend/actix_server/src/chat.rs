@@ -1,4 +1,4 @@
-use crate::database::{self, DBconfig, User, Chat};
+use crate::database::{self, Chat, DBconfig, User};
 use crate::{email, passwords};
 use actix_web::{
     dev::ConnectionInfo, get, post, web, App, HttpResponse, HttpServer, Responder,
@@ -20,14 +20,14 @@ pub async fn get_user_chats_service(
             return (
                 "FAILED".to_owned(),
                 "Invalid email adress".to_owned(),
-                Vec::new()
+                Vec::new(),
             );
         }
         if !passwords::is_valid_password(&password) {
             return (
                 "FAILED".to_owned(),
                 "Password contains invalid characters or too small".to_owned(),
-                Vec::new()
+                Vec::new(),
             );
         }
         let connection = database::try_connect(&db_config, 3);
@@ -40,13 +40,21 @@ pub async fn get_user_chats_service(
             );
         }
         let mut connection = connection.unwrap();
-        let user = database::find_user(&mut connection, &email, false);
+        let user = database::find_user_by_email(&mut connection, &email, false);
         if user.is_none() {
-            return ("FAILED".to_owned(), "User does not exist".to_owned(), Vec::new());
+            return (
+                "FAILED".to_owned(),
+                "User does not exist".to_owned(),
+                Vec::new(),
+            );
         }
         let user = user.unwrap();
         if user.password != password {
-            return ("FAILED".to_owned(), "Invalid password".to_owned(), Vec::new());
+            return (
+                "FAILED".to_owned(),
+                "Invalid password".to_owned(),
+                Vec::new(),
+            );
         }
         let chats = database::get_user_chats(&mut connection, user.id);
         if chats.is_err() {
@@ -95,7 +103,7 @@ pub async fn delete_chat_service(
             );
         }
         let mut connection = connection.unwrap();
-        let user1 = database::find_user(&mut connection, &email1, false);
+        let user1 = database::find_user_by_email(&mut connection, &email1, false);
         if user1.is_none() {
             return ("FAILED".to_owned(), "User1 does not exist".to_owned());
         }
@@ -103,7 +111,7 @@ pub async fn delete_chat_service(
         if user1.password != password {
             return ("FAILED".to_owned(), "Invalid password".to_owned());
         }
-        let user2 = database::find_user(&mut connection, &email2, true);
+        let user2 = database::find_user_by_email(&mut connection, &email2, true);
         if user2.is_none() {
             return ("FAILED".to_owned(), "User2 does not exist".to_owned());
         }
@@ -121,7 +129,6 @@ pub async fn delete_chat_service(
         "reason": fail_reason,
     })))
 }
-
 
 #[post("/create/{email1}/{password}/{email2}")]
 pub async fn create_chat_service(
@@ -157,7 +164,7 @@ pub async fn create_chat_service(
             );
         }
         let mut connection = connection.unwrap();
-        let user1 = database::find_user(&mut connection, &email1, false);
+        let user1 = database::find_user_by_email(&mut connection, &email1, false);
         if user1.is_none() {
             return ("FAILED".to_owned(), "User1 does not exist".to_owned());
         }
@@ -165,7 +172,7 @@ pub async fn create_chat_service(
         if user1.password != password {
             return ("FAILED".to_owned(), "Invalid password".to_owned());
         }
-        let user2 = database::find_user(&mut connection, &email2, true);
+        let user2 = database::find_user_by_email(&mut connection, &email2, true);
         if user2.is_none() {
             return ("FAILED".to_owned(), "User2 does not exist".to_owned());
         }

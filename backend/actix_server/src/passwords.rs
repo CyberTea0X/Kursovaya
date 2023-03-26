@@ -1,6 +1,6 @@
 use mysql::Conn;
 
-use crate::database;
+use crate::database::{self, FindUserRequest};
 
 pub fn is_valid_password(password: &str) -> bool {
     let restricted_chars = ['\\', '/', ':', ';', '\"', '\''];
@@ -8,14 +8,14 @@ pub fn is_valid_password(password: &str) -> bool {
 }
 
 pub fn check_password(connection: &mut Conn, email: &str, password: &str) -> (String, String) {
-    let user = database::find_user(connection, &email, false);
+    let user = database::find_user_by_email(connection, &email, false);
     if user.is_none() {
-        return ("FAILED".to_string(), "User does not exist".to_string());
+        return ("FAILED".to_owned(), "User does not exist".to_owned());
     }
     let user = user.unwrap();
     if user.password == password {
-        return ("OK".to_string(), "".to_string());
+        return ("OK".to_owned(), "".to_owned());
     } else {
-        return ("FAILED".to_string(), "Invalid password".to_string());
+        return ("FAILED".to_owned(), "Invalid password".to_owned());
     }
 }

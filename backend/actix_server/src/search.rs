@@ -21,21 +21,17 @@ pub async fn search_popular_service(db_config: web::Data<DBconfig>) -> ActxResul
         if connection.is_err() {
             println!("Failed to connect to database");
             return (
-                "FAILED".to_string(),
-                "Failed to connect to database".to_string(),
+                "FAILED".to_owned(),
+                "Failed to connect to database".to_owned(),
                 Vec::new(),
             );
         }
         let mut connection = connection.unwrap();
         let items = search_popular(&mut connection);
         if items.is_err() {
-            return (
-                "FAILED".to_string(),
-                "Database error".to_string(),
-                Vec::new(),
-            );
+            return ("FAILED".to_owned(), "Database error".to_owned(), Vec::new());
         }
-        return ("OK".to_string(), "".to_string(), items.unwrap());
+        return ("OK".to_owned(), "".to_owned(), items.unwrap());
     })();
     Ok(web::Json(json!({
         "items": items,
@@ -55,21 +51,17 @@ pub async fn search_login_service(
         if connection.is_err() {
             println!("Failed to connect to database");
             return (
-                "FAILED".to_string(),
-                "Failed to connect to database".to_string(),
+                "FAILED".to_owned(),
+                "Failed to connect to database".to_owned(),
                 Vec::new(),
             );
         }
         let mut connection = connection.unwrap();
         let users = search_login(&mut connection, &login);
         if users.is_err() {
-            return (
-                "FAILED".to_string(),
-                "Database error".to_string(),
-                Vec::new(),
-            );
+            return ("FAILED".to_owned(), "Database error".to_owned(), Vec::new());
         }
-        return ("OK".to_string(), "".to_string(), users.unwrap());
+        return ("OK".to_owned(), "".to_owned(), users.unwrap());
     })();
     Ok(web::Json(json!({
         "items": items,
@@ -88,21 +80,17 @@ pub async fn search_name_service(
         if connection.is_err() {
             println!("Failed to connect to database");
             return (
-                "FAILED".to_string(),
-                "Failed to connect to database".to_string(),
+                "FAILED".to_owned(),
+                "Failed to connect to database".to_owned(),
                 Vec::new(),
             );
         }
         let mut connection = connection.unwrap();
         let users = search_name(&mut connection, &info);
         if users.is_err() {
-            return (
-                "FAILED".to_string(),
-                "Database error".to_string(),
-                Vec::new(),
-            );
+            return ("FAILED".to_owned(), "Database error".to_owned(), Vec::new());
         }
-        return ("OK".to_string(), "".to_string(), users.unwrap());
+        return ("OK".to_owned(), "".to_owned(), users.unwrap());
     })();
     Ok(web::Json(json!({
         "items": items,
@@ -122,21 +110,17 @@ pub async fn search_text_service(
         if connection.is_err() {
             println!("Failed to connect to database");
             return (
-                "FAILED".to_string(),
-                "Failed to connect to database".to_string(),
+                "FAILED".to_owned(),
+                "Failed to connect to database".to_owned(),
                 Vec::new(),
             );
         }
         let mut connection = connection.unwrap();
         let users = search_text(&mut connection, &text);
         if users.is_err() {
-            return (
-                "FAILED".to_string(),
-                "Database error".to_string(),
-                Vec::new(),
-            );
+            return ("FAILED".to_owned(), "Database error".to_owned(), Vec::new());
         }
-        return ("OK".to_string(), "".to_string(), users.unwrap());
+        return ("OK".to_owned(), "".to_owned(), users.unwrap());
     })();
     Ok(web::Json(json!({
         "items": items,
@@ -151,11 +135,11 @@ pub fn search_text(connection: &mut Conn, text: &str) -> Result<Vec<User>, mysql
         let user_params = [
             user.username.clone(),
             user.email.clone(),
-            user.firstname.as_deref().unwrap_or_default().to_string(),
-            user.lastname.as_deref().unwrap_or_default().to_string(),
-            user.gender.as_deref().unwrap_or_default().to_string(),
-            user.about.as_deref().unwrap_or_default().to_string(),
-            user.age.as_deref().unwrap_or_default().to_string(),
+            user.firstname.as_deref().unwrap_or_default().to_owned(),
+            user.lastname.as_deref().unwrap_or_default().to_owned(),
+            user.gender.as_deref().unwrap_or_default().to_owned(),
+            user.about.as_deref().unwrap_or_default().to_owned(),
+            user.age.as_deref().unwrap_or_default().to_owned(),
         ]
         .join(" ");
         let similarity = -compare_similarity(&text.to_lowercase(), &user_params.to_lowercase());
@@ -166,12 +150,12 @@ pub fn search_text(connection: &mut Conn, text: &str) -> Result<Vec<User>, mysql
 
 pub fn search_name(connection: &mut Conn, info: &SeachName) -> Result<Vec<User>, mysql::Error> {
     let mut query_result = database::get_all_users(connection, true)?;
-    let firstname = info.firstname.as_deref().unwrap_or_default().to_string();
-    let lastname = info.lastname.as_deref().unwrap_or_default().to_string();
+    let firstname = info.firstname.as_deref().unwrap_or_default().to_owned();
+    let lastname = info.lastname.as_deref().unwrap_or_default().to_owned();
     let req_first_and_lastname = format!("{firstname} {lastname}").to_lowercase();
     query_result.sort_by_key(|user| {
-        let firstname = user.firstname.as_deref().unwrap_or_default().to_string();
-        let lastname = user.lastname.as_deref().unwrap_or_default().to_string();
+        let firstname = user.firstname.as_deref().unwrap_or_default().to_owned();
+        let lastname = user.lastname.as_deref().unwrap_or_default().to_owned();
         let first_and_lastname = format!("{firstname} {lastname}").to_lowercase();
         let similarity = -compare_similarity(&req_first_and_lastname, &first_and_lastname);
         (similarity * 10.0).round() as i32

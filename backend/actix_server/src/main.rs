@@ -21,20 +21,20 @@ async fn login_service(
 
     let (status, fail_reason) = (|| {
         if !email::is_valid_email(email.as_str()) {
-            return ("FAILED".to_string(), "Invalid email adresss".to_string());
+            return ("FAILED".to_owned(), "Invalid email adresss".to_owned());
         }
         if !passwords::is_valid_password(&password) {
             return (
-                "FAILED".to_string(),
-                "Password contains invalid characters or too small".to_string(),
+                "FAILED".to_owned(),
+                "Password contains invalid characters or too small".to_owned(),
             );
         }
         let connection = database::try_connect(&db_config, 3);
         if connection.is_err() {
             println!("Failed to connect to database");
             return (
-                "FAILED".to_string(),
-                "Failed to connect to database".to_string(),
+                "FAILED".to_owned(),
+                "Failed to connect to database".to_owned(),
             );
         }
         let mut connection = connection.unwrap();
@@ -77,8 +77,8 @@ async fn main() -> std::io::Result<()> {
                 web::scope("api/chat")
                     .service(chat::create_chat_service)
                     .service(chat::delete_chat_service)
-                    .service(chat::get_user_chats_service)
-                )
+                    .service(chat::get_user_chats_service),
+            )
             .service(
                 web::scope("/api/search")
                     .service(search::search_login_service)
@@ -89,8 +89,8 @@ async fn main() -> std::io::Result<()> {
             .service(
                 web::scope("/api")
                     .service(login_service)
-                    .service(register::register_service)
-                    .service(user::fetch_user_profile)
+                    .service(register::register_user_service)
+                    .service(user::user_profile_service)
                     .service(check_db_status)
                     .service(user::edit_user_service)
                     .service(user::delete_user_service)
