@@ -6,6 +6,12 @@ use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder, Result
 use serde::Deserialize;
 use serde_json::json;
 
+#[derive(Deserialize, Debug, Default)]
+pub struct FindUserRequest {
+    id: Option<u32>,
+    email: Option<String>,
+}
+
 #[post("delete/{email}/{password}")]
 pub(crate) async fn delete_user_service(
     path: web::Path<(String, String)>,
@@ -14,20 +20,20 @@ pub(crate) async fn delete_user_service(
     let (email, password) = path.into_inner();
     let (status, fail_reason) = (|| {
         if !email::is_valid_email(email.as_str()) {
-            return ("FAILED".to_string(), "Invalid email adresss".to_string());
+            return ("FAILED".to_owned(), "Invalid email adresss".to_owned());
         }
         if !passwords::is_valid_password(&password) {
             return (
-                "FAILED".to_string(),
-                "Password contains invalid characters or too small".to_string(),
+                "FAILED".to_owned(),
+                "Password contains invalid characters or too small".to_owned(),
             );
         }
         let connection = database::try_connect(&db_config, 3);
         if connection.is_err() {
             println!("Failed to connect to database");
             return (
-                "FAILED".to_string(),
-                "Failed to connect to database".to_string(),
+                "FAILED".to_owned(),
+                "Failed to connect to database".to_owned(),
             );
         }
         let mut connection = connection.unwrap();
@@ -37,10 +43,10 @@ pub(crate) async fn delete_user_service(
             _ => return password_check,
         }
         match database::delete_user(&mut connection, &email) {
-            Ok(_) => return ("OK".to_string(), "".to_string()),
+            Ok(_) => return ("OK".to_owned(), "".to_owned()),
             Err(err) => {
                 println!("{:?}", err);
-                return ("FAILED".to_string(), "Database error".to_string());
+                return ("FAILED".to_owned(), "Database error".to_owned());
             }
         }
     })();
@@ -60,8 +66,8 @@ pub(crate) async fn edit_user_service(
     let (status, fail_reason) = (|| {
         if info.rating.is_some() {
             return (
-                "FAILED".to_string(),
-                "You have not enough permissions to modify rating".to_string(),
+                "FAILED".to_owned(),
+                "You have not enough permissions to modify rating".to_owned(),
             );
         }
         let raw_info = [
@@ -76,8 +82,8 @@ pub(crate) async fn edit_user_service(
         ];
         if raw_info.iter().flatten().collect::<Vec<&&String>>().len() == 0 {
             return (
-                "FAILED".to_string(),
-                "Query must not be empty. What you want to edit?".to_string(),
+                "FAILED".to_owned(),
+                "Query must not be empty. What you want to edit?".to_owned(),
             );
         }
         if !raw_info
@@ -85,26 +91,23 @@ pub(crate) async fn edit_user_service(
             .flatten()
             .all(|text| database::is_valid_sql(&text))
         {
-            return (
-                "FAILED".to_string(),
-                "Some query attr is invalid".to_string(),
-            );
+            return ("FAILED".to_owned(), "Some query attr is invalid".to_owned());
         }
         if !email::is_valid_email(email.as_str()) {
-            return ("FAILED".to_string(), "Invalid email adresss".to_string());
+            return ("FAILED".to_owned(), "Invalid email adresss".to_owned());
         }
         if !passwords::is_valid_password(&password) {
             return (
-                "FAILED".to_string(),
-                "Password contains invalid characters or too small".to_string(),
+                "FAILED".to_owned(),
+                "Password contains invalid characters or too small".to_owned(),
             );
         }
         let connection = database::try_connect(&db_config, 3);
         if connection.is_err() {
             println!("Failed to connect to database");
             return (
-                "FAILED".to_string(),
-                "Failed to connect to database".to_string(),
+                "FAILED".to_owned(),
+                "Failed to connect to database".to_owned(),
             );
         }
         let mut connection = connection.unwrap();
@@ -114,20 +117,20 @@ pub(crate) async fn edit_user_service(
             _ => return password_check,
         }
         match database::edit_user(&mut connection, &email, &info) {
-            Ok(_) => return ("OK".to_string(), "".to_string()),
+            Ok(_) => return ("OK".to_owned(), "".to_owned()),
             Err(err) => {
                 println!("{:?}", err);
                 let err_content = err.to_string();
                 if err_content.contains("ERROR 1406") {
                     return (
-                        "FAILED".to_string(),
+                        "FAILED".to_owned(),
                         // MySqlError { ERROR 1406 (22001): Data too long for column 'firstname' at row 1 }
                         err_content[err_content.find("Data").unwrap()
                             ..err_content.rfind(" at row 1").unwrap()]
-                            .to_string(),
+                            .to_owned(),
                     );
                 }
-                return ("FAILED".to_string(), "Database error".to_string());
+                return ("FAILED".to_owned(), "Database error".to_owned());
             }
         }
     })();
@@ -137,14 +140,20 @@ pub(crate) async fn edit_user_service(
     })))
 }
 
-#[post("/profile/{email}")] // <- define path parameters
-pub(crate) async fn fetch_user_profile(
-    path: web::Path<String>,
+#[post("/profile")] // <- define path parameters
+pub(crate) async fn user_profile_service(
     db_config: web::Data<DBconfig>,
+    info: web::Query<FindUserRequest>,
 ) -> ActxResult<impl Responder> {
-    let email = path.into_inner();
     let (status, fail_reason, user) = (|| {
-        if !email::is_valid_email(email.as_str()) {
+        if info.email.is_none() && info.id.is_none() {
+            return (
+                "FAILED",
+                "id and email are not specified. Can't find user without any of them",
+                database::User::default(),
+            );
+        }
+        if info.email.is_some() && !email::is_valid_email(info.email.as_ref().unwrap()) {
             return ("FAILED", "Invalid email adresss", database::User::default());
         }
         let connection = database::try_connect(&db_config, 3);
@@ -157,7 +166,7 @@ pub(crate) async fn fetch_user_profile(
             );
         }
         let mut connection = connection.unwrap();
-        let user = database::find_user(&mut connection, &email, true);
+        let user = database::find_user(&mut connection, info.email.as_deref(), info.id, true);
         if user.is_none() {
             return ("FAILED", "User does not exist", database::User::default());
         }
@@ -178,38 +187,38 @@ pub(crate) async fn visit_user_service(
     let (email, password, visited_email) = path.into_inner();
     let (status, fail_reason) = (|| {
         if !email::is_valid_email(email.as_str()) {
-            return ("FAILED".to_string(), "Invalid email adresss".to_string());
+            return ("FAILED".to_owned(), "Invalid email adresss".to_owned());
         }
         if !passwords::is_valid_password(&password) {
             return (
-                "FAILED".to_string(),
-                "Password contains invalid characters or too small".to_string(),
+                "FAILED".to_owned(),
+                "Password contains invalid characters or too small".to_owned(),
             );
         }
         let connection = database::try_connect(&db_config, 3);
         if connection.is_err() {
             println!("Failed to connect to database");
             return (
-                "FAILED".to_string(),
-                "Failed to connect to database".to_string(),
+                "FAILED".to_owned(),
+                "Failed to connect to database".to_owned(),
             );
         }
         let mut connection = connection.unwrap();
-        let user = database::find_user(&mut connection, &email, false);
+        let user = database::find_user_by_email(&mut connection, &email, false);
         if user.is_none() {
-            return ("FAILED".to_string(), "Visitor does not exist".to_string());
+            return ("FAILED".to_owned(), "Visitor does not exist".to_owned());
         }
         let user = user.unwrap();
         if user.password != password {
-            return ("FAILED".to_string(), "Invalid password".to_string());
+            return ("FAILED".to_owned(), "Invalid password".to_owned());
         }
-        let user2 = database::find_user(&mut connection, &visited_email, false);
+        let user2 = database::find_user_by_email(&mut connection, &visited_email, false);
         if user2.is_none() {
-            return ("FAILED".to_string(), "Visited does not exist".to_string());
+            return ("FAILED".to_owned(), "Visited does not exist".to_owned());
         }
         let user2 = user2.unwrap();
         if database::visit_exists(&mut connection, &user.email, user2.id) {
-            return ("FAILED".to_string(), "Already visited".to_string());
+            return ("FAILED".to_owned(), "Already visited".to_owned());
         }
         let info = database::EditRequest {
             username: None,
@@ -224,12 +233,12 @@ pub(crate) async fn visit_user_service(
             reg_date: None,
         };
         if database::add_visit(&mut connection, &user.email, user2.id).is_err() {
-            return ("FAILED".to_string(), "Database error".to_string());
+            return ("FAILED".to_owned(), "Database error".to_owned());
         }
         if database::edit_user(&mut connection, &email, &info).is_err() {
-            return ("FAILED".to_string(), "Database error".to_string());
+            return ("FAILED".to_owned(), "Database error".to_owned());
         }
-        return ("OK".to_string(), "".to_string());
+        return ("OK".to_owned(), "".to_owned());
     })();
     Ok(web::Json(json!({
         "status": status,
