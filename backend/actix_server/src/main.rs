@@ -1,3 +1,5 @@
+use actix_files as fs;
+
 use actix_web::{get, post, web, App, HttpServer, Responder, Result as ActxResult};
 use database::DBconfig;
 use serde_json::json;
@@ -12,6 +14,7 @@ pub mod passwords;
 pub mod register;
 pub mod search;
 pub mod user;
+pub mod image;
 
 #[post("/login/{email}/{password}")] // <- define path parameters
 async fn login_service(
@@ -74,6 +77,12 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(|| {
         App::new()
             .app_data(web::Data::new(database::parse_config()))
+            .service(
+                web::scope("api/images")
+                    .service(image::load_image_service)
+                    .service(image::get_image_service)
+                    .service(fs::Files::new("/", "./users/.").show_files_listing())
+            )
             .service(
                 web::scope("api/chat")
                     .service(chat::create_chat_service)

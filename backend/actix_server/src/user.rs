@@ -1,3 +1,5 @@
+use std::fs;
+
 use crate::{
     database::{self, DBconfig},
     email, passwords,
@@ -42,13 +44,18 @@ pub(crate) async fn delete_user_service(
             ("OK", "") => {}
             _ => return password_check,
         }
-        match database::delete_user(&mut connection, &email) {
-            Ok(_) => return ("OK".to_owned(), "".to_owned()),
-            Err(err) => {
-                println!("{:?}", err);
-                return ("FAILED".to_owned(), "Database error".to_owned());
-            }
+        let id = match database::user_email_to_id(&mut connection, &email) {
+            Ok(Some(id)) => id,
+            Ok(None) => return ("FAILED".to_owned(), "User already deleted".to_owned()),
+            Err(_) => return ("FAILED".to_owned(), "Database error".to_owned()),
+        };
+        if let Err(err) = database::delete_user(&mut connection, &email) {
+            println!("{:?}", err);
+            return ("FAILED".to_owned(), "Database error".to_owned());
         }
+        let dir_name = format!("users/{}", id);
+        fs::remove_dir_all(dir_name).unwrap();
+        return ("OK".to_owned(), "".to_owned())
     })();
     Ok(web::Json(json!({
         "status": status,
@@ -116,23 +123,21 @@ pub(crate) async fn edit_user_service(
             ("OK", "") => {}
             _ => return password_check,
         }
-        match database::edit_user(&mut connection, &email, &info) {
-            Ok(_) => return ("OK".to_owned(), "".to_owned()),
-            Err(err) => {
-                println!("{:?}", err);
-                let err_content = err.to_string();
-                if err_content.contains("ERROR 1406") {
-                    return (
-                        "FAILED".to_owned(),
-                        // MySqlError { ERROR 1406 (22001): Data too long for column 'firstname' at row 1 }
-                        err_content[err_content.find("Data").unwrap()
-                            ..err_content.rfind(" at row 1").unwrap()]
-                            .to_owned(),
-                    );
-                }
-                return ("FAILED".to_owned(), "Database error".to_owned());
+        if let Err(err) = database::edit_user(&mut connection, &email, &info) {
+            println!("{:?}", err);
+            let err_content = err.to_string();
+            if err_content.contains("ERROR 1406") {
+                return (
+                    "FAILED".to_owned(),
+                    // MySqlError { ERROR 1406 (22001): Data too long for column 'firstname' at row 1 }
+                    err_content[err_content.find("Data").unwrap()
+                        ..err_content.rfind(" at row 1").unwrap()]
+                        .to_owned(),
+                );
             }
+            return ("FAILED".to_owned(), "Database error".to_owned());
         }
+        return ("OK".to_owned(), "".to_owned())
     })();
     Ok(web::Json(json!({
         "status": status,

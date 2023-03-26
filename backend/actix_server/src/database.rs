@@ -295,6 +295,14 @@ pub fn find_chats(
         )
 }
 
+pub fn user_email_to_id(
+    connection: &mut Conn,
+    email: &str,
+) -> Result<Option<u32>, mysql::Error> {
+    let query = format!("SELECT id FROM `users` WHERE email ='{}'", email);
+    connection.query_first(query)
+}
+
 pub fn get_all_users(
     connection: &mut Conn,
     hide_passwords: bool,
@@ -427,17 +435,11 @@ pub fn delete_user(connection: &mut Conn, email: &str) -> Result<(), mysql::Erro
     )
 }
 
-pub fn user_exists(connection: &mut Conn, email: &str) -> bool {
-    match connection.query::<String, String>(format!(
+pub fn user_exists(connection: &mut Conn, email: &str) -> Result<bool, mysql::Error> {
+    Ok(connection.query_first::<String, String>(format!(
         "SELECT `email` FROM `users` WHERE email = \"{}\"",
         email
-    )) {
-        Ok(registered) => !registered.is_empty(),
-        Err(err) => {
-            println!("{:?}", err);
-            true
-        }
-    }
+    ))?.is_some())
 }
 
 pub fn visit_exists(connection: &mut Conn, visitor_email: &str, visiting_id: u32) -> bool {

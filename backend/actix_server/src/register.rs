@@ -1,3 +1,5 @@
+use std::fs;
+
 use crate::{
     database::{self, DBconfig},
     email, passwords,
@@ -41,26 +43,38 @@ pub async fn register_user_service(
             );
         }
         let mut connection = connection.unwrap();
-        if database::user_exists(&mut connection, &email) {
-            return ("FAILED".to_owned(), "User already registered".to_owned());
+        match database::user_exists(&mut connection, &email) {
+            Ok(true) => return ("FAILED".to_owned(), "User already registered".to_owned()),
+            Err(_) => return ("FAILED".to_owned(), "Database error".to_owned()),
+            Ok(false) => ()
         }
-        match database::register_user(&mut connection, &username, &email, &password, &info) {
-            Ok(_) => return ("OK".to_owned(), "".to_owned()),
-            Err(err) => {
-                println!("{:?}", err);
-                let err_content = err.to_string();
-                if err_content.contains("ERROR 1406") {
-                    return (
-                        "FAILED".to_owned(),
-                        // MySqlError { ERROR 1406 (22001): Data too long for column 'firstname' at row 1 }
-                        err_content[err_content.find("Data").unwrap()
-                            ..err_content.rfind(" at row 1").unwrap()]
-                            .to_owned(),
-                    );
-                }
-                return ("FAILED".to_owned(), "Database error".to_owned());
+        if let Err(err) = database::register_user(&mut connection, &username, &email, &password, &info) {
+            println!("{:?}", err);
+            let err_content = err.to_string();
+            if err_content.contains("ERROR 1406") {
+                return (
+                    "FAILED".to_owned(),
+                    // MySqlError { ERROR 1406 (22001): Data too long for column 'firstname' at row 1 }
+                    err_content[err_content.find("Data").unwrap()
+                        ..err_content.rfind(" at row 1").unwrap()]
+                        .to_owned(),
+                );
             }
+            return ("FAILED".to_owned(), "Database error".to_owned());
         }
+        let id = match database::user_email_to_id(&mut connection, &email) {
+            Ok(Some(id)) => id,
+            _ => return ("FAILED".to_owned(), "Internal server error".to_owned())
+        };
+        let dir_name = format!("users/{}", id);
+        if fs::create_dir(dir_name).is_err() {
+            return ("FAILED".to_owned(), "Internal server error".to_owned());
+        }
+        let dir_name = format!("users/{}/gallery", id);
+        if fs::create_dir(dir_name).is_err() {
+            return ("FAILED".to_owned(), "Internal server error".to_owned());
+        }
+        return ("OK".to_owned(), "".to_owned())
     })();
     Ok(web::Json(json!({
         "status": status,
