@@ -190,3 +190,62 @@ pub async fn create_chat_service(
         "reason": fail_reason,
     })))
 }
+
+
+#[post("/exists/{email1}/{password}/{email2}")]
+pub async fn is_chat_exists_service(
+    path: web::Path<(String, String, String)>,
+    db_config: web::Data<DBconfig>,
+) -> ActxResult<impl Responder> {
+    let (status, fail_reason) = (|| {
+        let (email1, password, email2) = path.into_inner();
+        if !email::is_valid_email(email1.as_str()) {
+            return (
+                "FAILED".to_owned(),
+                "Invalid email adress of first user".to_owned(),
+            );
+        }
+        if !email::is_valid_email(email2.as_str()) {
+            return (
+                "FAILED".to_owned(),
+                "Invalid email adress of second user".to_owned(),
+            );
+        }
+        if !passwords::is_valid_password(&password) {
+            return (
+                "FAILED".to_owned(),
+                "Password contains invalid characters or too small".to_owned(),
+            );
+        }
+        let connection = database::try_connect(&db_config, 3);
+        if connection.is_err() {
+            println!("Failed to connect to database");
+            return (
+                "FAILED".to_owned(),
+                "Failed to connect to database".to_owned(),
+            );
+        }
+        let mut connection = connection.unwrap();
+        let user1 = database::find_user_by_email(&mut connection, &email1, false);
+        if user1.is_none() {
+            return ("FAILED".to_owned(), "User1 does not exist".to_owned());
+        }
+        let user1 = user1.unwrap();
+        if user1.password != password {
+            return ("FAILED".to_owned(), "Invalid password".to_owned());
+        }
+        let user2 = database::find_user_by_email(&mut connection, &email2, true);
+        if user2.is_none() {
+            return ("FAILED".to_owned(), "User2 does not exist".to_owned());
+        }
+        let user2 = user2.unwrap();
+        if database::is_chat_exists(&mut connection, user1.id, user2.id) {
+            return ("OK".to_owned(), "Exists".to_owned());
+        }
+        return ("Ok".to_owned(), "Does not exist".to_owned());
+    })();
+    Ok(web::Json(json!({
+        "status": status,
+        "reason": fail_reason,
+    })))
+}

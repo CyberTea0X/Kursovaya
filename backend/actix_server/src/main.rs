@@ -78,7 +78,8 @@ async fn main() -> std::io::Result<()> {
                 web::scope("api/chat")
                     .service(chat::create_chat_service)
                     .service(chat::delete_chat_service)
-                    .service(chat::get_user_chats_service),
+                    .service(chat::get_user_chats_service)
+                    .service(chat::is_chat_exists_service),
             )
             .service(web::scope("api/messages").service(messages::send_message_service))
             .service(
