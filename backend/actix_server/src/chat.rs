@@ -191,7 +191,6 @@ pub async fn create_chat_service(
     })))
 }
 
-
 #[post("/exists/{email1}/{password}/{email2}")]
 pub async fn is_chat_exists_service(
     path: web::Path<(String, String, String)>,

@@ -112,6 +112,64 @@ pub struct Chat {
     pub created_at: Option<String>,
 }
 
+#[derive(Serialize, Deserialize, Default, Debug)]
+pub struct Message {
+    pub id: u32,
+    pub chat_id: u32,
+    pub content: String,
+    pub owner_id: u32,
+    pub owner_name: String,
+    pub send_time: String,
+    pub is_read: bool,
+}
+
+impl FromRow for Message {
+    fn from_row(row: mysql::Row) -> Self {
+        let (id, chat_id, content, owner_id, owner_name, send_time, is_read) = mysql::from_row(row);
+        Message {
+            id,
+            chat_id,
+            content,
+            owner_id,
+            owner_name,
+            send_time,
+            is_read,
+        }
+    }
+
+    fn from_row_opt(row: mysql::Row) -> Result<Self, mysql::FromRowError>
+    where
+        Self: Sized,
+    {
+        let (id, chat_id, content, owner_id, owner_name, send_time, is_read) =
+            mysql::from_row_opt(row)?;
+        Ok(Self {
+            id,
+            chat_id,
+            content,
+            owner_id,
+            owner_name,
+            send_time,
+            is_read,
+        })
+    }
+}
+
+pub fn get_messages(
+    connection: &mut Conn,
+    chat_id: u32,
+    start: Option<usize>,
+    end: Option<usize>,
+) -> Result<Vec<Message>, mysql::Error> {
+    let query = format!("SELECT * FROM MESSAGES WHERE chat_id={}", chat_id);
+    let mut messages = connection.query(query)?;
+    let len = messages.len();
+    let start = start.unwrap_or(0).min(len);
+    let end = end.unwrap_or(len).min(len);
+    let messages = messages.drain(start..end).collect();
+    Ok(messages)
+}
+
 pub fn send_message(
     connection: &mut Conn,
     chat_id: u32,
