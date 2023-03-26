@@ -25,6 +25,7 @@ const ArtistProfile = () => {
 
 
     const viewImage = (img, i) => {
+
         setData({img, i})
     }
     const imgAction = (action) => {
@@ -55,18 +56,48 @@ const ArtistProfile = () => {
                                     width: '100%',
                                     height: '100vh',                          
                                     position: 'fixed',
-                                    background: "rgba(0, 0, 0, 0.8)",                                    
+                                    background: "rgba(0, 0, 0, 0.85)",                                    
                                     display: 'flex',
                                     justifyContent: 'center',
                                     alignItems: 'center',
                                     overflow: 'hidden',                                    
                                 }}>
                             
-                            
+                                    
                                     <button onClick={() => imgAction()} style={{position: 'absolute', top: '10px', right: '10px'}}>X</button>
-                                    <button onClick={() => imgAction('previous-img')} >Previous</button>
-                                    <img src={data.img} style={{width: 'auto', maxWidth: '100%', maxHeight: '100%', borderRadius: '30px'}}/>
+                                    <button onClick={() => imgAction('previous-img')}>Previous</button>
+
+                                    
+                                    <div style={{
+                                        verticalAlign: 'text-bottom',
+                                        alignContent: 'center',
+                                        maxWidth:'30%',
+                                        
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        verticalAlign: 'middle',
+                                        
+
+                                    }}>
+                                        <center>
+                                    <img src={data.img} style={{width: 'auto',  maxHeight: '100%', borderRadius: '30px', maxHeight:'600px', padding: '10px'}}/>
+                                   
+                                    <div style={{
+                                        color: 'white',
+                                        backgroundColor: "rgb(46, 4, 43)",
+                                        borderRadius: '10px',
+                                        
+                                        padding: '10px',
+                                        flexDirection: 'column',
+                                        wordWrap: 'break-word',
+                                        
+
+
+                                    }}> Всем привет дорогие друзья, это канал куплинов плей и сегодня мы играем в симулять очка</div>
+                                     </center>
+                                    </div>
                                     <button onClick={() => imgAction('next-img')}>Next</button>
+                                    
                                 </div>
                             
                             </div>
@@ -80,7 +111,7 @@ const ArtistProfile = () => {
                 <ResponsiveMasonry
                     columnsCountBreakPoints={{350: 3, 750: 4, 900: 5}}
             >
-                    <Masonry gutter='10px'>
+                    <Masonry gutter='10px'>                    
                         {images.map((image, i) => (
                             <img
                                 key={i}
@@ -88,8 +119,11 @@ const ArtistProfile = () => {
                                 style={{width: "100%", display: "block", cursor: 'pointer', borderRadius: '30px'}}
                                 alt=""
                                 onClick={()=> viewImage(image, i)}
+                                
                             />
+                            
                     ))}
+                    
                     </Masonry>
                 </ResponsiveMasonry>
             </div>
