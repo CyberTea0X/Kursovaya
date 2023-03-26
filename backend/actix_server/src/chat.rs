@@ -1,4 +1,4 @@
-use crate::database::{self, Chat, DBconfig, User};
+use crate::database::{self, DBconfig};
 use crate::{email, passwords};
 use actix_web::{
     post, web, Responder,
