@@ -1,9 +1,17 @@
-use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder, Result as ActxResult};
+use actix_web::{get, post, web, App, HttpServer, Responder, Result as ActxResult};
 use database::DBconfig;
 use serde_json::json;
 
-mod database;
-mod passwords;
+pub mod chat;
+pub mod claims;
+pub mod database;
+pub mod email;
+pub mod jwt;
+pub mod messages;
+pub mod passwords;
+pub mod register;
+pub mod search;
+pub mod user;
 
 #[post("/login/{email}/{password}")] // <- define path parameters
 async fn login_service(
@@ -13,26 +21,25 @@ async fn login_service(
     let (email, password) = path.into_inner();
 
     let (status, fail_reason) = (|| {
+        if !email::is_valid_email(email.as_str()) {
+            return ("FAILED".to_owned(), "Invalid email adresss".to_owned());
+        }
         if !passwords::is_valid_password(&password) {
-            return ("FAILED", "Password contains invalid characters or too small");
+            return (
+                "FAILED".to_owned(),
+                "Password contains invalid characters or too small".to_owned(),
+            );
         }
         let connection = database::try_connect(&db_config, 3);
         if connection.is_err() {
             println!("Failed to connect to database");
-            return ("FAILED", "Failed to connect to database");
+            return (
+                "FAILED".to_owned(),
+                "Failed to connect to database".to_owned(),
+            );
         }
         let mut connection = connection.unwrap();
-        let user = database::find_user(&mut connection, &email);
-        if user.is_none() {
-            return ("FAILED", "User does not exist");
-        }
-        let user = user.unwrap();
-        if user.password == password {
-            return ("OK", "");
-        }
-        else {
-            return ("FAILED", "Invalid password");
-        }
+        return passwords::check_password(&mut connection, &email, &password);
     })();
     Ok(web::Json(json!({
         "status": status,
@@ -40,90 +47,63 @@ async fn login_service(
     })))
 }
 
-#[post("/registration/{first_name}/{last_name}/{password}/{email}/{logo}/{about}")]
-async fn register(
-    path: web::Path<(String, String, String, String, String, String)>,
-    db_config: web::Data<DBconfig>,
-) -> ActxResult<impl Responder> {
-    let (first_name, last_name, password, email, logo, about) = path.into_inner();
-    let (status, fail_reason) = (||{
-        if !passwords::is_valid_password(&password) {
-            return  ("FAILED", "Password contains invalid characters or too small")
-        }
-        let connection = database::try_connect(&db_config, 3);
-        if connection.is_err() {
-            println!("Failed to connect to database");
-            return ("FAILED", "Failed to connect to database");
-        }
-        let mut connection = connection.unwrap();
-        if database::user_exists(&mut connection, &email) {
-            return ("FAILED", "User already registered");
-        }
-        if database::register_user(
-            &mut connection,
-            &first_name,
-            &last_name,
-            &password,
-            &email,
-            &logo,
-            &about,
-        ) {
-            return ("OK", "")
+#[get("/dbstatus")] //
+async fn check_db_status(db_config: web::Data<DBconfig>) -> String {
+    let connection = database::try_connect(&db_config, 3);
+    format!(
+        "DB {}",
+        if connection.is_ok() {
+            "Online"
         } else {
-            return ("FAILED", "Database error")
-        };
-    })();
-    Ok(web::Json(json!({
-        "status": status,
-        "reason": fail_reason,
-    })))
+            "Offline"
+        }
+    )
 }
 
-#[post("/profile/{email}")] // <- define path parameters
-async fn fetch_user_profile(
-    path: web::Path<String>,
-    db_config: web::Data<DBconfig>,
-) -> ActxResult<impl Responder> {
-    let email = path.into_inner();
-    let (status, fail_reason, user) = (||{
-        let connection = database::try_connect(&db_config, 3);
-        if connection.is_err() {
-            println!("Failed to connect to database");
-            return ("FAILED", "Failed to connect to database", database::User::default());
-        }
-        let mut connection = connection.unwrap();
-        let user = database::find_user(&mut connection, &email);
-        if user.is_none() {
-            return ("FAILED", "User does not exist", database::User::default());
-        }
-        let user = user.unwrap();
-        return ("OK", "", user);
-    })();
-    Ok(web::Json(json!({
-        "status": status,
-        "reason": fail_reason,
-        "user": user,
-    })))
-}
-
-#[post("/config")] // <- define path parameters
-async fn config(db_config: web::Data<DBconfig>) -> ActxResult<String> {
-    let responce = format!(
-        "ip: {}\nport: {}\nuser: {}\npassword: {},\ndatabase: {}",
-        db_config.ip, db_config.port, db_config.user, db_config.password, db_config.database
-    );
-    Ok(responce)
-}
+// #[post("/config")] // <- define path parameters
+// async fn config(db_config: web::Data<DBconfig>) -> ActxResult<String> {
+//     let responce = format!(
+//         "ip: {}\nport: {}\nuser: {}\npassword: {},\ndatabase: {}",
+//         db_config.ip, db_config.port, db_config.user, db_config.password, db_config.database
+//     );
+//     Ok(responce)
+// }
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     HttpServer::new(|| {
         App::new()
             .app_data(web::Data::new(database::parse_config()))
-            .service(login_service)
-            .service(register)
-            .service(fetch_user_profile)
-            .service(config)
+            .service(
+                web::scope("api/chat")
+                    .service(chat::create_chat_service)
+                    .service(chat::delete_chat_service)
+                    .service(chat::get_user_chats_service)
+                    .service(chat::is_chat_exists_service),
+            )
+            .service(
+                web::scope("api/messages")
+                    .service(messages::send_message_service)
+                    .service(messages::get_messages_service)
+                    .service(messages::read_messages_service),
+            )
+            .service(
+                web::scope("/api/search")
+                    .service(search::search_login_service)
+                    .service(search::search_popular_service)
+                    .service(search::search_name_service)
+                    .service(search::search_text_service),
+            )
+            .service(
+                web::scope("/api")
+                    .service(login_service)
+                    .service(register::register_user_service)
+                    .service(user::user_profile_service)
+                    .service(check_db_status)
+                    .service(user::edit_user_service)
+                    .service(user::delete_user_service)
+                    .service(user::visit_user_service),
+            )
     })
     .bind(("127.0.0.1", 8080))?
     .run()
