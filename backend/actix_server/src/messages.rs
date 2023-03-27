@@ -36,11 +36,9 @@ pub async fn read_messages_service(
             Ok(None) => return ("FAILED".to_owned(), "Chat does not exist".to_owned()),
             Err(_) => return ("FAILED".to_owned(), "Database error".to_owned()),
         };
-        if database::mark_messages_as_read(&mut connection, chat.id, messages).is_err() {
-            println!(
-                "{:?}",
-                database::mark_messages_as_read(&mut connection, chat.id, messages)
-            );
+        let result = database::mark_messages_as_read(&mut connection, chat.id, messages);
+        if result.is_err() {
+            println!("{:?}", result);
             return ("FAILED".to_owned(), "Database error".to_owned());
         }
         return ("OK".to_owned(), "".to_owned());

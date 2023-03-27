@@ -15,21 +15,22 @@ pub struct SeachName {
 #[post("/popular")]
 pub async fn search_popular_service(db_config: web::Data<DBconfig>) -> ActxResult<impl Responder> {
     let (status, fail_reason, items) = (|| {
-        let connection = database::try_connect(&db_config, 3);
-        if connection.is_err() {
-            println!("Failed to connect to database");
-            return (
-                "FAILED".to_owned(),
-                "Failed to connect to database".to_owned(),
-                Vec::new(),
-            );
-        }
-        let mut connection = connection.unwrap();
-        let items = search_popular(&mut connection);
-        if items.is_err() {
-            return ("FAILED".to_owned(), "Database error".to_owned(), Vec::new());
-        }
-        return ("OK".to_owned(), "".to_owned(), items.unwrap());
+        let mut connection = match database::try_connect(&db_config, 3) {
+            Ok(conn) => conn,
+            Err(_) => {
+                println!("Failed to connect to database");
+                return (
+                    "FAILED".to_owned(),
+                    "Failed to connect to database".to_owned(),
+                    Vec::new(),
+                );
+            }
+        };
+        let items = match search_popular(&mut connection) {
+            Ok(items) => items,
+            Err(_) => return ("FAILED".to_owned(), "Database error".to_owned(), Vec::new()),
+        };
+        return ("OK".to_owned(), "".to_owned(), items);
     })();
     Ok(web::Json(json!({
         "items": items,
@@ -45,21 +46,22 @@ pub async fn search_login_service(
 ) -> ActxResult<impl Responder> {
     let (status, fail_reason, items) = (|| {
         let login = path.into_inner();
-        let connection = database::try_connect(&db_config, 3);
-        if connection.is_err() {
-            println!("Failed to connect to database");
-            return (
-                "FAILED".to_owned(),
-                "Failed to connect to database".to_owned(),
-                Vec::new(),
-            );
-        }
-        let mut connection = connection.unwrap();
-        let users = search_login(&mut connection, &login);
-        if users.is_err() {
-            return ("FAILED".to_owned(), "Database error".to_owned(), Vec::new());
-        }
-        return ("OK".to_owned(), "".to_owned(), users.unwrap());
+        let mut connection = match database::try_connect(&db_config, 3) {
+            Ok(conn) => conn,
+            Err(_) => {
+                println!("Failed to connect to database");
+                return (
+                    "FAILED".to_owned(),
+                    "Failed to connect to database".to_owned(),
+                    Vec::new(),
+                );
+            }
+        };
+        let users = match search_login(&mut connection, &login) {
+            Ok(users) => users,
+            Err(_) => return ("FAILED".to_owned(), "Database error".to_owned(), Vec::new()),
+        };
+        return ("OK".to_owned(), "".to_owned(), users);
     })();
     Ok(web::Json(json!({
         "items": items,
@@ -74,21 +76,22 @@ pub async fn search_name_service(
     info: web::Query<SeachName>,
 ) -> ActxResult<impl Responder> {
     let (status, fail_reason, items) = (|| {
-        let connection = database::try_connect(&db_config, 3);
-        if connection.is_err() {
-            println!("Failed to connect to database");
-            return (
-                "FAILED".to_owned(),
-                "Failed to connect to database".to_owned(),
-                Vec::new(),
-            );
-        }
-        let mut connection = connection.unwrap();
-        let users = search_name(&mut connection, &info);
-        if users.is_err() {
-            return ("FAILED".to_owned(), "Database error".to_owned(), Vec::new());
-        }
-        return ("OK".to_owned(), "".to_owned(), users.unwrap());
+        let mut connection = match database::try_connect(&db_config, 3) {
+            Ok(conn) => conn,
+            Err(_) => {
+                println!("Failed to connect to database");
+                return (
+                    "FAILED".to_owned(),
+                    "Failed to connect to database".to_owned(),
+                    Vec::new(),
+                );
+            }
+        };
+        let users = match search_name(&mut connection, &info) {
+            Ok(users) => users,
+            Err(_) => return ("FAILED".to_owned(), "Database error".to_owned(), Vec::new()),
+        };
+        return ("OK".to_owned(), "".to_owned(), users);
     })();
     Ok(web::Json(json!({
         "items": items,
@@ -104,21 +107,22 @@ pub async fn search_text_service(
 ) -> ActxResult<impl Responder> {
     let (status, fail_reason, items) = (|| {
         let text = path.into_inner();
-        let connection = database::try_connect(&db_config, 3);
-        if connection.is_err() {
-            println!("Failed to connect to database");
-            return (
-                "FAILED".to_owned(),
-                "Failed to connect to database".to_owned(),
-                Vec::new(),
-            );
-        }
-        let mut connection = connection.unwrap();
-        let users = search_text(&mut connection, &text);
-        if users.is_err() {
-            return ("FAILED".to_owned(), "Database error".to_owned(), Vec::new());
-        }
-        return ("OK".to_owned(), "".to_owned(), users.unwrap());
+        let mut connection = match database::try_connect(&db_config, 3) {
+            Ok(conn) => conn,
+            Err(_) => {
+                println!("Failed to connect to database");
+                return (
+                    "FAILED".to_owned(),
+                    "Failed to connect to database".to_owned(),
+                    Vec::new(),
+                );
+            }
+        };
+        let users = match search_text(&mut connection, &text) {
+            Ok(users) => users,
+            Err(_) => return ("FAILED".to_owned(), "Database error".to_owned(), Vec::new()),
+        };
+        return ("OK".to_owned(), "".to_owned(), users);
     })();
     Ok(web::Json(json!({
         "items": items,

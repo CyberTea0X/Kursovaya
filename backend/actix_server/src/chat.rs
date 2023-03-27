@@ -41,11 +41,10 @@ pub async fn delete_chat_service(
             Ok((user, connection)) => (user, connection),
             Err(err) => return ("Failed".to_owned(), err.to_string()),
         };
-        let user2 = database::find_user_by_id(&mut connection, id);
-        if user2.is_none() {
-            return ("FAILED".to_owned(), "User2 does not exist".to_owned());
-        }
-        let user2 = user2.unwrap();
+        let user2 = match database::find_user_by_id(&mut connection, id) {
+            Some(user) => user,
+            None => return ("FAILED".to_owned(), "User2 does not exist".to_owned()),
+        };
         if !database::is_chat_exists(&mut connection, user1.id, user2.id) {
             return ("FAILED".to_owned(), "Chat does not exist".to_owned());
         }
@@ -72,11 +71,10 @@ pub async fn create_chat_service(
             Ok((user, connection)) => (user, connection),
             Err(err) => return ("Failed".to_owned(), err.to_string()),
         };
-        let user2 = database::find_user_by_id(&mut connection, id);
-        if user2.is_none() {
-            return ("FAILED".to_owned(), "User2 does not exist".to_owned());
-        }
-        let user2 = user2.unwrap();
+        let user2 = match database::find_user_by_id(&mut connection, id) {
+            Some(user) => user,
+            None => return ("FAILED".to_owned(), "User2 does not exist".to_owned()),
+        };
         if database::is_chat_exists(&mut connection, user1.id, user2.id) {
             return ("FAILED".to_owned(), "Chat already exists".to_owned());
         }
@@ -103,11 +101,10 @@ pub async fn is_chat_exists_service(
             Ok((user, connection)) => (user, connection),
             Err(err) => return ("Failed".to_owned(), err.to_string()),
         };
-        let user2 = database::find_user_by_id(&mut connection, id);
-        if user2.is_none() {
-            return ("FAILED".to_owned(), "User2 does not exist".to_owned());
-        }
-        let user2 = user2.unwrap();
+        let user2 = match database::find_user_by_id(&mut connection, id) {
+            Some(user) => user,
+            None => return ("FAILED".to_owned(), "User2 does not exist".to_owned()),
+        };
         if database::is_chat_exists(&mut connection, user1.id, user2.id) {
             return ("OK".to_owned(), "Exists".to_owned());
         }

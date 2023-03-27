@@ -116,33 +116,34 @@ pub(crate) async fn user_profile_service(
     let (status, fail_reason, user) = (|| {
         if info.email.is_none() && info.id.is_none() {
             return (
-                "FAILED",
-                "id and email are not specified. Can't find user without any of them",
+                "FAILED".to_owned(),
+                "id and email are not specified. Can't find user without any of them".to_owned(),
                 database::User::default(),
             );
         }
         if info.email.is_some() && !email::is_valid_email(info.email.as_ref().unwrap()) {
-            return ("FAILED", "Invalid email adresss", database::User::default());
+            return ("FAILED".to_owned(), "Invalid email adresss".to_owned(), database::User::default());
         }
-        let connection = database::try_connect(&db_config, 3);
-        if connection.is_err() {
-            println!("Failed to connect to database");
-            return (
-                "FAILED",
-                "Failed to connect to database",
-                database::User::default(),
-            );
-        }
-        let mut connection = connection.unwrap();
+        let mut connection = match database::try_connect(&db_config, 3) {
+            Ok(conn) => conn,
+            Err(_) => {
+                println!("Failed to connect to database");
+                return (
+                    "FAILED".to_owned(),
+                    "Failed to connect to database".to_owned(),
+                    database::User::default(),
+                );
+            }
+        };
         let user = database::find_user(&mut connection, info.email.as_deref(), info.id);
         let user = match user {
             Some(mut user) => {
                 hide_attributes(&mut user, &["email", "password"]);
                 user
             }
-            None => return ("FAILED", "User does not exist", database::User::default()),
+            None => return ("FAILED".to_owned(), "User does not exist".to_owned(), database::User::default()),
         };
-        return ("OK", "", user);
+        return ("OK".to_owned(), "".to_owned(), user);
     })();
     Ok(web::Json(json!({
         "status": status,
@@ -162,11 +163,11 @@ pub(crate) async fn visit_user_service(
             Ok((user, connection)) => (user, connection),
             Err(err) => return ("Failed".to_owned(), err.to_string()),
         };
-        let user2 = database::find_user_by_id(&mut connection, visit_id);
-        if user2.is_none() {
-            return ("FAILED".to_owned(), "Visited does not exist".to_owned());
-        }
-        let user2 = user2.unwrap();
+        let user2 = match database::find_user_by_id(&mut connection, visit_id)
+        {
+            Some(user) => user,
+            None => return ("FAILED".to_owned(), "Visited does not exist".to_owned())
+        };
         if user.id == user2.id {
             return ("FAILED".to_owned(), "Cannot visit yourself".to_owned());
         }

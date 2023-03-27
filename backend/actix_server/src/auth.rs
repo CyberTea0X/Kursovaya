@@ -1,4 +1,8 @@
-use crate::{passwords::is_valid_password, email::is_valid_email, database::{self, User, DBconfig, try_connect}};
+use crate::{
+    database::{self, try_connect, DBconfig, User},
+    email::is_valid_email,
+    passwords::is_valid_password,
+};
 use mysql::Conn;
 
 #[derive(Debug)]
@@ -45,5 +49,3 @@ pub fn auth_get_user_connect(
     }
     Ok((user, connection))
 }
-
-
