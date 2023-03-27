@@ -1,9 +1,5 @@
-use crate::database::{self, DBconfig};
-use crate::{email, passwords};
-use actix_web::{
-    post, web, Responder,
-    Result as ActxResult,
-};
+use crate::{database::{self, DBconfig}, auth::auth_get_user_connect};
+use actix_web::{post, web, Responder, Result as ActxResult};
 use serde_json::json;
 
 #[post("/user/{email1}/{password}")]
@@ -13,46 +9,10 @@ pub async fn get_user_chats_service(
 ) -> ActxResult<impl Responder> {
     let (status, fail_reason, chats) = (|| {
         let (email, password) = path.into_inner();
-        if !email::is_valid_email(email.as_str()) {
-            return (
-                "FAILED".to_owned(),
-                "Invalid email adress".to_owned(),
-                Vec::new(),
-            );
-        }
-        if !passwords::is_valid_password(&password) {
-            return (
-                "FAILED".to_owned(),
-                "Password contains invalid characters or too small".to_owned(),
-                Vec::new(),
-            );
-        }
-        let connection = database::try_connect(&db_config, 3);
-        if connection.is_err() {
-            println!("Failed to connect to database");
-            return (
-                "FAILED".to_owned(),
-                "Failed to connect to database".to_owned(),
-                Vec::new(),
-            );
-        }
-        let mut connection = connection.unwrap();
-        let user = database::find_user_by_email(&mut connection, &email);
-        if user.is_none() {
-            return (
-                "FAILED".to_owned(),
-                "User does not exist".to_owned(),
-                Vec::new(),
-            );
-        }
-        let user = user.unwrap();
-        if user.password != password {
-            return (
-                "FAILED".to_owned(),
-                "Invalid password".to_owned(),
-                Vec::new(),
-            );
-        }
+        let (user, mut connection) = match auth_get_user_connect(&email, &password, &db_config, 3) {
+            Ok((user, connection)) => (user, connection),
+            Err(err) => return ("Failed".to_owned(), err.to_string(), Vec::new()),
+        };
         let chats = database::get_user_chats(&mut connection, user.id);
         if chats.is_err() {
             return ("FAILED".to_owned(), "Database error".to_owned(), Vec::new());
@@ -73,35 +33,10 @@ pub async fn delete_chat_service(
 ) -> ActxResult<impl Responder> {
     let (status, fail_reason) = (|| {
         let (email, password, id) = path.into_inner();
-        if !email::is_valid_email(email.as_str()) {
-            return (
-                "FAILED".to_owned(),
-                "Invalid email adress of user".to_owned(),
-            );
-        }
-        if !passwords::is_valid_password(&password) {
-            return (
-                "FAILED".to_owned(),
-                "Password contains invalid characters or too small".to_owned(),
-            );
-        }
-        let connection = database::try_connect(&db_config, 3);
-        if connection.is_err() {
-            println!("Failed to connect to database");
-            return (
-                "FAILED".to_owned(),
-                "Failed to connect to database".to_owned(),
-            );
-        }
-        let mut connection = connection.unwrap();
-        let user1 = database::find_user_by_email(&mut connection, &email);
-        if user1.is_none() {
-            return ("FAILED".to_owned(), "User1 does not exist".to_owned());
-        }
-        let user1 = user1.unwrap();
-        if user1.password != password {
-            return ("FAILED".to_owned(), "Invalid password".to_owned());
-        }
+        let (user1, mut connection) = match auth_get_user_connect(&email, &password, &db_config, 3) {
+            Ok((user, connection)) => (user, connection),
+            Err(err) => return ("Failed".to_owned(), err.to_string()),
+        };
         let user2 = database::find_user_by_id(&mut connection, id);
         if user2.is_none() {
             return ("FAILED".to_owned(), "User2 does not exist".to_owned());
@@ -128,35 +63,10 @@ pub async fn create_chat_service(
 ) -> ActxResult<impl Responder> {
     let (status, fail_reason) = (|| {
         let (email, password, id) = path.into_inner();
-        if !email::is_valid_email(email.as_str()) {
-            return (
-                "FAILED".to_owned(),
-                "Invalid email adress of first user".to_owned(),
-            );
-        }
-        if !passwords::is_valid_password(&password) {
-            return (
-                "FAILED".to_owned(),
-                "Password contains invalid characters or too small".to_owned(),
-            );
-        }
-        let connection = database::try_connect(&db_config, 3);
-        if connection.is_err() {
-            println!("Failed to connect to database");
-            return (
-                "FAILED".to_owned(),
-                "Failed to connect to database".to_owned(),
-            );
-        }
-        let mut connection = connection.unwrap();
-        let user1 = database::find_user_by_email(&mut connection, &email);
-        if user1.is_none() {
-            return ("FAILED".to_owned(), "User1 does not exist".to_owned());
-        }
-        let user1 = user1.unwrap();
-        if user1.password != password {
-            return ("FAILED".to_owned(), "Invalid password".to_owned());
-        }
+        let (user1, mut connection) = match auth_get_user_connect(&email, &password, &db_config, 3) {
+            Ok((user, connection)) => (user, connection),
+            Err(err) => return ("Failed".to_owned(), err.to_string()),
+        };
         let user2 = database::find_user_by_id(&mut connection, id);
         if user2.is_none() {
             return ("FAILED".to_owned(), "User2 does not exist".to_owned());
@@ -183,35 +93,10 @@ pub async fn is_chat_exists_service(
 ) -> ActxResult<impl Responder> {
     let (status, fail_reason) = (|| {
         let (email, password, id) = path.into_inner();
-        if !email::is_valid_email(email.as_str()) {
-            return (
-                "FAILED".to_owned(),
-                "Invalid email adress of first user".to_owned(),
-            );
-        }
-        if !passwords::is_valid_password(&password) {
-            return (
-                "FAILED".to_owned(),
-                "Password contains invalid characters or too small".to_owned(),
-            );
-        }
-        let connection = database::try_connect(&db_config, 3);
-        if connection.is_err() {
-            println!("Failed to connect to database");
-            return (
-                "FAILED".to_owned(),
-                "Failed to connect to database".to_owned(),
-            );
-        }
-        let mut connection = connection.unwrap();
-        let user1 = database::find_user_by_email(&mut connection, &email);
-        if user1.is_none() {
-            return ("FAILED".to_owned(), "User1 does not exist".to_owned());
-        }
-        let user1 = user1.unwrap();
-        if user1.password != password {
-            return ("FAILED".to_owned(), "Invalid password".to_owned());
-        }
+        let (user1, mut connection) = match auth_get_user_connect(&email, &password, &db_config, 3) {
+            Ok((user, connection)) => (user, connection),
+            Err(err) => return ("Failed".to_owned(), err.to_string()),
+        };
         let user2 = database::find_user_by_id(&mut connection, id);
         if user2.is_none() {
             return ("FAILED".to_owned(), "User2 does not exist".to_owned());

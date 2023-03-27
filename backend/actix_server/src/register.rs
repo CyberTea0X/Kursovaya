@@ -46,9 +46,11 @@ pub async fn register_user_service(
         match database::user_exists(&mut connection, &email) {
             Ok(true) => return ("FAILED".to_owned(), "User already registered".to_owned()),
             Err(_) => return ("FAILED".to_owned(), "Database error".to_owned()),
-            Ok(false) => ()
+            Ok(false) => (),
         }
-        if let Err(err) = database::register_user(&mut connection, &username, &email, &password, &info) {
+        if let Err(err) =
+            database::register_user(&mut connection, &username, &email, &password, &info)
+        {
             println!("{:?}", err);
             let err_content = err.to_string();
             if err_content.contains("ERROR 1406") {
@@ -64,7 +66,7 @@ pub async fn register_user_service(
         }
         let id = match database::user_email_to_id(&mut connection, &email) {
             Ok(Some(id)) => id,
-            _ => return ("FAILED".to_owned(), "Internal server error".to_owned())
+            _ => return ("FAILED".to_owned(), "Internal server error".to_owned()),
         };
         let dir_name = format!("users/{}", id);
         if fs::create_dir(dir_name).is_err() {
@@ -74,7 +76,7 @@ pub async fn register_user_service(
         if fs::create_dir(dir_name).is_err() {
             return ("FAILED".to_owned(), "Internal server error".to_owned());
         }
-        return ("OK".to_owned(), "".to_owned())
+        return ("OK".to_owned(), "".to_owned());
     })();
     Ok(web::Json(json!({
         "status": status,

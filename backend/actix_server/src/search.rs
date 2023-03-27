@@ -1,9 +1,6 @@
 use crate::database::{self, DBconfig, User};
 use crate::user::hide_attributes;
-use actix_web::{
-    post, web, Responder,
-    Result as ActxResult,
-};
+use actix_web::{post, web, Responder, Result as ActxResult};
 use mysql::Conn;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -132,7 +129,9 @@ pub async fn search_text_service(
 
 pub fn search_text(connection: &mut Conn, text: &str) -> Result<Vec<User>, mysql::Error> {
     let mut query_result = database::get_all_users(connection)?;
-    query_result.iter_mut().for_each(|user| hide_attributes(user, &["email", "password"]));
+    query_result
+        .iter_mut()
+        .for_each(|user| hide_attributes(user, &["email", "password"]));
     query_result.sort_by_key(|user| {
         let user_params = [
             user.username.clone(),
@@ -151,7 +150,9 @@ pub fn search_text(connection: &mut Conn, text: &str) -> Result<Vec<User>, mysql
 
 pub fn search_name(connection: &mut Conn, info: &SeachName) -> Result<Vec<User>, mysql::Error> {
     let mut query_result = database::get_all_users(connection)?;
-    query_result.iter_mut().for_each(|user| hide_attributes(user, &["email", "password"]));
+    query_result
+        .iter_mut()
+        .for_each(|user| hide_attributes(user, &["email", "password"]));
     let firstname = info.firstname.as_deref().unwrap_or_default().to_owned();
     let lastname = info.lastname.as_deref().unwrap_or_default().to_owned();
     let req_first_and_lastname = format!("{firstname} {lastname}").to_lowercase();
@@ -167,7 +168,9 @@ pub fn search_name(connection: &mut Conn, info: &SeachName) -> Result<Vec<User>,
 
 pub fn search_login(connection: &mut Conn, login: &str) -> Result<Vec<User>, mysql::Error> {
     let mut query_result = database::get_all_users(connection)?;
-    query_result.iter_mut().for_each(|user| hide_attributes(user, &["email", "password"]));
+    query_result
+        .iter_mut()
+        .for_each(|user| hide_attributes(user, &["email", "password"]));
     query_result.sort_by_key(|user| {
         -f64::round(compare_similarity(&user.username.to_lowercase(), &login.to_lowercase()) * 10.0)
             as i32
@@ -177,7 +180,9 @@ pub fn search_login(connection: &mut Conn, login: &str) -> Result<Vec<User>, mys
 
 pub fn search_popular(connection: &mut Conn) -> Result<Vec<User>, mysql::Error> {
     let mut query_result = database::get_all_users(connection)?;
-    query_result.iter_mut().for_each(|user| hide_attributes(user, &["email", "password"]));
+    query_result
+        .iter_mut()
+        .for_each(|user| hide_attributes(user, &["email", "password"]));
     query_result.sort_by_key(|user| -(user.rating as i32));
     Ok(query_result)
 }

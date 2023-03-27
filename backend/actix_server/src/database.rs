@@ -5,7 +5,6 @@ use mysql::{params, Conn, OptsBuilder};
 use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::io::Read;
-use std::collections::HashMap;
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct FindUserRequest {
@@ -163,18 +162,25 @@ impl FromRow for Message {
 pub fn mark_messages_as_read(
     connection: &mut Conn,
     chat_id: u32,
-    messages: &Vec<u32>
+    messages: &Vec<u32>,
 ) -> Result<(), mysql::Error> {
     if messages.is_empty() {
         return Ok(());
     }
-    let items = messages.iter().map(|i| i.to_string()).collect::<Vec<String>>().join(",");
-    let stmt = format!("UPDATE MESSAGES SET is_read=true WHERE id IN ({}) AND chat_id=:chat_id", items);
+    let items = messages
+        .iter()
+        .map(|i| i.to_string())
+        .collect::<Vec<String>>()
+        .join(",");
+    let stmt = format!(
+        "UPDATE MESSAGES SET is_read=true WHERE id IN ({}) AND chat_id=:chat_id",
+        items
+    );
     connection.exec_drop(
         stmt,
         params! {
             chat_id,
-        }
+        },
     )
 }
 
@@ -296,21 +302,17 @@ pub fn find_chats(
         )
 }
 
-pub fn user_email_to_id(
-    connection: &mut Conn,
-    email: &str,
-) -> Result<Option<u32>, mysql::Error> {
+pub fn user_email_to_id(connection: &mut Conn, email: &str) -> Result<Option<u32>, mysql::Error> {
     let query = format!("SELECT id FROM `users` WHERE email ='{}'", email);
     connection.query_first(query)
 }
 
-pub fn get_all_users(
-    connection: &mut Conn,
-) -> Result<Vec<User>, mysql::Error> {
+pub fn get_all_users(connection: &mut Conn) -> Result<Vec<User>, mysql::Error> {
     connection.query(
         r"SELECT id, username, email, password, firstname,
     lastname, rating, about, age, gender, last_online, reg_date
-        FROM `users`")
+        FROM `users`",
+    )
 }
 
 pub fn is_valid_sql(text: &str) -> bool {
@@ -428,10 +430,12 @@ pub fn delete_user(connection: &mut Conn, email: &str) -> Result<(), mysql::Erro
 }
 
 pub fn user_exists(connection: &mut Conn, email: &str) -> Result<bool, mysql::Error> {
-    Ok(connection.query_first::<String, String>(format!(
-        "SELECT `email` FROM `users` WHERE email = \"{}\"",
-        email
-    ))?.is_some())
+    Ok(connection
+        .query_first::<String, String>(format!(
+            "SELECT `email` FROM `users` WHERE email = \"{}\"",
+            email
+        ))?
+        .is_some())
 }
 
 pub fn visit_exists(connection: &mut Conn, visitor_email: &str, visiting_id: u32) -> bool {
@@ -465,11 +469,7 @@ pub fn add_visit(
     )
 }
 
-pub fn find_user(
-    connection: &mut Conn,
-    email: Option<&str>,
-    id: Option<u32>,
-) -> Option<User> {
+pub fn find_user(connection: &mut Conn, email: Option<&str>, id: Option<u32>) -> Option<User> {
     email
         .and_then(|e| find_user_by_email(connection, e))
         .or_else(|| id.and_then(|i| find_user_by_id(connection, i)))

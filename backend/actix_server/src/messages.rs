@@ -1,11 +1,8 @@
 use std::collections::HashMap;
 
 use crate::database::{self, DBconfig, ReadMessagesRequest};
-use crate::{email, passwords};
-use actix_web::{
-    post, web, Responder,
-    Result as ActxResult,
-};
+use crate::auth::auth_get_user_connect;
+use actix_web::{post, web, Responder, Result as ActxResult};
 use serde_json::json;
 #[post("/read/{email1}/{password}/{id}")]
 pub async fn read_messages_service(
@@ -17,66 +14,35 @@ pub async fn read_messages_service(
         let (email, password, id) = path.into_inner();
         let messages = match &messages.id_list {
             Some(messages) => messages,
-            None => return (
-                "FAILED".to_owned(),
-                "No messages to read specified. Plese specify some through query 'id_list'".to_owned()
-            )
-        };
-        if !email::is_valid_email(email.as_str()) {
-            return (
-                "FAILED".to_owned(),
-                "Invalid email".to_owned(),
-            );
-        }
-        if !passwords::is_valid_password(&password) {
-            return (
-                "FAILED".to_owned(),
-                "Password contains invalid characters or too small".to_owned(),
-            );
-        }
-        let connection = database::try_connect(&db_config, 3);
-        if connection.is_err() {
-            println!("Failed to connect to database");
-            return (
-                "FAILED".to_owned(),
-                "Failed to connect to database".to_owned(),
-            );
-        }
-        let mut connection = connection.unwrap();
-        let user1 = match database::find_user_by_email(&mut connection, &email) {
-            Some(user) => user,
             None => {
                 return (
                     "FAILED".to_owned(),
-                    "User1 does not exist".to_owned(),
+                    "No messages to read specified. Plese specify some through query 'id_list'"
+                        .to_owned(),
                 )
             }
+        };
+        let (user1, mut connection) = match auth_get_user_connect(&email, &password, &db_config, 3) {
+            Ok((user, connection)) => (user, connection),
+            Err(err) => return ("Failed".to_owned(), err.to_string()),
         };
         let user2 = match database::find_user_by_id(&mut connection, id) {
             Some(user) => user,
-            None => {
-                return (
-                    "FAILED".to_owned(),
-                    "User2 does not exist".to_owned(),
-                )
-            }
+            None => return ("FAILED".to_owned(), "User2 does not exist".to_owned()),
         };
         let chat = match database::find_chat(&mut connection, user1.id, user2.id) {
             Ok(Some(chat)) => chat,
-            Ok(None) => {
-                return (
-                    "FAILED".to_owned(),
-                    "Chat does not exist".to_owned(),
-                )
-            }
+            Ok(None) => return ("FAILED".to_owned(), "Chat does not exist".to_owned()),
             Err(_) => return ("FAILED".to_owned(), "Database error".to_owned()),
         };
         if database::mark_messages_as_read(&mut connection, chat.id, messages).is_err() {
-            println!("{:?}", database::mark_messages_as_read(&mut connection, chat.id, messages));
+            println!(
+                "{:?}",
+                database::mark_messages_as_read(&mut connection, chat.id, messages)
+            );
             return ("FAILED".to_owned(), "Database error".to_owned());
         }
         return ("OK".to_owned(), "".to_owned());
-
     })();
     Ok(web::Json(json!({
         "status": status,
@@ -92,39 +58,9 @@ pub async fn get_messages_service(
 ) -> ActxResult<impl Responder> {
     let (status, fail_reason, messages) = (|| {
         let (email, password, id) = path.into_inner();
-        if !email::is_valid_email(email.as_str()) {
-            return (
-                "FAILED".to_owned(),
-                "Invalid email adress of first user".to_owned(),
-                Vec::new(),
-            );
-        }
-        if !passwords::is_valid_password(&password) {
-            return (
-                "FAILED".to_owned(),
-                "Password contains invalid characters or too small".to_owned(),
-                Vec::new(),
-            );
-        }
-        let connection = database::try_connect(&db_config, 3);
-        if connection.is_err() {
-            println!("Failed to connect to database");
-            return (
-                "FAILED".to_owned(),
-                "Failed to connect to database".to_owned(),
-                Vec::new(),
-            );
-        }
-        let mut connection = connection.unwrap();
-        let user1 = match database::find_user_by_email(&mut connection, &email) {
-            Some(user) => user,
-            None => {
-                return (
-                    "FAILED".to_owned(),
-                    "User1 does not exist".to_owned(),
-                    Vec::new(),
-                )
-            }
+        let (user1, mut connection) = match auth_get_user_connect(&email, &password, &db_config, 3) {
+            Ok((user, connection)) => (user, connection),
+            Err(err) => return ("Failed".to_owned(), err.to_string(), Vec::new()),
         };
         let user2 = match database::find_user_by_id(&mut connection, id) {
             Some(user) => user,
@@ -181,30 +117,9 @@ pub async fn send_message_service(
                 )
             }
         };
-        if !email::is_valid_email(email.as_str()) {
-            return (
-                "FAILED".to_owned(),
-                "Invalid email adress of first user".to_owned(),
-            );
-        }
-        if !passwords::is_valid_password(&password) {
-            return (
-                "FAILED".to_owned(),
-                "Password contains invalid characters or too small".to_owned(),
-            );
-        }
-        let connection = database::try_connect(&db_config, 3);
-        if connection.is_err() {
-            println!("Failed to connect to database");
-            return (
-                "FAILED".to_owned(),
-                "Failed to connect to database".to_owned(),
-            );
-        }
-        let mut connection = connection.unwrap();
-        let user1 = match database::find_user_by_email(&mut connection, &email) {
-            Some(user) => user,
-            None => return ("FAILED".to_owned(), "User1 does not exist".to_owned()),
+        let (user1, mut connection) = match auth_get_user_connect(&email, &password, &db_config, 3) {
+            Ok((user, connection)) => (user, connection),
+            Err(err) => return ("Failed".to_owned(), err.to_string()),
         };
         let user2 = match database::find_user_by_id(&mut connection, id) {
             Some(user) => user,

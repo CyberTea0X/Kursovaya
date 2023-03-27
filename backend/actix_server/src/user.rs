@@ -2,7 +2,7 @@ use std::fs;
 
 use crate::{
     database::{self, DBconfig, User},
-    email, passwords,
+    auth::auth_get_user_connect, email,
 };
 use actix_web::{post, web, Responder, Result as ActxResult};
 use serde::Deserialize;
@@ -21,29 +21,10 @@ pub(crate) async fn delete_user_service(
 ) -> ActxResult<impl Responder> {
     let (email, password) = path.into_inner();
     let (status, fail_reason) = (|| {
-        if !email::is_valid_email(email.as_str()) {
-            return ("FAILED".to_owned(), "Invalid email adresss".to_owned());
-        }
-        if !passwords::is_valid_password(&password) {
-            return (
-                "FAILED".to_owned(),
-                "Password contains invalid characters or too small".to_owned(),
-            );
-        }
-        let connection = database::try_connect(&db_config, 3);
-        if connection.is_err() {
-            println!("Failed to connect to database");
-            return (
-                "FAILED".to_owned(),
-                "Failed to connect to database".to_owned(),
-            );
-        }
-        let mut connection = connection.unwrap();
-        let password_check = passwords::check_password(&mut connection, &email, &password);
-        match (password_check.0.as_str(), password_check.1.as_str()) {
-            ("OK", "") => {}
-            _ => return password_check,
-        }
+        let (_, mut connection) = match auth_get_user_connect(&email, &password, &db_config, 3) {
+            Ok((user, connection)) => (user, connection),
+            Err(err) => return ("Failed".to_owned(), err.to_string()),
+        };
         let id = match database::user_email_to_id(&mut connection, &email) {
             Ok(Some(id)) => id,
             Ok(None) => return ("FAILED".to_owned(), "User already deleted".to_owned()),
@@ -55,7 +36,7 @@ pub(crate) async fn delete_user_service(
         }
         let dir_name = format!("users/{}", id);
         fs::remove_dir_all(dir_name).unwrap();
-        return ("OK".to_owned(), "".to_owned())
+        return ("OK".to_owned(), "".to_owned());
     })();
     Ok(web::Json(json!({
         "status": status,
@@ -100,29 +81,10 @@ pub(crate) async fn edit_user_service(
         {
             return ("FAILED".to_owned(), "Some query attr is invalid".to_owned());
         }
-        if !email::is_valid_email(email.as_str()) {
-            return ("FAILED".to_owned(), "Invalid email adresss".to_owned());
-        }
-        if !passwords::is_valid_password(&password) {
-            return (
-                "FAILED".to_owned(),
-                "Password contains invalid characters or too small".to_owned(),
-            );
-        }
-        let connection = database::try_connect(&db_config, 3);
-        if connection.is_err() {
-            println!("Failed to connect to database");
-            return (
-                "FAILED".to_owned(),
-                "Failed to connect to database".to_owned(),
-            );
-        }
-        let mut connection = connection.unwrap();
-        let password_check = passwords::check_password(&mut connection, &email, &password);
-        match (password_check.0.as_str(), password_check.1.as_str()) {
-            ("OK", "") => {}
-            _ => return password_check,
-        }
+        let (_, mut connection) = match auth_get_user_connect(&email, &password, &db_config, 3) {
+            Ok((user, connection)) => (user, connection),
+            Err(err) => return ("Failed".to_owned(), err.to_string()),
+        };
         if let Err(err) = database::edit_user(&mut connection, &email, &info) {
             println!("{:?}", err);
             let err_content = err.to_string();
@@ -137,7 +99,7 @@ pub(crate) async fn edit_user_service(
             }
             return ("FAILED".to_owned(), "Database error".to_owned());
         }
-        return ("OK".to_owned(), "".to_owned())
+        return ("OK".to_owned(), "".to_owned());
     })();
     Ok(web::Json(json!({
         "status": status,
@@ -176,8 +138,8 @@ pub(crate) async fn user_profile_service(
             Some(mut user) => {
                 hide_attributes(&mut user, &["email", "password"]);
                 user
-            },
-            None => return ("FAILED", "User does not exist", database::User::default())
+            }
+            None => return ("FAILED", "User does not exist", database::User::default()),
         };
         return ("OK", "", user);
     })();
@@ -195,32 +157,10 @@ pub(crate) async fn visit_user_service(
 ) -> ActxResult<impl Responder> {
     let (email, password, visit_id) = path.into_inner();
     let (status, fail_reason) = (|| {
-        if !email::is_valid_email(email.as_str()) {
-            return ("FAILED".to_owned(), "Invalid email adresss".to_owned());
-        }
-        if !passwords::is_valid_password(&password) {
-            return (
-                "FAILED".to_owned(),
-                "Password contains invalid characters or too small".to_owned(),
-            );
-        }
-        let connection = database::try_connect(&db_config, 3);
-        if connection.is_err() {
-            println!("Failed to connect to database");
-            return (
-                "FAILED".to_owned(),
-                "Failed to connect to database".to_owned(),
-            );
-        }
-        let mut connection = connection.unwrap();
-        let user = database::find_user_by_email(&mut connection, &email);
-        if user.is_none() {
-            return ("FAILED".to_owned(), "Visitor does not exist".to_owned());
-        }
-        let user = user.unwrap();
-        if user.password != password {
-            return ("FAILED".to_owned(), "Invalid password".to_owned());
-        }
+        let (user, mut connection) = match auth_get_user_connect(&email, &password, &db_config, 3) {
+            Ok((user, connection)) => (user, connection),
+            Err(err) => return ("Failed".to_owned(), err.to_string()),
+        };
         let user2 = database::find_user_by_id(&mut connection, visit_id);
         if user2.is_none() {
             return ("FAILED".to_owned(), "Visited does not exist".to_owned());

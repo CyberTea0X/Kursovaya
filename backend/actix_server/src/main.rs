@@ -4,17 +4,18 @@ use actix_web::{get, post, web, App, HttpServer, Responder, Result as ActxResult
 use database::DBconfig;
 use serde_json::json;
 
+pub mod auth;
 pub mod chat;
 pub mod claims;
 pub mod database;
 pub mod email;
+pub mod image;
 pub mod jwt;
 pub mod messages;
 pub mod passwords;
 pub mod register;
 pub mod search;
 pub mod user;
-pub mod image;
 
 #[post("/login/{email}/{password}")] // <- define path parameters
 async fn login_service(
@@ -24,25 +25,10 @@ async fn login_service(
     let (email, password) = path.into_inner();
 
     let (status, fail_reason) = (|| {
-        if !email::is_valid_email(email.as_str()) {
-            return ("FAILED".to_owned(), "Invalid email adresss".to_owned());
-        }
-        if !passwords::is_valid_password(&password) {
-            return (
-                "FAILED".to_owned(),
-                "Password contains invalid characters or too small".to_owned(),
-            );
-        }
-        let connection = database::try_connect(&db_config, 3);
-        if connection.is_err() {
-            println!("Failed to connect to database");
-            return (
-                "FAILED".to_owned(),
-                "Failed to connect to database".to_owned(),
-            );
-        }
-        let mut connection = connection.unwrap();
-        return passwords::check_password(&mut connection, &email, &password);
+        return match auth::auth_get_user_connect(&email, &password, &db_config, 3) {
+            Ok(_) => ("OK".to_owned(), "".to_owned()),
+            Err(err) => ("Failed".to_owned(), err.to_string()),
+        };
     })();
     Ok(web::Json(json!({
         "status": status,
@@ -80,8 +66,7 @@ async fn main() -> std::io::Result<()> {
             .service(
                 web::scope("api/images")
                     .service(image::load_image_service)
-                    .service(image::get_image_service)
-                    .service(fs::Files::new("/", "./users/.").show_files_listing())
+                    .service(fs::Files::new("/", "./users/.").show_files_listing()),
             )
             .service(
                 web::scope("api/chat")
