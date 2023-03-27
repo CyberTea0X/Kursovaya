@@ -1,4 +1,7 @@
-use crate::{database::{self, DBconfig}, auth::auth_get_user_connect};
+use crate::{
+    auth::auth_get_user_connect,
+    database::{self, DBconfig},
+};
 use actix_web::{post, web, Responder, Result as ActxResult};
 use serde_json::json;
 
@@ -33,7 +36,8 @@ pub async fn delete_chat_service(
 ) -> ActxResult<impl Responder> {
     let (status, fail_reason) = (|| {
         let (email, password, id) = path.into_inner();
-        let (user1, mut connection) = match auth_get_user_connect(&email, &password, &db_config, 3) {
+        let (user1, mut connection) = match auth_get_user_connect(&email, &password, &db_config, 3)
+        {
             Ok((user, connection)) => (user, connection),
             Err(err) => return ("Failed".to_owned(), err.to_string()),
         };
@@ -63,7 +67,8 @@ pub async fn create_chat_service(
 ) -> ActxResult<impl Responder> {
     let (status, fail_reason) = (|| {
         let (email, password, id) = path.into_inner();
-        let (user1, mut connection) = match auth_get_user_connect(&email, &password, &db_config, 3) {
+        let (user1, mut connection) = match auth_get_user_connect(&email, &password, &db_config, 3)
+        {
             Ok((user, connection)) => (user, connection),
             Err(err) => return ("Failed".to_owned(), err.to_string()),
         };
@@ -93,7 +98,8 @@ pub async fn is_chat_exists_service(
 ) -> ActxResult<impl Responder> {
     let (status, fail_reason) = (|| {
         let (email, password, id) = path.into_inner();
-        let (user1, mut connection) = match auth_get_user_connect(&email, &password, &db_config, 3) {
+        let (user1, mut connection) = match auth_get_user_connect(&email, &password, &db_config, 3)
+        {
             Ok((user, connection)) => (user, connection),
             Err(err) => return ("Failed".to_owned(), err.to_string()),
         };

@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
-use crate::database::{self, DBconfig, ReadMessagesRequest};
 use crate::auth::auth_get_user_connect;
+use crate::database::{self, DBconfig, ReadMessagesRequest};
 use actix_web::{post, web, Responder, Result as ActxResult};
 use serde_json::json;
 #[post("/read/{email1}/{password}/{id}")]
@@ -22,7 +22,8 @@ pub async fn read_messages_service(
                 )
             }
         };
-        let (user1, mut connection) = match auth_get_user_connect(&email, &password, &db_config, 3) {
+        let (user1, mut connection) = match auth_get_user_connect(&email, &password, &db_config, 3)
+        {
             Ok((user, connection)) => (user, connection),
             Err(err) => return ("Failed".to_owned(), err.to_string()),
         };
@@ -58,7 +59,8 @@ pub async fn get_messages_service(
 ) -> ActxResult<impl Responder> {
     let (status, fail_reason, messages) = (|| {
         let (email, password, id) = path.into_inner();
-        let (user1, mut connection) = match auth_get_user_connect(&email, &password, &db_config, 3) {
+        let (user1, mut connection) = match auth_get_user_connect(&email, &password, &db_config, 3)
+        {
             Ok((user, connection)) => (user, connection),
             Err(err) => return ("Failed".to_owned(), err.to_string(), Vec::new()),
         };
@@ -117,7 +119,8 @@ pub async fn send_message_service(
                 )
             }
         };
-        let (user1, mut connection) = match auth_get_user_connect(&email, &password, &db_config, 3) {
+        let (user1, mut connection) = match auth_get_user_connect(&email, &password, &db_config, 3)
+        {
             Ok((user, connection)) => (user, connection),
             Err(err) => return ("Failed".to_owned(), err.to_string()),
         };

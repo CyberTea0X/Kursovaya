@@ -1,8 +1,9 @@
 use std::fs;
 
 use crate::{
+    auth::auth_get_user_connect,
     database::{self, DBconfig, User},
-    auth::auth_get_user_connect, email,
+    email,
 };
 use actix_web::{post, web, Responder, Result as ActxResult};
 use serde::Deserialize;
