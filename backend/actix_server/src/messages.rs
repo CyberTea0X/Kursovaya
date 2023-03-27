@@ -7,14 +7,14 @@ use actix_web::{
     Result as ActxResult,
 };
 use serde_json::json;
-#[post("/read/{email1}/{password}/{email2}")]
+#[post("/read/{email1}/{password}/{id}")]
 pub async fn read_messages_service(
-    path: web::Path<(String, String, String)>,
+    path: web::Path<(String, String, u32)>,
     db_config: web::Data<DBconfig>,
     messages: web::Json<ReadMessagesRequest>,
 ) -> ActxResult<impl Responder> {
     let (status, fail_reason) = (|| {
-        let (email1, password, email2) = path.into_inner();
+        let (email, password, id) = path.into_inner();
         let messages = match &messages.id_list {
             Some(messages) => messages,
             None => return (
@@ -22,22 +22,16 @@ pub async fn read_messages_service(
                 "No messages to read specified. Plese specify some through query 'id_list'".to_owned()
             )
         };
-        if !email::is_valid_email(email1.as_str()) {
+        if !email::is_valid_email(email.as_str()) {
             return (
                 "FAILED".to_owned(),
-                "Invalid email adress of first user".to_owned(),
+                "Invalid email".to_owned(),
             );
         }
         if !passwords::is_valid_password(&password) {
             return (
                 "FAILED".to_owned(),
                 "Password contains invalid characters or too small".to_owned(),
-            );
-        }
-        if !email::is_valid_email(email2.as_str()) {
-            return (
-                "FAILED".to_owned(),
-                "Invalid email adress of second user".to_owned(),
             );
         }
         let connection = database::try_connect(&db_config, 3);
@@ -49,7 +43,7 @@ pub async fn read_messages_service(
             );
         }
         let mut connection = connection.unwrap();
-        let user1 = match database::find_user_by_email(&mut connection, &email1, true) {
+        let user1 = match database::find_user_by_email(&mut connection, &email) {
             Some(user) => user,
             None => {
                 return (
@@ -58,7 +52,7 @@ pub async fn read_messages_service(
                 )
             }
         };
-        let user2 = match database::find_user_by_email(&mut connection, &email2, true) {
+        let user2 = match database::find_user_by_id(&mut connection, id) {
             Some(user) => user,
             None => {
                 return (
@@ -90,15 +84,15 @@ pub async fn read_messages_service(
     })))
 }
 
-#[post("/get/{email1}/{password}/{email2}")]
+#[post("/get/{email1}/{password}/{id}")]
 pub async fn get_messages_service(
-    path: web::Path<(String, String, String)>,
+    path: web::Path<(String, String, u32)>,
     db_config: web::Data<DBconfig>,
     mut query: web::Query<HashMap<String, usize>>,
 ) -> ActxResult<impl Responder> {
     let (status, fail_reason, messages) = (|| {
-        let (email1, password, email2) = path.into_inner();
-        if !email::is_valid_email(email1.as_str()) {
+        let (email, password, id) = path.into_inner();
+        if !email::is_valid_email(email.as_str()) {
             return (
                 "FAILED".to_owned(),
                 "Invalid email adress of first user".to_owned(),
@@ -112,13 +106,6 @@ pub async fn get_messages_service(
                 Vec::new(),
             );
         }
-        if !email::is_valid_email(email2.as_str()) {
-            return (
-                "FAILED".to_owned(),
-                "Invalid email adress of second user".to_owned(),
-                Vec::new(),
-            );
-        }
         let connection = database::try_connect(&db_config, 3);
         if connection.is_err() {
             println!("Failed to connect to database");
@@ -129,7 +116,7 @@ pub async fn get_messages_service(
             );
         }
         let mut connection = connection.unwrap();
-        let user1 = match database::find_user_by_email(&mut connection, &email1, true) {
+        let user1 = match database::find_user_by_email(&mut connection, &email) {
             Some(user) => user,
             None => {
                 return (
@@ -139,7 +126,7 @@ pub async fn get_messages_service(
                 )
             }
         };
-        let user2 = match database::find_user_by_email(&mut connection, &email2, true) {
+        let user2 = match database::find_user_by_id(&mut connection, id) {
             Some(user) => user,
             None => {
                 return (
@@ -176,14 +163,14 @@ pub async fn get_messages_service(
     })))
 }
 
-#[post("/send/{email1}/{password}/{email2}")]
+#[post("/send/{email1}/{password}/{id}")]
 pub async fn send_message_service(
-    path: web::Path<(String, String, String)>,
+    path: web::Path<(String, String, u32)>,
     db_config: web::Data<DBconfig>,
     mut message: web::Query<HashMap<String, String>>,
 ) -> ActxResult<impl Responder> {
     let (status, fail_reason) = (|| {
-        let (email1, password, email2) = path.into_inner();
+        let (email, password, id) = path.into_inner();
         let message = match message.remove("content") {
             Some(value) => value,
             None => {
@@ -194,7 +181,7 @@ pub async fn send_message_service(
                 )
             }
         };
-        if !email::is_valid_email(email1.as_str()) {
+        if !email::is_valid_email(email.as_str()) {
             return (
                 "FAILED".to_owned(),
                 "Invalid email adress of first user".to_owned(),
@@ -206,12 +193,6 @@ pub async fn send_message_service(
                 "Password contains invalid characters or too small".to_owned(),
             );
         }
-        if !email::is_valid_email(email2.as_str()) {
-            return (
-                "FAILED".to_owned(),
-                "Invalid email adress of second user".to_owned(),
-            );
-        }
         let connection = database::try_connect(&db_config, 3);
         if connection.is_err() {
             println!("Failed to connect to database");
@@ -221,11 +202,11 @@ pub async fn send_message_service(
             );
         }
         let mut connection = connection.unwrap();
-        let user1 = match database::find_user_by_email(&mut connection, &email1, true) {
+        let user1 = match database::find_user_by_email(&mut connection, &email) {
             Some(user) => user,
             None => return ("FAILED".to_owned(), "User1 does not exist".to_owned()),
         };
-        let user2 = match database::find_user_by_email(&mut connection, &email2, true) {
+        let user2 = match database::find_user_by_id(&mut connection, id) {
             Some(user) => user,
             None => return ("FAILED".to_owned(), "User2 does not exist".to_owned()),
         };

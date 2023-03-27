@@ -8,7 +8,7 @@ pub fn is_valid_password(password: &str) -> bool {
 }
 
 pub fn check_password(connection: &mut Conn, email: &str, password: &str) -> (String, String) {
-    let user = database::find_user_by_email(connection, &email, false);
+    let user = database::find_user_by_email(connection, &email);
     if user.is_none() {
         return ("FAILED".to_owned(), "User does not exist".to_owned());
     }

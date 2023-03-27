@@ -37,7 +37,7 @@ pub async fn get_user_chats_service(
             );
         }
         let mut connection = connection.unwrap();
-        let user = database::find_user_by_email(&mut connection, &email, false);
+        let user = database::find_user_by_email(&mut connection, &email);
         if user.is_none() {
             return (
                 "FAILED".to_owned(),
@@ -66,23 +66,17 @@ pub async fn get_user_chats_service(
     })))
 }
 
-#[post("/delete/{email1}/{password}/{email2}")]
+#[post("/delete/{email1}/{password}/{id}")]
 pub async fn delete_chat_service(
-    path: web::Path<(String, String, String)>,
+    path: web::Path<(String, String, u32)>,
     db_config: web::Data<DBconfig>,
 ) -> ActxResult<impl Responder> {
     let (status, fail_reason) = (|| {
-        let (email1, password, email2) = path.into_inner();
-        if !email::is_valid_email(email1.as_str()) {
+        let (email, password, id) = path.into_inner();
+        if !email::is_valid_email(email.as_str()) {
             return (
                 "FAILED".to_owned(),
-                "Invalid email adress of first user".to_owned(),
-            );
-        }
-        if !email::is_valid_email(email2.as_str()) {
-            return (
-                "FAILED".to_owned(),
-                "Invalid email adress of second user".to_owned(),
+                "Invalid email adress of user".to_owned(),
             );
         }
         if !passwords::is_valid_password(&password) {
@@ -100,7 +94,7 @@ pub async fn delete_chat_service(
             );
         }
         let mut connection = connection.unwrap();
-        let user1 = database::find_user_by_email(&mut connection, &email1, false);
+        let user1 = database::find_user_by_email(&mut connection, &email);
         if user1.is_none() {
             return ("FAILED".to_owned(), "User1 does not exist".to_owned());
         }
@@ -108,7 +102,7 @@ pub async fn delete_chat_service(
         if user1.password != password {
             return ("FAILED".to_owned(), "Invalid password".to_owned());
         }
-        let user2 = database::find_user_by_email(&mut connection, &email2, true);
+        let user2 = database::find_user_by_id(&mut connection, id);
         if user2.is_none() {
             return ("FAILED".to_owned(), "User2 does not exist".to_owned());
         }
@@ -127,23 +121,17 @@ pub async fn delete_chat_service(
     })))
 }
 
-#[post("/create/{email1}/{password}/{email2}")]
+#[post("/create/{email1}/{password}/{id}")]
 pub async fn create_chat_service(
-    path: web::Path<(String, String, String)>,
+    path: web::Path<(String, String, u32)>,
     db_config: web::Data<DBconfig>,
 ) -> ActxResult<impl Responder> {
     let (status, fail_reason) = (|| {
-        let (email1, password, email2) = path.into_inner();
-        if !email::is_valid_email(email1.as_str()) {
+        let (email, password, id) = path.into_inner();
+        if !email::is_valid_email(email.as_str()) {
             return (
                 "FAILED".to_owned(),
                 "Invalid email adress of first user".to_owned(),
-            );
-        }
-        if !email::is_valid_email(email2.as_str()) {
-            return (
-                "FAILED".to_owned(),
-                "Invalid email adress of second user".to_owned(),
             );
         }
         if !passwords::is_valid_password(&password) {
@@ -161,7 +149,7 @@ pub async fn create_chat_service(
             );
         }
         let mut connection = connection.unwrap();
-        let user1 = database::find_user_by_email(&mut connection, &email1, false);
+        let user1 = database::find_user_by_email(&mut connection, &email);
         if user1.is_none() {
             return ("FAILED".to_owned(), "User1 does not exist".to_owned());
         }
@@ -169,7 +157,7 @@ pub async fn create_chat_service(
         if user1.password != password {
             return ("FAILED".to_owned(), "Invalid password".to_owned());
         }
-        let user2 = database::find_user_by_email(&mut connection, &email2, true);
+        let user2 = database::find_user_by_id(&mut connection, id);
         if user2.is_none() {
             return ("FAILED".to_owned(), "User2 does not exist".to_owned());
         }
@@ -188,23 +176,17 @@ pub async fn create_chat_service(
     })))
 }
 
-#[post("/exists/{email1}/{password}/{email2}")]
+#[post("/exists/{email1}/{password}/{id}")]
 pub async fn is_chat_exists_service(
-    path: web::Path<(String, String, String)>,
+    path: web::Path<(String, String, u32)>,
     db_config: web::Data<DBconfig>,
 ) -> ActxResult<impl Responder> {
     let (status, fail_reason) = (|| {
-        let (email1, password, email2) = path.into_inner();
-        if !email::is_valid_email(email1.as_str()) {
+        let (email, password, id) = path.into_inner();
+        if !email::is_valid_email(email.as_str()) {
             return (
                 "FAILED".to_owned(),
                 "Invalid email adress of first user".to_owned(),
-            );
-        }
-        if !email::is_valid_email(email2.as_str()) {
-            return (
-                "FAILED".to_owned(),
-                "Invalid email adress of second user".to_owned(),
             );
         }
         if !passwords::is_valid_password(&password) {
@@ -222,7 +204,7 @@ pub async fn is_chat_exists_service(
             );
         }
         let mut connection = connection.unwrap();
-        let user1 = database::find_user_by_email(&mut connection, &email1, false);
+        let user1 = database::find_user_by_email(&mut connection, &email);
         if user1.is_none() {
             return ("FAILED".to_owned(), "User1 does not exist".to_owned());
         }
@@ -230,7 +212,7 @@ pub async fn is_chat_exists_service(
         if user1.password != password {
             return ("FAILED".to_owned(), "Invalid password".to_owned());
         }
-        let user2 = database::find_user_by_email(&mut connection, &email2, true);
+        let user2 = database::find_user_by_id(&mut connection, id);
         if user2.is_none() {
             return ("FAILED".to_owned(), "User2 does not exist".to_owned());
         }

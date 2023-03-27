@@ -5,6 +5,7 @@ use mysql::{params, Conn, OptsBuilder};
 use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::io::Read;
+use std::collections::HashMap;
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct FindUserRequest {
@@ -305,20 +306,11 @@ pub fn user_email_to_id(
 
 pub fn get_all_users(
     connection: &mut Conn,
-    hide_passwords: bool,
 ) -> Result<Vec<User>, mysql::Error> {
-    connection.query_map(
+    connection.query(
         r"SELECT id, username, email, password, firstname,
     lastname, rating, about, age, gender, last_online, reg_date
-        FROM `users`",
-        |user| {
-            let mut user: User = user;
-            if hide_passwords {
-                user.password = "secret".to_owned();
-            }
-            user
-        },
-    )
+        FROM `users`")
 }
 
 pub fn is_valid_sql(text: &str) -> bool {
@@ -477,22 +469,21 @@ pub fn find_user(
     connection: &mut Conn,
     email: Option<&str>,
     id: Option<u32>,
-    hide_password: bool,
 ) -> Option<User> {
     email
-        .and_then(|e| find_user_by_email(connection, e, hide_password))
-        .or_else(|| id.and_then(|i| find_user_by_id(connection, i, hide_password)))
+        .and_then(|e| find_user_by_email(connection, e))
+        .or_else(|| id.and_then(|i| find_user_by_id(connection, i)))
 }
 
-pub fn find_user_by_id(connection: &mut Conn, id: u32, hide_password: bool) -> Option<User> {
-    match get_all_users(connection, hide_password) {
+pub fn find_user_by_id(connection: &mut Conn, id: u32) -> Option<User> {
+    match get_all_users(connection) {
         Ok(users) => users.into_iter().find(|user| user.id == id),
         Err(_) => None,
     }
 }
 
-pub fn find_user_by_email(connection: &mut Conn, email: &str, hide_password: bool) -> Option<User> {
-    match get_all_users(connection, hide_password) {
+pub fn find_user_by_email(connection: &mut Conn, email: &str) -> Option<User> {
+    match get_all_users(connection) {
         Ok(users) => users.into_iter().find(|user| user.email == email),
         Err(_) => None,
     }

@@ -1,7 +1,7 @@
 use std::fs;
 
 use crate::{
-    database::{self, DBconfig},
+    database::{self, DBconfig, User},
     email, passwords,
 };
 use actix_web::{post, web, Responder, Result as ActxResult};
@@ -171,11 +171,15 @@ pub(crate) async fn user_profile_service(
             );
         }
         let mut connection = connection.unwrap();
-        let user = database::find_user(&mut connection, info.email.as_deref(), info.id, true);
-        if user.is_none() {
-            return ("FAILED", "User does not exist", database::User::default());
-        }
-        return ("OK", "", user.unwrap());
+        let user = database::find_user(&mut connection, info.email.as_deref(), info.id);
+        let user = match user {
+            Some(mut user) => {
+                hide_attributes(&mut user, &["email", "password"]);
+                user
+            },
+            None => return ("FAILED", "User does not exist", database::User::default())
+        };
+        return ("OK", "", user);
     })();
     Ok(web::Json(json!({
         "status": status,
@@ -184,12 +188,12 @@ pub(crate) async fn user_profile_service(
     })))
 }
 
-#[post("/visit/{visitor_email}/{visitor_password}/{visited_email}")] // <- define path parameters
+#[post("/visit/{visitor_email}/{visitor_password}/{id}")] // <- define path parameters
 pub(crate) async fn visit_user_service(
-    path: web::Path<(String, String, String)>,
+    path: web::Path<(String, String, u32)>,
     db_config: web::Data<DBconfig>,
 ) -> ActxResult<impl Responder> {
-    let (email, password, visited_email) = path.into_inner();
+    let (email, password, visit_id) = path.into_inner();
     let (status, fail_reason) = (|| {
         if !email::is_valid_email(email.as_str()) {
             return ("FAILED".to_owned(), "Invalid email adresss".to_owned());
@@ -209,7 +213,7 @@ pub(crate) async fn visit_user_service(
             );
         }
         let mut connection = connection.unwrap();
-        let user = database::find_user_by_email(&mut connection, &email, false);
+        let user = database::find_user_by_email(&mut connection, &email);
         if user.is_none() {
             return ("FAILED".to_owned(), "Visitor does not exist".to_owned());
         }
@@ -217,7 +221,7 @@ pub(crate) async fn visit_user_service(
         if user.password != password {
             return ("FAILED".to_owned(), "Invalid password".to_owned());
         }
-        let user2 = database::find_user_by_email(&mut connection, &visited_email, false);
+        let user2 = database::find_user_by_id(&mut connection, visit_id);
         if user2.is_none() {
             return ("FAILED".to_owned(), "Visited does not exist".to_owned());
         }
@@ -249,4 +253,24 @@ pub(crate) async fn visit_user_service(
         "status": status,
         "reason": fail_reason,
     })))
+}
+
+pub fn hide_attributes(user: &mut User, hidden_attributes: &[&str]) {
+    for attribute in hidden_attributes {
+        match *attribute {
+            "id" => user.id = 0,
+            "username" => user.username = "secret".to_string(),
+            "email" => user.email = "secret".to_string(),
+            "password" => user.password = "secret".to_string(),
+            "firstname" => user.firstname = None,
+            "lastname" => user.lastname = None,
+            "rating" => user.rating = 0,
+            "about" => user.about = None,
+            "age" => user.age = None,
+            "gender" => user.gender = None,
+            "last_online" => user.last_online = None,
+            "reg_date" => user.reg_date = None,
+            _ => (),
+        }
+    }
 }
