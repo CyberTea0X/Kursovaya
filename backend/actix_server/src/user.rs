@@ -226,6 +226,9 @@ pub(crate) async fn visit_user_service(
             return ("FAILED".to_owned(), "Visited does not exist".to_owned());
         }
         let user2 = user2.unwrap();
+        if user.id == user2.id {
+            return ("FAILED".to_owned(), "Cannot visit yourself".to_owned());
+        }
         if database::visit_exists(&mut connection, &user.email, user2.id) {
             return ("FAILED".to_owned(), "Already visited".to_owned());
         }
