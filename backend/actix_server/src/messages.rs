@@ -1,9 +1,16 @@
 use std::collections::HashMap;
 
 use crate::auth::auth_get_user_connect;
-use crate::database::{self, DBconfig, ReadMessagesRequest};
+use crate::database::{self, DBconfig};
 use actix_web::{post, web, Responder, Result as ActxResult};
+use serde::{Serialize, Deserialize};
 use serde_json::json;
+
+#[derive(Serialize, Deserialize, Default, Debug)]
+pub struct ReadMessagesRequest {
+    pub id_list: Option<Vec<u32>>,
+}
+
 #[post("/read/{email1}/{password}/{id}")]
 pub async fn read_messages_service(
     path: web::Path<(String, String, u32)>,
