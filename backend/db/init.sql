@@ -52,6 +52,8 @@ CREATE TABLE images (
 	id INTEGER AUTO_INCREMENT PRIMARY KEY UNIQUE, 
     owner_id INTEGER NOT NULL,
     published_at DATETIME NOT NULL,
+    about TEXT NOT NULL,
+    image_name TEXT NOT NULL,
     views INTEGER NOT NULL,
     likes INTEGER NOT NULL,
     FOREIGN KEY (owner_id)  REFERENCES users (id) ON DELETE CASCADE

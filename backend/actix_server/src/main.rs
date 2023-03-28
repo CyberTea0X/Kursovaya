@@ -3,6 +3,7 @@ use actix_files as fs;
 use actix_web::{get, post, web, App, HttpServer, Responder, Result as ActxResult};
 use database::DBconfig;
 use serde_json::json;
+use std::fs::{create_dir, metadata};
 
 pub mod auth;
 pub mod chat;
@@ -16,6 +17,13 @@ pub mod passwords;
 pub mod register;
 pub mod search;
 pub mod user;
+
+fn init_users_dir() {
+    let dir_name = "users";
+    if !metadata(dir_name).is_ok() {
+        create_dir(dir_name).unwrap();
+    }
+}
 
 #[post("/login/{email}/{password}")] // <- define path parameters
 async fn login_service(
@@ -60,6 +68,7 @@ async fn check_db_status(db_config: web::Data<DBconfig>) -> String {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    init_users_dir();
     HttpServer::new(|| {
         App::new()
             .app_data(web::Data::new(database::parse_config()))
