@@ -207,6 +207,17 @@ pub fn get_image(connection: &mut Conn, id: u32) -> Result<Option<ImageData>, my
         .pop())
 }
 
+pub fn delete_image(
+    connection: &mut Conn,
+    id: u32
+) -> Result<(), mysql::Error> {
+    connection.exec_drop("DELETE FROM images WHERE id = :id",
+        params! {
+            "id" => id
+        }
+    )
+}
+
 pub fn get_images(
     connection: &mut Conn,
     owner_id: u32
