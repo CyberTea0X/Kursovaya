@@ -18,3 +18,4 @@ Cargo.lock
 DBconfig.json
 DB2config.json
 JWTconfig.json
+.users
