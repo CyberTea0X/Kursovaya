@@ -12,6 +12,7 @@ use actix_multipart::Multipart;
 use actix_web::{post, web, App, Error, HttpResponse, HttpServer, Responder, Result as ActxResult, get};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
+use glob::glob;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ImageAddRequest {
@@ -58,6 +59,58 @@ async fn load_image_service(
             })));
         }
     }
+    Ok(web::Json(json!({
+        "status": status,
+        "reason": fail_reason,
+    })))
+}
+
+#[post("/delete/{email}/{password}/{image_id}")] // <- define path parameters
+async fn delete_image_service(
+    path: web::Path<(String, String, u32)>,
+    db_config: web::Data<DBconfig>,
+) -> ActxResult<impl Responder> {
+    let (email, password, img_id) = path.into_inner();
+    let (status, fail_reason) = (|| {
+        let (user, mut connection) = match auth_get_user_connect(&email, &password, &db_config, 3) {
+            Ok((user, connection)) => (user, connection),
+            Err(err) => return ("Failed".to_owned(), err.to_string()),
+        };
+        let img = match database::get_image(&mut connection, img_id) {
+            Ok(Some(img)) => img,
+            Ok(None) => return ("Failed".to_owned(), "Image already deleted".to_owned()),
+            Err(_) => return ("Failed".to_owned(), "Database error".to_owned())
+        };
+        if img.owner_id != user.id {
+            return ("Failed".to_owned(), "Not enough permissions".to_owned());
+        }
+        if database::delete_image(&mut connection, img_id).is_err() {
+            return ("Failed".to_owned(), "Database error".to_owned())
+        }
+        let user_gallery = format!("users/{}/gallery", user.id);
+        let dir_reader = match fs::read_dir(user_gallery) {
+            Ok(dr) => dr,
+            Err(_) => return ("FAILED".to_owned(), "Internal server error".to_owned())
+        };
+
+        for path in dir_reader {
+            let path = path.unwrap().path();
+            if let Some(prefix) = path.file_stem() {
+                let prefix = match prefix.to_str() {
+                    Some(s) => s.to_string(),
+                    _ => continue
+                };
+                if prefix != img_id.to_string() {
+                    continue;
+                }
+                if fs::remove_file(path).is_err() {
+                    return ("FAILED".to_owned(), "Internal server error".to_owned())
+                }
+                break;
+            }
+        }
+        return ("OK".to_owned(), "".to_owned())
+    })();
     Ok(web::Json(json!({
         "status": status,
         "reason": fail_reason,
