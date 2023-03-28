@@ -211,7 +211,7 @@ pub fn get_images(
     connection: &mut Conn,
     owner_id: u32
 ) -> Result<Vec<ImageData>, mysql::Error> {
-    let query = format!("SELECT * FROM images WHERE id = '{}'", owner_id);
+    let query = format!("SELECT * FROM images WHERE owner_id = '{}'", owner_id);
     Ok(connection
         .query_map(
             query,

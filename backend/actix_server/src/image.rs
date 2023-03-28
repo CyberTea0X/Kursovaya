@@ -64,6 +64,34 @@ async fn load_image_service(
     })))
 }
 
+#[get("/gallery/{user_id}")] // <- define path parameters
+async fn gallery_service(
+    path: web::Path<u32>,
+    db_config: web::Data<DBconfig>,
+) -> ActxResult<impl Responder> {
+    let user_id = path.into_inner();
+    let (status, fail_reason, logo_id) = (|| {
+        let mut connection = match database::try_connect(&db_config, 3) {
+            Ok(conn) => conn,
+            Err(_) => return ("Failed".to_owned(), "Database error".to_owned(), Vec::new()),
+        };
+        let user = match database::find_user_by_id(&mut connection, user_id) {
+            Some(user) => user,
+            None => return ("Failed".to_owned(), "User not found".to_owned(), Vec::new())
+        };
+        match database::get_images(&mut connection, user.id) {
+            Ok(images) => ("OK".to_owned(), "".to_owned(), images),
+            Err(_) => return ("Failed".to_owned(), "Database error".to_owned(), Vec::new())
+        }
+    }
+    )();
+    Ok(web::Json(json!({
+        "status": status,
+        "reason": fail_reason,
+        "logo_id": logo_id
+    })))
+}
+
 #[post("/set/{email}/{password}/{image_id}")] // <- define path parameters
 async fn set_logo_service(
     path: web::Path<(String, String, u32)>,

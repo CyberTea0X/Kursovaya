@@ -115,6 +115,7 @@ async fn main() -> std::io::Result<()> {
                     .service(check_db_status)
                     .service(user::edit_user_service)
                     .service(user::delete_user_service)
+                    .service(image::gallery_service)
                     .service(user::visit_user_service),
             )
     })
