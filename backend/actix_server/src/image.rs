@@ -1,81 +1,124 @@
-use std::{fs::{File, self}, io::Write};
+use std::{
+    fs::{self, File},
+    io::{Read, Write},
+};
 
 use crate::{
-    database::{self, DBconfig},
     auth::auth_get_user_connect,
+    database::{self, DBconfig},
+    files::save_file,
 };
-use actix_web::{post, web, App, HttpServer, Responder, Result as ActxResult, HttpResponse, Error, dev::Payload};
-use serde::{Serialize, Deserialize};
-use serde_json::json;
-use std::path::PathBuf;
-use uuid::Uuid;
 use actix_multipart::Multipart;
-use actix_form_data::{handle_multipart, Error as FormError, Field, Form};
-use futures::{Future, StreamExt};
-use bytes::BytesMut;
+use actix_web::{post, web, App, Error, HttpResponse, HttpServer, Responder, Result as ActxResult, get};
+use serde::{Deserialize, Serialize};
+use serde_json::json;
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct ImageData {
-    pub id: u32,
-    pub owner_id: u32,
-    pub published_at: String,
+pub struct ImageAddRequest {
     pub about: String,
     pub image_name: String,
-    pub views: u32,
-    pub likes: u32,
 }
 
-#[post("/load/{email}/{password}")]
-pub async fn load_image_service(
-    db_config: web::Data<DBconfig>,
+#[post("/load/{email}/{password}")] // <- define path parameters
+async fn load_image_service(
+    payload: Multipart,
     path: web::Path<(String, String)>,
-    image_data: web::Query<ImageData>,
-) -> Result<impl Responder, Error> {
-
+    db_config: web::Data<DBconfig>,
+    query: web::Query<ImageAddRequest>,
+) -> ActxResult<impl Responder> {
+    let (email, password) = path.into_inner();
+    let mut file_name = String::new();
+    let mut user_gallery = String::new();
+    let (status, fail_reason) = (|| {
+        let (user, mut connection) = match auth_get_user_connect(&email, &password, &db_config, 3) {
+            Ok((user, connection)) => (user, connection),
+            Err(err) => return ("Failed".to_owned(), err.to_string()),
+        };
+        let (about, image_name) = (&query.about, &query.image_name);
+        if database::add_image(&mut connection, user.id, about, image_name).is_err() {
+            return ("Failed".to_owned(), "Database error".to_owned());
+        }
+        file_name = connection.last_insert_id().to_string();
+        user_gallery = format!("users/{}/gallery", user.id);
+        ("OK".to_owned(), "".to_owned())
+    })();
+    if !user_gallery.is_empty() {
+        if save_file(
+            payload,
+            &user_gallery,
+            &file_name,
+            &["png", "jpeg", "jpe", "jpg"],
+        )
+        .await
+        .is_none()
+        {
+            return Ok(web::Json(json!({
+                "status": "FAILED",
+                "reason": "Failed to save file",
+            })));
+        }
+    }
     Ok(web::Json(json!({
-        "status": "image upload successful",
-        "reason": ""
+        "status": status,
+        "reason": fail_reason,
     })))
 }
 
-async fn image_upload_local_request(mut payload: Multipart) -> Result<HttpResponse, Error> {
-    let mut file_sizes = String::new();
-    while let Some(item) = payload.next().await {
-        let mut field = item?;
-        let content_type = field.content_disposition();
-        let file_name = content_type.get_filename().unwrap();
-        if file_name == "" {
-            break;
+#[post("/set/{email}/{password}/{image_id}")] // <- define path parameters
+async fn set_logo_service(
+    path: web::Path<(String, String, u32)>,
+    db_config: web::Data<DBconfig>,
+) -> ActxResult<impl Responder> {
+    let (email, password, img_id) = path.into_inner();
+    let (status, fail_reason) = (|| {
+        let (user, mut connection) = match auth_get_user_connect(&email, &password, &db_config, 3) {
+            Ok((user, connection)) => (user, connection),
+            Err(err) => return ("Failed".to_owned(), err.to_string()),
+        };
+        let image = match database::get_image(&mut connection, img_id) {
+            Ok(Some(image)) => image,
+            Ok(None) => return ("Failed".to_owned(), "Image not found".to_owned()),
+            Err(_) => return ("Failed".to_owned(), "Database error".to_owned())
+        };
+        if database::delete_logo(&mut connection, user.id).is_err() {
+            return ("Failed".to_owned(), "Database error".to_owned())
         }
-        let file_path = format!("{}", file_name);
-        let mut file = web::block(|| std::fs::File::create(file_path))
-            .await
-            .unwrap();
-        let mut file_size: usize = 0;
-        let mut file_bytes = BytesMut::new();
-        while let Some(chunk) = field.next().await {
-            let data = chunk?;
-            file_bytes.extend_from_slice(&data);
-            file_size += data.len();
-            file = web::block(move || file.unwrap().write_all(&data).map(|_| file)).await.unwrap().unwrap();
+        if database::set_logo(&mut connection, image.id, user.id).is_err() {
+            return ("Failed".to_owned(), "Database error".to_owned())
         }
-        let thumb_size = image_create_preview(file_bytes, file_name.to_owned()).await?;
-        file_sizes.push_str(&format!(
-            "\"{}\": {{ \"full\": {}, \"thumb\": {} }}, ",
-            file_name, file_size, thumb_size
-        ));
-    }
-    Ok(HttpResponse::Ok()
-        .content_type("application/json")
-        .body(format!("{{ {} }}", &file_sizes[..file_sizes.len() - 2]))
-        .into())
+        ("OK".to_owned(), "".to_owned())
+    })();
+    Ok(web::Json(json!({
+        "status": status,
+        "reason": fail_reason,
+    })))
 }
-async fn image_create_preview(image_bytes: BytesMut, file_name: String) -> Result<usize, Error> {
-    let img = image::load_from_memory(&image_bytes).unwrap();
-    let scaled = img.thumbnail(100, 100);
-    let file_path = format!("{}", file_name);
-    let file_path_clone = file_path.clone();
-    web::block(move || scaled.save(&file_path_clone)).await?;
-    let file_size: usize = fs::metadata(&file_path)?.len() as usize;
-    Ok(file_size)
+
+#[get("/get/{user_id}")] // <- define path parameters
+async fn get_logo_service(
+    path: web::Path<u32>,
+    db_config: web::Data<DBconfig>,
+) -> ActxResult<impl Responder> {
+    let user_id = path.into_inner();
+    let (status, fail_reason, logo_id) = (|| {
+        let mut connection = match database::try_connect(&db_config, 3) {
+            Ok(conn) => conn,
+            Err(_) => return ("Failed".to_owned(), "Database error".to_owned(), -1),
+        };
+        let user = match database::find_user_by_id(&mut connection, user_id) {
+            Some(user) => user,
+            None => return ("Failed".to_owned(), "User not found".to_owned(), -1)
+        };
+        match database::get_logo_id(&mut connection, user.id) {
+            Ok(Some(id)) => ("OK".to_owned(), "".to_owned(), id as i32),
+            Ok(None) => return ("Failed".to_owned(), "Logo not found".to_owned(), -1),
+            Err(_) => return ("Failed".to_owned(), "Database error".to_owned(), -1)
+        }
+    }
+    )();
+    Ok(web::Json(json!({
+        "status": status,
+        "reason": fail_reason,
+        "logo_id": logo_id
+    })))
 }

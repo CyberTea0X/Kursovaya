@@ -122,7 +122,11 @@ pub(crate) async fn user_profile_service(
             );
         }
         if info.email.is_some() && !email::is_valid_email(info.email.as_ref().unwrap()) {
-            return ("FAILED".to_owned(), "Invalid email adresss".to_owned(), database::User::default());
+            return (
+                "FAILED".to_owned(),
+                "Invalid email adresss".to_owned(),
+                database::User::default(),
+            );
         }
         let mut connection = match database::try_connect(&db_config, 3) {
             Ok(conn) => conn,
@@ -141,7 +145,13 @@ pub(crate) async fn user_profile_service(
                 hide_attributes(&mut user, &["email", "password"]);
                 user
             }
-            None => return ("FAILED".to_owned(), "User does not exist".to_owned(), database::User::default()),
+            None => {
+                return (
+                    "FAILED".to_owned(),
+                    "User does not exist".to_owned(),
+                    database::User::default(),
+                )
+            }
         };
         return ("OK".to_owned(), "".to_owned(), user);
     })();
@@ -163,10 +173,9 @@ pub(crate) async fn visit_user_service(
             Ok((user, connection)) => (user, connection),
             Err(err) => return ("Failed".to_owned(), err.to_string()),
         };
-        let user2 = match database::find_user_by_id(&mut connection, visit_id)
-        {
+        let user2 = match database::find_user_by_id(&mut connection, visit_id) {
             Some(user) => user,
-            None => return ("FAILED".to_owned(), "Visited does not exist".to_owned())
+            None => return ("FAILED".to_owned(), "Visited does not exist".to_owned()),
         };
         if user.id == user2.id {
             return ("FAILED".to_owned(), "Cannot visit yourself".to_owned());

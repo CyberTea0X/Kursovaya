@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use crate::auth::auth_get_user_connect;
 use crate::database::{self, DBconfig};
 use actix_web::{post, web, Responder, Result as ActxResult};
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use serde_json::json;
 
 #[derive(Serialize, Deserialize, Default, Debug)]

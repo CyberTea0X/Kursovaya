@@ -10,6 +10,7 @@ pub mod chat;
 pub mod claims;
 pub mod database;
 pub mod email;
+pub mod files;
 pub mod image;
 pub mod jwt;
 pub mod messages;
@@ -18,8 +19,12 @@ pub mod register;
 pub mod search;
 pub mod user;
 
-fn init_users_dir() {
+fn init_dirs() {
     let dir_name = "users";
+    if !metadata(dir_name).is_ok() {
+        create_dir(dir_name).unwrap();
+    }
+    let dir_name = "tmp";
     if !metadata(dir_name).is_ok() {
         create_dir(dir_name).unwrap();
     }
@@ -68,10 +73,15 @@ async fn check_db_status(db_config: web::Data<DBconfig>) -> String {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    init_users_dir();
+    init_dirs();
     HttpServer::new(|| {
         App::new()
             .app_data(web::Data::new(database::parse_config()))
+            .service(
+                web::scope("api/logo")
+                    .service(image::get_logo_service)
+                    .service(image::set_logo_service)
+            )
             .service(
                 web::scope("api/images")
                     .service(image::load_image_service)

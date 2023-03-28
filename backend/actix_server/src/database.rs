@@ -122,9 +122,15 @@ pub struct Message {
     pub is_read: bool,
 }
 
-#[derive(Serialize, Deserialize, Default, Debug)]
-pub struct ReadMessagesRequest {
-    pub id_list: Option<Vec<u32>>,
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ImageData {
+    pub id: u32,
+    pub owner_id: u32,
+    pub published_at: String,
+    pub about: String,
+    pub image_name: String,
+    pub views: u32,
+    pub likes: u32,
 }
 
 impl FromRow for Message {
@@ -157,6 +163,84 @@ impl FromRow for Message {
             is_read,
         })
     }
+}
+pub fn get_logo_id(
+    connection: &mut Conn,
+    owner_id: u32,
+) -> Result<Option<u32>, mysql::Error> {
+    let query = format!("SELECT id FROM logos WHERE owner_id = {} LIMIT 1", owner_id);
+    connection.query_first(query)
+}
+
+pub fn set_logo(
+    connection: &mut Conn,
+    img_id: u32,
+    owner_id: u32
+) -> Result<(), mysql::Error> {
+    connection.exec_drop("INSERT INTO logos (id, owner_id) VALUES (?, ?);", (img_id, owner_id))
+}
+
+pub fn delete_logo(
+    connection: &mut Conn,
+    owner_id: u32,
+) -> Result<(), mysql::Error> {
+    connection.exec_drop("DELETE FROM logos WHERE owner_id = :owner", params! {
+        "owner" => owner_id
+    })
+}
+
+pub fn get_image(connection: &mut Conn, id: u32) -> Result<Option<ImageData>, mysql::Error> {
+    let query = format!("SELECT * FROM images WHERE id = '{}' LIMIT 1", id);
+    Ok(connection
+        .query_map(
+            query,
+            |(id, owner_id, published_at, about, image_name, views, likes)| ImageData {
+                id,
+                owner_id,
+                published_at,
+                about,
+                image_name,
+                views,
+                likes,
+            },
+        )?
+        .pop())
+}
+
+pub fn get_images(
+    connection: &mut Conn,
+    owner_id: u32
+) -> Result<Vec<ImageData>, mysql::Error> {
+    let query = format!("SELECT * FROM images WHERE id = '{}'", owner_id);
+    Ok(connection
+        .query_map(
+            query,
+            |(id, owner_id, published_at, about, image_name, views, likes)| ImageData {
+                id,
+                owner_id,
+                published_at,
+                about,
+                image_name,
+                views,
+                likes,
+            },
+        )?)
+}
+
+pub fn add_image(
+    connection: &mut Conn,
+    owner_id: u32,
+    about: &str,
+    image_name: &str,
+) -> Result<(), mysql::Error> {
+    let published_at = chrono::offset::Local::now()
+        .format("%Y-%m-%d %H-%M-%S")
+        .to_string();
+    connection.exec_drop(
+        "INSERT INTO images (owner_id, published_at, about, image_name, views, likes)
+    VALUES (?, ?, ?, ?, ?, ?)",
+        (owner_id, published_at, about, image_name, 0, 0),
+    )
 }
 
 pub fn mark_messages_as_read(
