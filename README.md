@@ -10,6 +10,10 @@
 ### Диаграмма ганта:
 https://docs.google.com/spreadsheets/d/14OZumUvYDyPBog4PSBGLDfvenpr_oTND39_t1MktJ54/edit?usp=sharing
 
+### Postman (backend, автотесты, документация api сервера, запросы и т.п)
+KEY:
+https://api.postman.com/collections/26434478-67e37c10-c14d-4350-bfe8-49a2b3aed928?access_key=PMAT-01GWN4QE884V89ZT0RQTK39SD9
+
 
 ### Со стороны заказчика:
 Потенциальный заказчик заходит на главную страницу и может ввести в поиск названия картин, либо выбрать теги какие ему нравятся.
