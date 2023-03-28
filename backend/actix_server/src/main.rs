@@ -40,7 +40,7 @@ async fn login_service(
     let (status, fail_reason) = (|| {
         return match auth::auth_get_user_connect(&email, &password, &db_config, 3) {
             Ok(_) => ("OK".to_owned(), "".to_owned()),
-            Err(err) => ("Failed".to_owned(), err.to_string()),
+            Err(err) => ("FAILED".to_owned(), err.to_string()),
         };
     })();
     Ok(web::Json(json!({

@@ -12,7 +12,6 @@ use actix_multipart::Multipart;
 use actix_web::{post, web, App, Error, HttpResponse, HttpServer, Responder, Result as ActxResult, get};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use glob::glob;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ImageAddRequest {
@@ -33,11 +32,11 @@ async fn load_image_service(
     let (status, fail_reason) = (|| {
         let (user, mut connection) = match auth_get_user_connect(&email, &password, &db_config, 3) {
             Ok((user, connection)) => (user, connection),
-            Err(err) => return ("Failed".to_owned(), err.to_string()),
+            Err(err) => return ("FAILED".to_owned(), err.to_string()),
         };
         let (about, image_name) = (&query.about, &query.image_name);
         if database::add_image(&mut connection, user.id, about, image_name).is_err() {
-            return ("Failed".to_owned(), "Database error".to_owned());
+            return ("FAILED".to_owned(), "Database error".to_owned());
         }
         file_name = connection.last_insert_id().to_string();
         user_gallery = format!("users/{}/gallery", user.id);
@@ -74,18 +73,18 @@ async fn delete_image_service(
     let (status, fail_reason) = (|| {
         let (user, mut connection) = match auth_get_user_connect(&email, &password, &db_config, 3) {
             Ok((user, connection)) => (user, connection),
-            Err(err) => return ("Failed".to_owned(), err.to_string()),
+            Err(err) => return ("FAILED".to_owned(), err.to_string()),
         };
         let img = match database::get_image(&mut connection, img_id) {
             Ok(Some(img)) => img,
-            Ok(None) => return ("Failed".to_owned(), "Image already deleted".to_owned()),
-            Err(_) => return ("Failed".to_owned(), "Database error".to_owned())
+            Ok(None) => return ("FAILED".to_owned(), "Image already deleted".to_owned()),
+            Err(_) => return ("FAILED".to_owned(), "Database error".to_owned())
         };
         if img.owner_id != user.id {
-            return ("Failed".to_owned(), "Not enough permissions".to_owned());
+            return ("FAILED".to_owned(), "Not enough permissions".to_owned());
         }
         if database::delete_image(&mut connection, img_id).is_err() {
-            return ("Failed".to_owned(), "Database error".to_owned())
+            return ("FAILED".to_owned(), "Database error".to_owned())
         }
         let user_gallery = format!("users/{}/gallery", user.id);
         let dir_reader = match fs::read_dir(user_gallery) {
@@ -126,15 +125,15 @@ async fn gallery_service(
     let (status, fail_reason, logo_id) = (|| {
         let mut connection = match database::try_connect(&db_config, 3) {
             Ok(conn) => conn,
-            Err(_) => return ("Failed".to_owned(), "Database error".to_owned(), Vec::new()),
+            Err(_) => return ("FAILED".to_owned(), "Database error".to_owned(), Vec::new()),
         };
         let user = match database::find_user_by_id(&mut connection, user_id) {
             Some(user) => user,
-            None => return ("Failed".to_owned(), "User not found".to_owned(), Vec::new())
+            None => return ("FAILED".to_owned(), "User not found".to_owned(), Vec::new())
         };
         match database::get_images(&mut connection, user.id) {
             Ok(images) => ("OK".to_owned(), "".to_owned(), images),
-            Err(_) => return ("Failed".to_owned(), "Database error".to_owned(), Vec::new())
+            Err(_) => return ("FAILED".to_owned(), "Database error".to_owned(), Vec::new())
         }
     }
     )();
@@ -154,18 +153,18 @@ async fn set_logo_service(
     let (status, fail_reason) = (|| {
         let (user, mut connection) = match auth_get_user_connect(&email, &password, &db_config, 3) {
             Ok((user, connection)) => (user, connection),
-            Err(err) => return ("Failed".to_owned(), err.to_string()),
+            Err(err) => return ("FAILED".to_owned(), err.to_string()),
         };
         let image = match database::get_image(&mut connection, img_id) {
             Ok(Some(image)) => image,
-            Ok(None) => return ("Failed".to_owned(), "Image not found".to_owned()),
-            Err(_) => return ("Failed".to_owned(), "Database error".to_owned())
+            Ok(None) => return ("FAILED".to_owned(), "Image not found".to_owned()),
+            Err(_) => return ("FAILED".to_owned(), "Database error".to_owned())
         };
         if database::delete_logo(&mut connection, user.id).is_err() {
-            return ("Failed".to_owned(), "Database error".to_owned())
+            return ("FAILED".to_owned(), "Database error".to_owned())
         }
         if database::set_logo(&mut connection, image.id, user.id).is_err() {
-            return ("Failed".to_owned(), "Database error".to_owned())
+            return ("FAILED".to_owned(), "Database error".to_owned())
         }
         ("OK".to_owned(), "".to_owned())
     })();
@@ -184,16 +183,16 @@ async fn get_logo_service(
     let (status, fail_reason, logo_id) = (|| {
         let mut connection = match database::try_connect(&db_config, 3) {
             Ok(conn) => conn,
-            Err(_) => return ("Failed".to_owned(), "Database error".to_owned(), -1),
+            Err(_) => return ("FAILED".to_owned(), "Database error".to_owned(), -1),
         };
         let user = match database::find_user_by_id(&mut connection, user_id) {
             Some(user) => user,
-            None => return ("Failed".to_owned(), "User not found".to_owned(), -1)
+            None => return ("FAILED".to_owned(), "User not found".to_owned(), -1)
         };
         match database::get_logo_id(&mut connection, user.id) {
             Ok(Some(id)) => ("OK".to_owned(), "".to_owned(), id as i32),
-            Ok(None) => return ("Failed".to_owned(), "Logo not found".to_owned(), -1),
-            Err(_) => return ("Failed".to_owned(), "Database error".to_owned(), -1)
+            Ok(None) => return ("FAILED".to_owned(), "Logo not found".to_owned(), -1),
+            Err(_) => return ("FAILED".to_owned(), "Database error".to_owned(), -1)
         }
     }
     )();

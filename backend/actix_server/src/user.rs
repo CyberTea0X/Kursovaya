@@ -24,7 +24,7 @@ pub(crate) async fn delete_user_service(
     let (status, fail_reason) = (|| {
         let (_, mut connection) = match auth_get_user_connect(&email, &password, &db_config, 3) {
             Ok((user, connection)) => (user, connection),
-            Err(err) => return ("Failed".to_owned(), err.to_string()),
+            Err(err) => return ("FAILED".to_owned(), err.to_string()),
         };
         let id = match database::user_email_to_id(&mut connection, &email) {
             Ok(Some(id)) => id,
