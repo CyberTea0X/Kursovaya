@@ -25,5 +25,8 @@ FROM alpine:latest
 RUN apk --no-cache add ca-certificates
 
 COPY --from=build /usr/local/cargo/bin/actix_server /usr/local/bin/actix_server
+WORKDIR /usr/src/actix_server
+RUN ls
 WORKDIR /usr/local/bin/actix_server
+RUN ls
 CMD ["actix_server"]
