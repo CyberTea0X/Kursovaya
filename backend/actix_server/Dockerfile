@@ -7,10 +7,6 @@ RUN cargo build --release && \
     rm -rf src/ tests/ target/release/.fingerprint/actix_server-*
 
 FROM gcr.io/distroless/cc-debian10
-RUN apt-get update && \
-    apt-get install -y ca-certificates && \
-    apt-get -y install libpq-dev && \
-    rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 
 COPY --from=build /app/target/release/actix_server .
