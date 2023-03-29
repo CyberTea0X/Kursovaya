@@ -589,7 +589,8 @@ pub fn parse_config() -> DBconfig {
         .expect("Database config not found");
     let mut data = String::new();
     file.read_to_string(&mut data).unwrap();
-    let db_config: DBconfig = serde_json::from_str(&data).unwrap();
+    let db_config: DBconfig = serde_json::from_str(&data)
+        .expect("Конфиг базы данных имеет неверный формат");
     db_config
 }
 
