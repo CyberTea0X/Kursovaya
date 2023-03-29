@@ -9,7 +9,6 @@ RUN apt-get update \
         cmake \
         musl-tools \
         libssl-dev \
-        extra-runtime-dependencies \
     && rm -rf /var/lib/apt/lists/* \
     && rustup target add ${TARGET_ENV} \
     && USER=root cargo new --bin main
