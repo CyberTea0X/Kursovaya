@@ -18,4 +18,4 @@ FROM alpine:latest
 WORKDIR /app
 
 COPY --from=build /app/target/release/actix_server .
-CMD ["./actix_server"]
+CMD ["actix_server"]
