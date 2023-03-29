@@ -585,7 +585,8 @@ pub fn find_user_by_email(connection: &mut Conn, email: &str) -> Option<User> {
 }
 
 pub fn parse_config() -> DBconfig {
-    let mut file = File::open("DB2config.json").unwrap();
+    let mut file = File::open("DBconfig.json")
+        .expect("Database config not found");
     let mut data = String::new();
     file.read_to_string(&mut data).unwrap();
     let db_config: DBconfig = serde_json::from_str(&data).unwrap();
