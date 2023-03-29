@@ -1,4 +1,4 @@
-FROM rust::latest AS build
+FROM rust:latest AS build
 ENV PKG_CONFIG_ALLOW_CROSS=1
 WORKDIR /app
 COPY . .
