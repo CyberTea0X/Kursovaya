@@ -10,5 +10,6 @@ RUN apt-get update && \
     apt-get install -y ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 WORKDIR /app
+
 COPY --from=build /app/target/release/actix_server .
 CMD ["./actix_server"]
