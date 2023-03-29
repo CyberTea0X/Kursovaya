@@ -1,4 +1,4 @@
-FROM 1.68.2-slim-buster AS build
+FROM rust:1.68.2-slim-buster AS build
 ENV PKG_CONFIG_ALLOW_CROSS=1
 WORKDIR /app
 COPY . .
