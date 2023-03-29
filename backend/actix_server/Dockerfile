@@ -1,3 +1,10 @@
+# FROM alpine:latest
+# WORKDIR /app
+
+# COPY --from=build /usr/local/cargo/bin/api-service /usr/local/bin/api-service
+# CMD ["actix_server"]
+
+
 FROM rust:1.68.2 AS build
 ENV PKG_CONFIG_ALLOW_CROSS=1
 ENV TARGET_ENV x86_64-unknown-linux-musl
@@ -17,5 +24,5 @@ RUN cargo build --release
 FROM alpine:latest
 WORKDIR /app
 
-COPY --from=build /usr/local/cargo/bin/api-service /usr/local/bin/api-service
+COPY --from=build /usr/local/cargo/bin/actix_server /usr/local/bin/actix_server
 CMD ["actix_server"]
