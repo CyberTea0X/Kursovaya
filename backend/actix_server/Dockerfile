@@ -19,10 +19,10 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/* \
     && rustup target add ${TARGET_ENV} \
     && USER=root cargo new --bin main
-RUN cargo build --release
+RUN cargo install --path .
 
 FROM alpine:latest
 RUN apk --no-cache add ca-certificates
 
-COPY --from=build /usr/local/cargo/bin/actix_server /usr/local/bin/
+COPY --from=build /usr/local/cargo/bin/actix_server /usr/local/bin/actix_server
 CMD ["actix_server"]
