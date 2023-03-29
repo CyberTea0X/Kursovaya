@@ -12,11 +12,9 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/* \
     && rustup target add ${TARGET_ENV} \
     && USER=root cargo new --bin main
-RUN cargo build --target ${TARGET_ENV} --release && \
-    strip target/release/actix_server && \
-    rm -rf src/ tests/ target/release/.fingerprint/actix_server-*
+RUN cargo build --target ${TARGET_ENV} --release
 
-FROM debian:buster-slim
+FROM alpine:latest
 WORKDIR /app
 
 COPY --from=build /app/target/release/actix_server .
