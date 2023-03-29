@@ -22,7 +22,7 @@ RUN apt-get update \
 RUN cargo build --release
 
 FROM alpine:latest
-WORKDIR /app
+RUN apk --no-cache add ca-certificates
 
-COPY --from=build /usr/local/cargo/bin/actix_server /usr/local/bin/actix_server
+COPY --from=build /target/release/actix_server .
 CMD ["actix_server"]
