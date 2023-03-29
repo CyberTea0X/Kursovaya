@@ -12,7 +12,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/* \
     && rustup target add ${TARGET_ENV} \
     && USER=root cargo new --bin main
-RUN cargo build --target ${TARGET_ENV} --release
+RUN cargo build --release
 
 FROM alpine:latest
 WORKDIR /app
