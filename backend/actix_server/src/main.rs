@@ -62,14 +62,14 @@ async fn check_db_status(db_config: web::Data<DBconfig>) -> String {
     )
 }
 
-// #[post("/config")] // <- define path parameters
-// async fn config(db_config: web::Data<DBconfig>) -> ActxResult<String> {
-//     let responce = format!(
-//         "ip: {}\nport: {}\nuser: {}\npassword: {},\ndatabase: {}",
-//         db_config.ip, db_config.port, db_config.user, db_config.password, db_config.database
-//     );
-//     Ok(responce)
-// }
+#[post("/config")] // <- define path parameters
+async fn config(db_config: web::Data<DBconfig>) -> ActxResult<String> {
+    let responce = format!(
+        "ip: {}\nport: {}\nuser: {}\npassword: {},\ndatabase: {}",
+        db_config.ip, db_config.port, db_config.user, db_config.password, db_config.database
+    );
+    Ok(responce)
+}
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -117,7 +117,8 @@ async fn main() -> std::io::Result<()> {
                     .service(user::edit_user_service)
                     .service(user::delete_user_service)
                     .service(image::gallery_service)
-                    .service(user::visit_user_service),
+                    .service(user::visit_user_service)
+                    .service(config),
             )
     })
     .bind(("0.0.0.0", 8080))?
