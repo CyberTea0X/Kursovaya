@@ -1,7 +1,7 @@
 FROM rust:latest
 
 WORKDIR /usr/src/actix_server
-COPY Cargo.toml Cargo.lock ./
+COPY Cargo.toml ./
 
 RUN cargo install --path .
 
