@@ -1,0 +1,42 @@
+.searchpage{
+    margin: 50px;
+    text-align: center;
+}
+
+.search {
+    padding: 10px;
+    font-size: 20px;
+ 
+}
+
+table {
+    width: 100%;
+    margin: 50px 0px;
+    /* border-spacing: 10px; */
+    /* border: 1px solid; */
+    color: #444;
+  }
+  
+  table td {
+   
+    text-align: left;
+    padding: 16px;
+    /* border: 1px solid #ddd; */
+    flex-direction: row
+}
+
+.name{
+    
+} 
+
+table tr:hover {
+    background-color: #ddd;
+}
+ 
+table th {
+    padding-top: 12px;
+    padding-bottom: 12px;
+    text-align: center;
+    background-color: rgb(191, 42, 250);
+    color: white;
+}
