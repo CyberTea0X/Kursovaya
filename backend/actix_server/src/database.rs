@@ -592,6 +592,7 @@ pub fn parse_config() -> DBconfig {
 }
 
 pub fn parse_config_file(mut file: File) -> DBconfig {
+    println!("Trying to get DB config from file...");
     let mut data = String::new();
     file.read_to_string(&mut data).unwrap();
     let db_config: DBconfig = serde_json::from_str(&data)
@@ -600,6 +601,7 @@ pub fn parse_config_file(mut file: File) -> DBconfig {
 }
 
 pub fn parse_config_env() -> DBconfig {
+    println!("Trying to get DB config from enviroment...");
     let ip = std::env::var("DB_IP")
         .expect("DB_IP not set");
     let port = std::env::var("DB_PORT")

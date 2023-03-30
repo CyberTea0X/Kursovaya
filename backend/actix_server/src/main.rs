@@ -50,16 +50,18 @@ async fn login_service(
 }
 
 #[get("/dbstatus")] //
-async fn check_db_status(db_config: web::Data<DBconfig>) -> String {
+async fn check_db_status(db_config: web::Data<DBconfig>) -> ActxResult<impl Responder>{
     let connection = database::try_connect(&db_config, 3);
-    format!(
-        "DB {}",
-        if connection.is_ok() {
-            "Online"
-        } else {
-            "Offline"
+    let (status, fail_reason) = (|| {
+        match connection {
+            Ok(_) => return ("OK".to_owned(), "Online".to_owned()),
+            Err(err) => return ("OK".to_owned(), err.to_string())
         }
-    )
+    })();
+    Ok(web::Json(json!({
+        "status": status,
+        "reason": fail_reason,
+    })))
 }
 
 #[post("/config")] // <- define path parameters
