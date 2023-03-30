@@ -585,13 +585,32 @@ pub fn find_user_by_email(connection: &mut Conn, email: &str) -> Option<User> {
 }
 
 pub fn parse_config() -> DBconfig {
-    let mut file = File::open("DBconfig.json")
-        .expect("Database config not found");
+    match File::open("DBconfig.json") {
+        Ok(file) => return parse_config_file(file),
+        Err(_) => return parse_config_env()
+    };
+}
+
+pub fn parse_config_file(mut file: File) -> DBconfig {
     let mut data = String::new();
     file.read_to_string(&mut data).unwrap();
     let db_config: DBconfig = serde_json::from_str(&data)
         .expect("Конфиг базы данных имеет неверный формат");
     db_config
+}
+
+pub fn parse_config_env() -> DBconfig {
+    let ip = std::env::var("DB_IP")
+        .expect("DB_IP not set");
+    let port = std::env::var("DB_PORT")
+        .expect("DB_PORT not set").parse::<u16>().unwrap();
+    let user = std::env::var("DB_USER")
+        .expect("DB_USER not set");
+    let password = std::env::var("DB_PASSWORD")
+        .expect("DB_PASSWORD not set");
+    let database = std::env::var("DB_DATABASE")
+        .expect("DB_DATABASE not set");
+    DBconfig { ip, port, user, password, database }
 }
 
 // pub fn try_reconnect(connection: &mut Conn) -> bool{
