@@ -1,9 +1,12 @@
 .account {
-    padding: 50px 0;
-    background: url(back2.jpg);
-    background-size: cover;
+    background:linear-gradient(rgba(0,0,0,0.5),transparent 60%, rgba(0,0,0,0.5) ), url(back2.jpg);
+      background-size: cover;
     background-position: center;
+    padding: 50px 0;
+    
 }
+
+
 
 .account-title {
     font-size: 20px;
