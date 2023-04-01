@@ -22,17 +22,14 @@ const Account = () => {
                     <p className="account-title">Введите номер телефона</p>
                     <input className="account-input" placeholder="Введите номер телефона" type="tel" />
                     <button className="account-btn2">Сохранить</button>
-                    <div style={{borderbottom: '1px solid rgb(36, 5, 51)'}}>
-                        <h3 className="account-title">Изменение пароля</h3>
-                        <p className="account-title">Текущий пароль</p>
-                        <input className="account-input" placeholder="Текущий пароль" type="password"  />
-                        <p className="account-title">Новый пароль</p>
-                        <input className="account-input" placeholder="Пароль" type="password"  />
-                        <p className="account-title">Подтвердите пароль</p>
-                        <input className="account-input" placeholder="Пароль" type="password"  />
-                        <button className="account-btn2">Сохранить</button>
-                    </div>
-                    
+                    <h3 className="account-title">Изменение пароля</h3>
+                    <p className="account-title">Текущий пароль</p>
+                    <input className="account-input" placeholder="Текущий пароль" type="password"  />
+                    <p className="account-title">Новый пароль</p>
+                    <input className="account-input" placeholder="Пароль" type="password"  />
+                    <p className="account-title">Подтвердите пароль</p>
+                    <input className="account-input" placeholder="Пароль" type="password"  />
+                    <button className="account-btn2">Сохранить</button>
                 </div>
                 
             </div>
