@@ -1,0 +1,73 @@
+.account {
+    padding: 50px 0;
+    background: url(back.jpg);
+    background-size: cover;
+    background-position: center;
+}
+
+.account-title {
+    font-size: 20px;
+    margin: 15px 0;
+    font-weight: bold;
+}
+
+.account-user{
+    display: flex;
+    column-gap: 20px;
+    align-items: center;
+    border-bottom: 1px solid rgb(36, 5, 51);
+    padding-bottom: 40px;
+    width: 650px;
+}
+
+.account-img{
+    height: 80px;
+    width: 80px;
+    border-radius: 50%;
+    background-color: rgb(139, 139, 139);
+    cursor: pointer;
+    
+}
+
+.account-btn {
+    padding: 10px 15px;
+    border: 2px solid rgb(0, 28, 121);
+    border-radius: 15px;
+    cursor: pointer;
+    background: rgb(138, 230, 255);
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.account-input {
+    width: 300px;
+    height: 25px;
+    outline: none;
+    padding-left: 20px;
+    border-radius: 10px;
+    font-size: 15px;
+}
+
+.account-btn2 {
+    display: block;
+    background: #040072;
+    border: none;
+    border-radius: 15px;
+    cursor: pointer;
+    padding: 10px 15px;
+    margin: 20px 0;
+    color: #adffff;
+    font-size: 15px;
+    font-weight: 500;
+    border: 1px solid black;
+}
+
+.account-input2 {
+    width: 600px;
+    height: 100px;
+    outline: none;
+    padding-left: 20px;
+    border-radius: 10px;
+    font-size: 15px;    
+    align-content: flex-start;
+}

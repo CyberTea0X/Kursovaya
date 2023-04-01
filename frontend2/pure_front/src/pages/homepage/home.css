@@ -1,13 +1,75 @@
-button {
-    color: black;
-    width: 18em;
+.registration-button {
+    color: rgb(255, 255, 255);
+    width: 15em;
+    background-color: rgb(88, 34, 154);
+    height: 50px;
+    border-radius: 10px;
+    border: none;
+    font-size: 20px;
+    font-weight: 650;
+    position: absolute;
+    right:    125px;
+    bottom:   25px;
+    
 }
 
 
 
+.enter-button {
+    color: rgb(255, 255, 255);
+    width: 5em;
+    background-color: rgb(88, 34, 154);
+    height: 50px;
+    border-radius: 10px;
+    border: none;
+    font-size: 20px;
+    font-weight: 650;
+    position: absolute;
+    right:    10px;
+    bottom:   25px;
+}
 
+.about-us {
+    position: relative;
+    right:    0;
+    bottom:   0;
+    height: 500px;
+    background: rgba(220, 169, 254, 0.61);
+   
+    background-size: cover;
+    background-position: center;
+    flex-direction: row;
+    
+}
 
+.functional {
+    position: relative;
+    right:    0;
+    bottom:   0;
+    height: 500px;
+    background: rgba(183, 255, 230, 0.671);
+   
+    background-size: cover;
+    background-position: center;
+    flex-direction: row;
+}
 
+.heading {
+    position: relative;
+    right:    0;
+    bottom:   0;
+    height: 500px;
+    background: rgb(248, 255, 198);
+   
+    background-size: cover;
+    background-position: center;
+    flex-direction: row;
+}
+
+.text {
+    padding: 0px;
+    margin: 0px;
+}
 
 
 

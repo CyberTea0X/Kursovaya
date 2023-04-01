@@ -47,70 +47,63 @@ const ArtistProfile = () => {
     return (
         <>
             <div>
-
-           
-                    {data.img &&
-                        <div className='buttons'>
-                            
-                                <div style={{
-                                    width: '100%',
-                                    height: '100vh',                          
-                                    position: 'fixed',
-                                    background: "rgba(0, 0, 0, 0.85)",                                    
-                                    display: 'flex',
-                                    justifyContent: 'center',
-                                    alignItems: 'center',
-                                    overflow: 'hidden',                                    
-                                }}>
+                
+            </div>
+            <div  >
+         
+                {data.img &&
+                    <div >                        
+                        <div style={{
+                            width: '100%',
+                            height: '90vh',                          
+                            position: 'fixed',
+                            background: "rgba(0, 0, 0, 0.85)",                                    
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            overflow: 'hidden',                                    
+                        }}>
                             
                                     
-                                    <button onClick={() => imgAction()} style={{position: 'absolute', top: '10px', right: '10px'}}>X</button>
-                                    <button onClick={() => imgAction('previous-img')}>Previous</button>
-
-                                    
-                                    <div style={{
-                                        verticalAlign: 'text-bottom',
-                                        alignContent: 'center',
-                                        maxWidth:'30%',
-                                        
-                                        justifyContent: 'center',
-                                        alignItems: 'center',
-                                        verticalAlign: 'middle',
-                                        
-
-                                    }}>
-                                        <center>
+                            <button className='buttons' onClick={() => imgAction()} style={{position: 'absolute', top: '10px', right: '10px'}}>X</button>
+                            <button className='buttons' onClick={() => imgAction('previous-img')}>Previous</button>                                   
+                            <div style={{
+                                verticalAlign: 'text-bottom',
+                                alignContent: 'center',
+                                maxWidth:'30%',                                        
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                verticalAlign: 'middle',
+                            }}>
+                                <center>
                                     <img src={data.img} style={{width: 'auto',  maxHeight: '100%', borderRadius: '30px', maxHeight:'600px', padding: '10px'}}/>
-                                   
                                     <div style={{
                                         color: 'white',
                                         backgroundColor: "rgb(46, 4, 43)",
-                                        borderRadius: '10px',
-                                        
+                                        borderRadius: '10px',                                       
                                         padding: '10px',
                                         flexDirection: 'column',
                                         wordWrap: 'break-word',
-                                        
-
-
-                                    }}> Всем привет дорогие друзья, это канал куплинов плей и сегодня мы играем в симулять очка</div>
-                                     </center>
+                                    }}> 
+                                        Всем привет дорогие друзья, это канал куплинов плей и сегодня мы играем в симулять очка
                                     </div>
-                                    <button onClick={() => imgAction('next-img')}>Next</button>
-                                    
-                                </div>
-                            
+                                </center>
                             </div>
+                                <button className='buttons' onClick={() => imgAction('next-img')}>Next</button>
+                                    
+                        </div>
+                            
+                    </div>
                         }
                     
 
                     
-             </div>
+            </div>
            
             <div style={{padding: '10px'}}>
                 <ResponsiveMasonry
                     columnsCountBreakPoints={{350: 3, 750: 4, 900: 5}}
-            >
+                >
                     <Masonry gutter='10px'>                    
                         {images.map((image, i) => (
                             <img

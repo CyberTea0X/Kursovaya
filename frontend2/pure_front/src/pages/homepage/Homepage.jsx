@@ -1,17 +1,27 @@
 import './home.css'
 import { Link } from 'react-router-dom'
-import Pic1 from './Pic1.png'
 import React from 'react'
 
 const Homepage = () => {
   return (
-    <div>
+    <div >
+      <div className='heading'>
+      </div>
 
-      <div style={{backgroundImage: "url(https://catherineasquithgallery.com/uploads/posts/2021-02/1612305975_5-p-fon-purpurnii-gradient-5.jpg)"}}>
-        <Link to="/Profile">
-          <button>Зарегистрироваться</button>
+      <div className='about-us'>
+        <p className='text'>Hello everyone! Let’s edit some text.</p>
+      </div>
+
+      <div className='functional'>
+        <Link to="/Signup">
+          <button className='registration-button'>Зарегистрироваться</button>
+        </Link>
+
+        <Link to="/Login">
+          <button className='enter-button'>Войти</button>       
         </Link>
       </div>
+
     </div>
   )
 }

@@ -1,7 +1,7 @@
 .navbar {
 width: 100%;
-height: 100px;    
-background-color: rgb(62, 62, 62);
+height: 90px;    
+background: rgb(174, 174, 174);
 display: flex;
 flex-direction: row;
 position: fixed;  
@@ -22,22 +22,19 @@ align-items: center;
 
 }
 
-p {
+.navbar-p {
   font-size: 30px;
   font-weight: 550;
   height: 100%;
   display: flex;
   align-items: center;
   margin-top: 0%;
-  color: aliceblue;
+  color: rgb(0, 0, 0);
   position: relative;
 
 }
 
-.navbar .leftSide img {
-width: 70px;
-float: left;
-}
+
 
 .navbar .rightside {
   font-size: 30px;
@@ -47,11 +44,11 @@ float: left;
   display: flex;
   align-items: center;
   justify-content: right;
-  color: aliceblue;
+  color: rgb(0, 0, 0);
 }
   
 .navbar a {
-    color: white;
+    color:rgb(0, 0, 0);
     text-decoration: none;
     padding: 0 1rem;
     
@@ -59,9 +56,23 @@ float: left;
 
 
   
-.navbar .rightSide button {
+.navbar .rightSide {
     background-color: transparent;
     border: none;
     color: white;
     cursor: pointer;
   }
+
+.searchbar {
+  width: 300px;
+  border-radius: 40px;
+  
+}
+
+.searchbar:hover {
+ border-color: darkgrey;
+}
+
+.searchbar:onClick {
+  border-color: white;
+}

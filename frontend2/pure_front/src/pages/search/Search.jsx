@@ -20,7 +20,7 @@ const SearchPage = () => {
     return (
         
         <div className="searchpage">
-            <input type="text" placeholder='Search...' className="search" onChange={e=> setQuery(e.target.value)} />
+            <input type="text" placeholder='Поиск...' className="search" onChange={e=> setQuery(e.target.value)} />
            <Table data={search(Users)}/>
         </div>
     )

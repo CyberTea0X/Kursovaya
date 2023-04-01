@@ -2,13 +2,13 @@ import { HashRouter ,Routes, Route, Link } from 'react-router-dom';
 import { Homepage } from './pages/homepage/Homepage';
 import { ArtistProfile } from './pages/artistProfile/ArtistProfile';
 import { Trends } from './pages/trends/Trends';
-import { Profile } from './pages/register/Profile';
-
+import { Signup } from './pages/sign-up/signup';
+import { SearchPage } from './pages/search/Search.jsx';
 import './index.css';
-import {Header} from './navbar/Navbar.jsx'
+import {Header} from './navbar/Navbar.jsx';
+import { Log_in } from './pages/log_in/Log_in';
 
-
-
+import {Account} from './pages/account/Account.jsx'
 
 
 
@@ -19,9 +19,12 @@ function App() {
         <Header />
           <Routes>
             <Route path="/" element={<Homepage />} />
-            <Route path="/gallery" element={<ArtistProfile />} />
-            <Route path="/trends" element={<Trends />} />
-            <Route path="/Profile" element={<Profile />} />
+            <Route path="/Gallery" element={<ArtistProfile />} />
+            <Route path="/Trends" element={<Trends />} />
+            <Route path="/Signup" element={<Signup />} />
+            <Route path="/Search" element={<SearchPage/>} />
+            <Route path="/Login" element={<Log_in/>} />
+            <Route path="/Account" element={<Account/>} />
           </Routes>
       
     </>
