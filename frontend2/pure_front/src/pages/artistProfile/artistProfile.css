@@ -13,3 +13,14 @@
     margin-bottom: 30px; 
     
 }
+
+.profile-img {
+    height: 200px;
+    width: 200px;
+    border-radius: 50%;
+    background-color: rgb(139, 139, 139);
+    cursor: pointer;
+    display: block;
+    
+    margin: 140px auto 50px auto;
+}

@@ -1,7 +1,7 @@
 import React, {useState} from 'react';
 import Masonry,{ResponsiveMasonry} from 'react-responsive-masonry';
 import "./artistProfile.css";
-
+import User from "../account/Unknown_person.jpg"
 const images = [
 "https://i.pinimg.com/474x/98/64/58/98645877a607cc968e459047a6eba601.jpg",
 "https://i.pinimg.com/564x/24/10/32/241032236c043b846d106cc36d26f5aa.jpg",
@@ -47,7 +47,7 @@ const ArtistProfile = () => {
     return (
         <>
             <div>
-                
+                <img className="profile-img" src={User} alt="" />                        
             </div>
             <div  >
          
