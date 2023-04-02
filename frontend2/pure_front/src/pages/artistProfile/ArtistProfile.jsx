@@ -57,7 +57,7 @@ const ArtistProfile = () => {
                     <div >                        
                         <div style={{
                             width: '100%',
-                            height: '90vh',                          
+                            height: '100vh',                          
                             position: 'fixed',
                             background: "rgba(0, 0, 0, 0.85)",                                    
                             display: 'flex',
