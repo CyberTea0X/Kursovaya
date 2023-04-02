@@ -22,8 +22,7 @@ function Header() {
           
         </Link>
         <Link to="/">Главная</Link>
-        <Link to="/trends">Популярное</Link>
-        <Link to="/gallery">Gallery</Link>
+        <Link to="/trends">Популярное</Link>        
         <Link to="/Account">Профиль</Link>
       </div>
     </div>
