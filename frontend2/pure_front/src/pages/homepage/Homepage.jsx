@@ -1,18 +1,56 @@
-import './home.css'
-import { Link } from 'react-router-dom'
-import React from 'react'
+import './home.css';
+import { Link } from 'react-router-dom';
+import React from 'react';
+import Fox from './лиса.jpg';
+import Tea from './tea.png';
+import Gosling from './гослинг.png';
+import Cat from './header5.jpg';
+import CloudDog from './header2.jpg';
+import Corgi from './header3.jpg';
+import GoodBoy from './header4.jpg';
+import Chat from './chat.png';
+import Profile from './profile.png';
+import Popular from './popular.png';
+
+
+
 
 const Homepage = () => {
   return (
     <div >
       <div className='heading'>
+        <h1 className='home-title2'>Добро пожаловать на платформу <br /> от художников для художников</h1>
+        
+          <img className='heading-pics' src={Cat} />
+          <img className='heading-pics2' src={CloudDog} />
+          <img className='heading-pics3' src={Corgi} />
+          <img className='heading-pics4' src={GoodBoy} />
+        
+        
+
       </div>
 
       <div className='about-us'>
-        <p className='text'>Hello everyone! Let’s edit some text.</p>
+
+        <h1 className='home-title'>Местный Райан Гослинг <br /> встретит всех с <br /> чашечкой виртуального чая <br /> и лисичками</h1>
+        <p className='text'>Для наибольшего комфорта <br /> пользователей <br /> пишите свои предложения <br /> по улучшению сайта <br/> или внедрению новых фишек.</p>
+        <img className='home-tea' src={Tea} />
+        <img className='home-gosling' src={Gosling} />        
+        <img className='home-fox' src={Fox} />
+
       </div>
 
       <div className='functional'>
+        <h1 className='home-title2'>Используйте функционал по полной!</h1>
+        <img className='func-img1' src={Popular}/>
+        <img className='func-img2' src={Chat}/>
+        <img className='func-img3' src={Profile}/>
+        <p className='text2' style={{	left: '310px', top:'75px'}}>Загляните на вкладку "Популярное" и найдите актуального для себя художника</p>
+        <p className='text2' style={{	left: '310px', top:'270px'}}>Общайтесь со своими заказчиками или с теми, у кого заказали картину</p>
+        <p className='text2' style={{	left: '310px', top:'444px'}}>Настраивайте свой профиль, выбирайте теги,<br/> под которыми вы рисуете, и Вас обязательно заметят</p>
+        
+
+
         <Link to="/Signup">
           <button className='registration-button'>Зарегистрироваться</button>
         </Link>

@@ -1,5 +1,5 @@
 .account {
-    background:linear-gradient(rgba(0,0,0,0.5),transparent 60%, rgba(0,0,0,0.5) ), url(back2.jpg);
+    background:linear-gradient(rgba(0,0,0,0.0),transparent 40%, rgba(0,0,0,0.2) ), url(back2.jpg);
       background-size: cover;
     background-position: center;
     padding: 50px 0;
@@ -12,6 +12,24 @@
     font-size: 20px;
     margin: 15px 0;
     font-weight: 500;
+    color: #000000;
+	text-shadow: 
+		-0   -1.5px 0   #ffffff,
+		 0   -1.5px 0   #ffffff,
+		-0    1.5px 0   #ffffff,
+		 0    1.5px 0   #ffffff,
+		-1.5px -0   0   #ffffff,
+		 1.5px -0   0   #ffffff,
+		-1.5px  0   0   #ffffff,
+		 1.5px  0   0   #ffffff,
+		-1.5px -1.5px 0 #ffffff,
+		 1.5px -1.5px 0   #ffffff,
+		-1.5px  1.5px 0   #ffffff,
+		 1.5px  1.5px 0   #ffffff,
+		-1.5px -1.5px 0   #ffffff,
+		 1.5px -1.5px 0   #ffffff,
+		-1.5px  1.5px 0   #ffffff,
+		 1.5px  1.5px 0   #ffffff;
 }
 
 .account-user{

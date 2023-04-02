@@ -20,6 +20,8 @@ const images = [
 "https://i.pinimg.com/474x/24/fa/f7/24faf7e2d2d1195e879d3a86bf138955.jpg",
 ]
 
+
+
 const ArtistProfile = () => {
     const [data, setData] = useState({img: '', i: 0})
 
@@ -46,11 +48,11 @@ const ArtistProfile = () => {
     }
     return (
         <>
-            <div>
-                <img className="profile-img" src={User} alt="" />                        
-            </div>
+            
+                                        
+            
             <div  >
-         
+            
                 {data.img &&
                     <div >                        
                         <div style={{
@@ -61,7 +63,9 @@ const ArtistProfile = () => {
                             display: 'flex',
                             justifyContent: 'center',
                             alignItems: 'center',
-                            overflow: 'hidden',                                    
+                            marginTop:'-50px'
+                            
+                                                        
                         }}>
                             
                                     
@@ -76,7 +80,7 @@ const ArtistProfile = () => {
                                 verticalAlign: 'middle',
                             }}>
                                 <center>
-                                    <img src={data.img} style={{width: 'auto',  maxHeight: '100%', borderRadius: '30px', maxHeight:'600px', padding: '10px'}}/>
+                                    <img src={data.img} style={{maxWidth: '40em', borderRadius: '30px', maxHeight:'500px', padding: '10px'}}/>
                                     <div style={{
                                         color: 'white',
                                         backgroundColor: "rgb(46, 4, 43)",
@@ -84,6 +88,7 @@ const ArtistProfile = () => {
                                         padding: '10px',
                                         flexDirection: 'column',
                                         wordWrap: 'break-word',
+                                        width:'40em'
                                     }}> 
                                         Всем привет дорогие друзья, это канал куплинов плей и сегодня мы играем в симулять очка
                                     </div>
@@ -99,7 +104,7 @@ const ArtistProfile = () => {
 
                     
             </div>
-           
+            <img className="profile-img" src={User} alt="" />
             <div style={{padding: '10px'}}>
                 <ResponsiveMasonry
                     columnsCountBreakPoints={{350: 3, 750: 4, 900: 5}}
