@@ -8,6 +8,7 @@ import {Text} from 'react'
     import Img5 from './img/img5.png'
     
     import './trends.css';
+import { ArtistProfile } from '../artistProfile/ArtistProfile'
     
 
 const Trends = () => {
@@ -63,7 +64,8 @@ const Trends = () => {
                         <div className="pics" key={index} >
                             
                             <img src ={item.imgSrc} style={{width: '100%', borderRadius: '30px', border: '2px solid black'}}/>
-                             {item.name}
+                            <Link to="/gallery" className='trends-link'>{item.name}</Link>
+                             
                             
                         </div>
                     )

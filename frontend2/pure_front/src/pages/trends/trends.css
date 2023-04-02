@@ -34,3 +34,10 @@
     font-size: 20px;
     font-weight: 479;
 }
+
+.trends-link {
+    color: rgb(241, 241, 241);
+    font-size: 20px;
+    font-weight: 479;
+    text-decoration: none;
+}
