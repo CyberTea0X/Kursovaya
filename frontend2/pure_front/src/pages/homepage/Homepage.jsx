@@ -43,8 +43,8 @@ const Homepage = () => {
       <div className='functional'>
         <h1 className='home-title2'>Используйте функционал по полной!</h1>
         <Link  to="/trends"><img className='func-img1' src={Popular}/></Link>
-        <Link><img className='func-img2' src={Chat}/></Link>
-        <Link to="/trends"><img className='func-img3' src={Profile}/></Link>
+        <Link to="/Chat"><img className='func-img2' src={Chat}/></Link>
+        <Link to="/account"><img className='func-img3' src={Profile}/></Link>
         <p className='text2' style={{	left: '310px', top:'75px'}}>Загляните на вкладку "Популярное" и найдите актуального для себя художника</p>
         <p className='text2' style={{	left: '310px', top:'270px'}}>Общайтесь со своими заказчиками или с теми, у кого заказали картину</p>
         <p className='text2' style={{	left: '310px', top:'444px'}}>Настраивайте свой профиль, выбирайте теги,<br/> под которыми вы рисуете, и Вас обязательно заметят</p>

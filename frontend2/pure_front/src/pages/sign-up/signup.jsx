@@ -80,7 +80,7 @@ const Signup = () => {
   return (
     <div className="reg">
       <form onSubmit={handleSubmit}>
-        <h1>Регистрация</h1>
+        <h1 className="h1">Регистрация</h1>
         {inputs.map((input) => (
           <FormInput
             key={input.id}
