@@ -76,9 +76,11 @@ async fn config(db_config: web::Data<DBconfig>) -> ActxResult<String> {
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     init_dirs();
-    HttpServer::new(|| {
+    let db_config = database::parse_config();
+    HttpServer::new(move || {
+        let db_config = db_config.clone();
         App::new()
-            .app_data(web::Data::new(database::parse_config()))
+            .app_data(web::Data::new(db_config))
             .service(
                 web::scope("api/logo")
                     .service(image::get_logo_service)
