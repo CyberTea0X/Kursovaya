@@ -597,6 +597,7 @@ pub fn parse_config_file(mut file: File) -> DBconfig {
     file.read_to_string(&mut data).unwrap();
     let db_config: DBconfig = serde_json::from_str(&data)
         .expect("Конфиг базы данных имеет неверный формат");
+    println!("Got DB config from file");
     db_config
 }
 
@@ -612,6 +613,7 @@ pub fn parse_config_env() -> DBconfig {
         .expect("DB_PASSWORD not set");
     let database = std::env::var("DB_DATABASE")
         .expect("DB_DATABASE not set");
+    println!("Got DB config from enviroment");
     DBconfig { ip, port, user, password, database }
 }
 
