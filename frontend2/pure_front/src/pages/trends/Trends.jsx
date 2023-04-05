@@ -6,8 +6,9 @@ import {Text} from 'react'
     import Img3 from './img/img3.png'
     import Img4 from './img/img4.png'
     import Img5 from './img/img5.png'
-    import Img6 from './img/img6.png'
+    
     import './trends.css';
+import { ArtistProfile } from '../artistProfile/ArtistProfile'
     
 
 const Trends = () => {
@@ -37,11 +38,7 @@ const Trends = () => {
             imgSrc: Img5, 
             name: "Vova",
         },
-        {
-            id: 5,
-            imgSrc: Img6, 
-            name: "Dasha",
-        }
+        
     ]
    
     return (
@@ -49,25 +46,26 @@ const Trends = () => {
             <div  style={{
                 fontSize: '30px',
                 textAlign: 'right',
-                backgroundColor: 'black',
-                color: 'white', 
+               
+                color: 'rgb(18, 6, 28)', 
             }}>
-            Вернуться на <Link to="/" style={{
-                color: 'white',
-            }}>главную</Link></div>      
+            </div>      
             <div style={{
                 textAlign: 'center',
-                backgroundColor: 'black',
-                color: 'white',
+                backgroundColor: 'rgb(56, 56, 56)',
+                color: 'rgb(241, 241, 241)',
                 fontSize: '30px',
-            }}>Популярное</div>
+                padding: '40px 30px',
+                
+            }}>Найдите что-то для себя</div>
             <div className= "gallery">
                 {data.map((item, index)=>{
                     return(
                         <div className="pics" key={index} >
                             
-                            <img src ={item.imgSrc} style={{width: '100%', borderRadius: '30px'}}/>
-                             {item.name}
+                            <img src ={item.imgSrc} style={{width: '100%', borderRadius: '30px', border: '2px solid black'}}/>
+                            <Link to="/gallery" className='trends-link'>{item.name}</Link>
+                             
                             
                         </div>
                     )
