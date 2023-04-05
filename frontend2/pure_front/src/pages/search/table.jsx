@@ -6,6 +6,7 @@ const Table = ({ data }) => {
       <table>
         <tbody>
           <tr>
+            
             {/* <th>Profile</th>
             <th>Name</th>
             <th>Surname</th> */}

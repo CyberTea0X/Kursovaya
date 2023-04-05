@@ -18,7 +18,17 @@ const Account = () => {
                         <h3 className="account-title" style={{fontWeight: '700', padding:'0 0 20px 0'}}>Личная информация</h3>
                         <p className="account-title">Имя пользователя</p>
                         <input className="account-input" placeholder="Введите имя" type="text" />
-                        <p className="account-title">Обо мне</p>
+                        <p className="account-title">Если Вы художник, пожалуйста, выберите теги из предложенных, под которыми вы рисуете:<br/>
+                        <p className="Tags">
+                        #Traditional<br/>
+                        #Digital<br/>
+                        #Portraits<br/>
+                        #Animalistic<br/>
+                        #Anime<br/>
+                        #Nature<br/>
+                        #Landscape<br/>
+                        </p>
+                        </p>
                         <textarea style={{resize:'none'}} className="account-input2" placeholder="Напишите что-нибудь о себе" type="text" />
                         <p className="account-title">Введите номер телефона</p>
                         <input className="account-input" placeholder="Введите номер телефона" type="tel" />

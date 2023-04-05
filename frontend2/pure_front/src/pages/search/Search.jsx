@@ -17,7 +17,7 @@ const Table = ({ data }) => {
           </tr>
           {data.map((item) => (
             <tr key={item.id}>
-              <td>{<img src="https://avatars.dzeninfra.ru/get-zen_doc/1884623/pub_60be1f9abcbf42494ea7da85_60be206a746af706906e32df/scale_1200" style={{
+              <td>{<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQkwNi3BaNAgeNdiKbvkcaQGEa8ZgVBHK5dmOxaKrc&s" style={{
                 width: '70px',
                 height: '70px',
                 borderRadius: '50%',
@@ -56,6 +56,14 @@ const SearchPage = () => {
                 </div> 
                 <div className='page'>
                 <input type="text" placeholder='Поиск...' className="search" onChange={e=> setQuery(e.target.value)} />
+                <p className='p'>Вы можете найти художника не только по имени, но и по тегам:</p>
+                <p className='p2'> #Traditional<br/>
+                        #Digital<br/>
+                        #Portraits<br/>
+                        #Animalistic<br/>
+                        #Anime<br/>
+                        #Nature<br/>
+                        #Landscape<br/></p>
                 <Table data={search(Users)}/>  
                 
                 
