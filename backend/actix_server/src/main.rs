@@ -24,10 +24,6 @@ fn init_dirs() {
     if !metadata(dir_name).is_ok() {
         create_dir(dir_name).unwrap();
     }
-    let dir_name = "tmp";
-    if !metadata(dir_name).is_ok() {
-        create_dir(dir_name).unwrap();
-    }
 }
 
 #[post("/login/{email}/{password}")] // <- define path parameters
@@ -50,13 +46,11 @@ async fn login_service(
 }
 
 #[get("/dbstatus")] //
-async fn check_db_status(db_config: web::Data<DBconfig>) -> ActxResult<impl Responder>{
+async fn check_db_status(db_config: web::Data<DBconfig>) -> ActxResult<impl Responder> {
     let connection = database::try_connect(&db_config, 3);
-    let (status, fail_reason) = (|| {
-        match connection {
-            Ok(_) => return ("OK".to_owned(), "Online".to_owned()),
-            Err(err) => return ("OK".to_owned(), err.to_string())
-        }
+    let (status, fail_reason) = (|| match connection {
+        Ok(_) => return ("OK".to_owned(), "Online".to_owned()),
+        Err(err) => return ("OK".to_owned(), err.to_string()),
     })();
     Ok(web::Json(json!({
         "status": status,
@@ -82,14 +76,26 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .app_data(web::Data::new(db_config))
             .service(
+                web::scope("api/user")
+                    .service(login_service)
+                    .service(register::register_user_service)
+                    .service(user::user_profile_service)
+                    .service(user::edit_user_service)
+                    .service(user::delete_user_service)
+                    .service(user::visit_user_service)
+                    .service(user::edit_user_tags_service)
+                    .service(user::get_user_tags_service),
+            )
+            .service(
                 web::scope("api/logo")
                     .service(image::get_logo_service)
-                    .service(image::set_logo_service)
+                    .service(image::set_logo_service),
             )
             .service(
                 web::scope("api/images")
                     .service(image::load_image_service)
                     .service(image::delete_image_service)
+                    .service(image::image_data_service)
                     .service(fs::Files::new("/", "./users/.").show_files_listing()),
             )
             .service(
@@ -114,14 +120,8 @@ async fn main() -> std::io::Result<()> {
             )
             .service(
                 web::scope("/api")
-                    .service(login_service)
-                    .service(register::register_user_service)
-                    .service(user::user_profile_service)
                     .service(check_db_status)
-                    .service(user::edit_user_service)
-                    .service(user::delete_user_service)
                     .service(image::gallery_service)
-                    .service(user::visit_user_service)
                     .service(config),
             )
     })

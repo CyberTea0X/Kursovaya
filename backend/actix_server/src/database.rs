@@ -122,13 +122,14 @@ pub struct Message {
     pub is_read: bool,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Default)]
 pub struct ImageData {
     pub id: u32,
     pub owner_id: u32,
     pub published_at: String,
     pub about: String,
     pub image_name: String,
+    pub tags: String,
     pub views: u32,
     pub likes: u32,
 }
@@ -164,42 +165,72 @@ impl FromRow for Message {
         })
     }
 }
-pub fn get_logo_id(
-    connection: &mut Conn,
-    owner_id: u32,
-) -> Result<Option<u32>, mysql::Error> {
+
+pub fn user_tags_exists(connection: &mut Conn, user_id: u32) -> Result<bool, mysql::Error> {
+    Ok(get_user_tags(connection, user_id)?.is_some())
+}
+
+pub fn get_user_tags_table(connection: &mut Conn) -> Result<Vec<(u32, u32, String)>, mysql::Error> {
+    connection.query("SELECT * FROM user_tags")
+}
+
+pub fn get_user_tags(connection: &mut Conn, user_id: u32) -> Result<Option<String>, mysql::Error> {
+    let query = format!(
+        "SELECT tags FROM user_tags WHERE user_id = {} LIMIT 1",
+        user_id
+    );
+    connection.query_first(query)
+}
+
+pub fn delete_user_tags(connection: &mut Conn, user_id: u32) -> Result<(), mysql::Error> {
+    connection.exec_drop(
+        "DELETE FROM user_tags WHERE user_id = :id",
+        params! {
+            "id" => user_id
+        },
+    )
+}
+
+pub fn add_user_tags(connection: &mut Conn, user_id: u32, tags: &str) -> Result<(), mysql::Error> {
+    connection.exec_drop(
+        "INSERT INTO user_tags (user_id, tags) VALUES (?, ?);",
+        (user_id, tags),
+    )
+}
+
+pub fn get_logo_id(connection: &mut Conn, owner_id: u32) -> Result<Option<u32>, mysql::Error> {
     let query = format!("SELECT id FROM logos WHERE owner_id = {} LIMIT 1", owner_id);
     connection.query_first(query)
 }
 
-pub fn set_logo(
-    connection: &mut Conn,
-    img_id: u32,
-    owner_id: u32
-) -> Result<(), mysql::Error> {
-    connection.exec_drop("INSERT INTO logos (id, owner_id) VALUES (?, ?);", (img_id, owner_id))
+pub fn set_logo(connection: &mut Conn, img_id: u32, owner_id: u32) -> Result<(), mysql::Error> {
+    connection.exec_drop(
+        "INSERT INTO logos (id, owner_id) VALUES (?, ?);",
+        (img_id, owner_id),
+    )
 }
 
-pub fn delete_logo(
-    connection: &mut Conn,
-    owner_id: u32,
-) -> Result<(), mysql::Error> {
-    connection.exec_drop("DELETE FROM logos WHERE owner_id = :owner", params! {
-        "owner" => owner_id
-    })
+pub fn delete_logo(connection: &mut Conn, owner_id: u32) -> Result<(), mysql::Error> {
+    connection.exec_drop(
+        "DELETE FROM logos WHERE owner_id = :owner",
+        params! {
+            "owner" => owner_id
+        },
+    )
 }
 
-pub fn get_image(connection: &mut Conn, id: u32) -> Result<Option<ImageData>, mysql::Error> {
-    let query = format!("SELECT * FROM images WHERE id = '{}' LIMIT 1", id);
+pub fn get_image(connection: &mut Conn, image_id: u32) -> Result<Option<ImageData>, mysql::Error> {
+    let query = format!("SELECT * FROM images WHERE id = '{}' LIMIT 1", image_id);
     Ok(connection
         .query_map(
             query,
-            |(id, owner_id, published_at, about, image_name, views, likes)| ImageData {
+            |(id, owner_id, published_at, about, image_name, tags, views, likes)| ImageData {
                 id,
                 owner_id,
                 published_at,
                 about,
                 image_name,
+                tags,
                 views,
                 likes,
             },
@@ -207,35 +238,30 @@ pub fn get_image(connection: &mut Conn, id: u32) -> Result<Option<ImageData>, my
         .pop())
 }
 
-pub fn delete_image(
-    connection: &mut Conn,
-    id: u32
-) -> Result<(), mysql::Error> {
-    connection.exec_drop("DELETE FROM images WHERE id = :id",
+pub fn delete_image(connection: &mut Conn, id: u32) -> Result<(), mysql::Error> {
+    connection.exec_drop(
+        "DELETE FROM images WHERE id = :id",
         params! {
             "id" => id
-        }
+        },
     )
 }
 
-pub fn get_images(
-    connection: &mut Conn,
-    owner_id: u32
-) -> Result<Vec<ImageData>, mysql::Error> {
+pub fn get_images(connection: &mut Conn, owner_id: u32) -> Result<Vec<ImageData>, mysql::Error> {
     let query = format!("SELECT * FROM images WHERE owner_id = '{}'", owner_id);
-    Ok(connection
-        .query_map(
-            query,
-            |(id, owner_id, published_at, about, image_name, views, likes)| ImageData {
-                id,
-                owner_id,
-                published_at,
-                about,
-                image_name,
-                views,
-                likes,
-            },
-        )?)
+    Ok(connection.query_map(
+        query,
+        |(id, owner_id, published_at, about, image_name, tags, views, likes)| ImageData {
+            id,
+            owner_id,
+            published_at,
+            about,
+            image_name,
+            tags,
+            views,
+            likes,
+        },
+    )?)
 }
 
 pub fn add_image(
@@ -243,14 +269,15 @@ pub fn add_image(
     owner_id: u32,
     about: &str,
     image_name: &str,
+    tags: &str,
 ) -> Result<(), mysql::Error> {
     let published_at = chrono::offset::Local::now()
         .format("%Y-%m-%d %H-%M-%S")
         .to_string();
     connection.exec_drop(
-        "INSERT INTO images (owner_id, published_at, about, image_name, views, likes)
-    VALUES (?, ?, ?, ?, ?, ?)",
-        (owner_id, published_at, about, image_name, 0, 0),
+        "INSERT INTO images (owner_id, published_at, about, image_name, tags, views, likes)
+    VALUES (?, ?, ?, ?, ?, ?, ?)",
+        (owner_id, published_at, about, image_name, tags, 0, 0),
     )
 }
 
@@ -587,7 +614,7 @@ pub fn find_user_by_email(connection: &mut Conn, email: &str) -> Option<User> {
 pub fn parse_config() -> DBconfig {
     match File::open("DBconfig.json") {
         Ok(file) => return parse_config_file(file),
-        Err(_) => return parse_config_env()
+        Err(_) => return parse_config_env(),
     };
 }
 
@@ -595,26 +622,30 @@ pub fn parse_config_file(mut file: File) -> DBconfig {
     println!("Trying to get DB config from file...");
     let mut data = String::new();
     file.read_to_string(&mut data).unwrap();
-    let db_config: DBconfig = serde_json::from_str(&data)
-        .expect("Конфиг базы данных имеет неверный формат");
+    let db_config: DBconfig =
+        serde_json::from_str(&data).expect("Конфиг базы данных имеет неверный формат");
     println!("Got DB config from file");
     db_config
 }
 
 pub fn parse_config_env() -> DBconfig {
     println!("Trying to get DB config from enviroment...");
-    let ip = std::env::var("DB_IP")
-        .expect("DB_IP not set");
+    let ip = std::env::var("DB_IP").expect("DB_IP not set");
     let port = std::env::var("DB_PORT")
-        .expect("DB_PORT not set").parse::<u16>().unwrap();
-    let user = std::env::var("DB_USER")
-        .expect("DB_USER not set");
-    let password = std::env::var("DB_PASSWORD")
-        .expect("DB_PASSWORD not set");
-    let database = std::env::var("DB_DATABASE")
-        .expect("DB_DATABASE not set");
+        .expect("DB_PORT not set")
+        .parse::<u16>()
+        .unwrap();
+    let user = std::env::var("DB_USER").expect("DB_USER not set");
+    let password = std::env::var("DB_PASSWORD").expect("DB_PASSWORD not set");
+    let database = std::env::var("DB_DATABASE").expect("DB_DATABASE not set");
     println!("Got DB config from enviroment");
-    DBconfig { ip, port, user, password, database }
+    DBconfig {
+        ip,
+        port,
+        user,
+        password,
+        database,
+    }
 }
 
 // pub fn try_reconnect(connection: &mut Conn) -> bool{

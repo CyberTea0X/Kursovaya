@@ -54,6 +54,7 @@ CREATE TABLE images (
     published_at DATETIME NOT NULL,
     about TEXT NOT NULL,
     image_name TEXT NOT NULL,
+    tags TEXT NOT NULL,
     views INTEGER NOT NULL,
     likes INTEGER NOT NULL,
     FOREIGN KEY (owner_id)  REFERENCES users (id) ON DELETE CASCADE
@@ -61,8 +62,17 @@ CREATE TABLE images (
 
 DROP TABLE IF EXISTS logos;
 CREATE TABLE logos (
-	id INTEGER NOT NULL,
+	id INTEGER AUTO_INCREMENT PRIMARY KEY UNIQUE, 
+	image_id INTEGER NOT NULL,
     owner_id INTEGER NOT NULL,
     FOREIGN KEY (owner_id)  REFERENCES users (id),
-    FOREIGN KEY (id)  REFERENCES images (id) ON DELETE CASCADE
+    FOREIGN KEY (image_id)  REFERENCES images (id) ON DELETE CASCADE
+);
+
+DROP TABLE IF EXISTS user_tags;
+CREATE TABLE user_tags(
+	id INTEGER AUTO_INCREMENT PRIMARY KEY UNIQUE, 
+	user_id INTEGER NOT NULL UNIQUE,
+    tags TEXT NOT NULL,
+    FOREIGN KEY (user_id)  REFERENCES users (id) ON DELETE CASCADE
 );

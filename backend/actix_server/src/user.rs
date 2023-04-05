@@ -15,6 +15,86 @@ pub struct FindUserRequest {
     email: Option<String>,
 }
 
+#[derive(Deserialize, Debug, Default)]
+pub struct TagsQuery {
+    tags: String,
+}
+
+#[post("tags/get/{email}/{password}")]
+pub(crate) async fn get_user_tags_service(
+    path: web::Path<(String, String)>,
+    db_config: web::Data<DBconfig>,
+) -> ActxResult<impl Responder> {
+    let (email, password) = path.into_inner();
+    let (status, fail_reason, tags) = (|| {
+        let (_, mut connection) = match auth_get_user_connect(&email, &password, &db_config, 3) {
+            Ok((user, connection)) => (user, connection),
+            Err(err) => return ("FAILED".to_owned(), err.to_string(), Vec::new()),
+        };
+        let user_id = match database::user_email_to_id(&mut connection, &email) {
+            Ok(Some(id)) => id,
+            Ok(None) => {
+                return (
+                    "FAILED".to_owned(),
+                    "User does not exist".to_owned(),
+                    Vec::new(),
+                )
+            }
+            Err(_) => return ("FAILED".to_owned(), "Database error".to_owned(), Vec::new()),
+        };
+        let tags = match database::get_user_tags(&mut connection, user_id) {
+            Ok(Some(tags)) => tags,
+            Ok(None) => String::new(),
+            Err(_) => return ("FAILED".to_owned(), "Database error".to_owned(), Vec::new()),
+        };
+        let tags: Vec<String> = tags.split(",").map(|s| s.to_owned()).collect();
+        return ("OK".to_owned(), "".to_owned(), tags);
+    })();
+    Ok(web::Json(json!({
+        "status": status,
+        "reason": fail_reason,
+        "tags": tags,
+    })))
+}
+
+#[post("tags/edit/{email}/{password}")]
+pub(crate) async fn edit_user_tags_service(
+    path: web::Path<(String, String)>,
+    db_config: web::Data<DBconfig>,
+    info: web::Query<TagsQuery>,
+) -> ActxResult<impl Responder> {
+    let (email, password) = path.into_inner();
+    let (status, fail_reason) = (|| {
+        let (_, mut connection) = match auth_get_user_connect(&email, &password, &db_config, 3) {
+            Ok((user, connection)) => (user, connection),
+            Err(err) => return ("FAILED".to_owned(), err.to_string()),
+        };
+        let user_id = match database::user_email_to_id(&mut connection, &email) {
+            Ok(Some(id)) => id,
+            Ok(None) => return ("FAILED".to_owned(), "User does not exist".to_owned()),
+            Err(_) => return ("FAILED".to_owned(), "Database error".to_owned()),
+        };
+        let tags = &info.tags;
+        match database::user_tags_exists(&mut connection, user_id) {
+            Ok(true) => {
+                if database::delete_user_tags(&mut connection, user_id).is_err() {
+                    return ("FAILED".to_owned(), "Database error".to_owned());
+                }
+            }
+            Ok(false) => (),
+            Err(_) => return ("FAILED".to_owned(), "Database error".to_owned()),
+        }
+        if database::add_user_tags(&mut connection, user_id, &tags).is_err() {
+            return ("FAILED".to_owned(), "Database error".to_owned());
+        }
+        return ("OK".to_owned(), "".to_owned());
+    })();
+    Ok(web::Json(json!({
+        "status": status,
+        "reason": fail_reason,
+    })))
+}
+
 #[post("delete/{email}/{password}")]
 pub(crate) async fn delete_user_service(
     path: web::Path<(String, String)>,

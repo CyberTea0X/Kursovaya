@@ -1,0 +1,9 @@
+services:
+  actix_server:
+    build: actix_server
+    ports:
+      - "8000:8000"
+  db:
+    image: postgres
+    ports:
+      - "8001:5432"
