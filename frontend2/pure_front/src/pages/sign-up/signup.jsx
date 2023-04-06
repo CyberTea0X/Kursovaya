@@ -3,6 +3,7 @@ import "./registration.css";
 import "./registration_main.css";
 import FormInput from "./FormInput";
 import { useNavigate } from 'react-router-dom';
+import { registerUser } from "../../server/server";
 
 const Signup = () => {
   const [values, setValues] = useState({
@@ -10,6 +11,11 @@ const Signup = () => {
     email: "",
     password: "",
     confirmPassword: "",
+    firstname: "",
+    lastname: "",
+    age: "",
+    gender: "",
+    about: "",
   });
 
 
@@ -64,10 +70,66 @@ const Signup = () => {
       pattern: values.password,
       required: true,
     },
+    {
+      id: 5,
+      name: "firstname",
+      type: "text",
+      placeholder: "First Name",
+      errorMessage:
+        "First name should be 2-20 characters and shouldn't include any special character or number!",
+      label: "First Name",
+      pattern: "^\\p{L}{2,20}$",
+      required: true,
+    },
+    {
+      id: 6,
+      name: "lastname",
+      type: "text",
+      placeholder: "Last Name",
+      errorMessage:
+        "Last name should be 2-20 characters and shouldn't include any special character or number!",
+      label: "Last Name",
+      pattern: "^\\p{L}{2,20}$",
+      required: true,
+    },
+    {
+      id: 7,
+      name: "age",
+      type: "number",
+      placeholder: "Age",
+      errorMessage: "Age should be a number between 18 and 99!",
+      label: "Age",
+      min: 18,
+      max: 99,
+      required: true,
+    },
+    {
+      id: 8,
+      name: "gender",
+      type: "text",
+      placeholder: "Gender",
+      errorMessage: "Please enter your gender!",
+      label: "Gender",
+      pattern: "^\\p{L}{3,6}$",
+      required: true,
+    },
+    {
+      id: 9,
+      name: "about",
+      type: "textarea",
+      placeholder: "Tell us about yourself…",
+      errorMessage:
+        "About should be 5-500 characters and shouldn't include any special character!",
+      label: "About",
+      pattern: "^\\p{L}{5,500}$",
+      required: true,
+    },
   ];
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    console.log(registerUser(values.username, values.email.toLowerCase(), values.password,
+      values.firstname, values.lastname, values.age, values.gender, values.about))
     routeChange();
   };
 
