@@ -1,4 +1,4 @@
-import config from './config.json';
+import config from '../config.json';
 
 
 async function registerUser(config, login, email, password, firstname, lastname, age, gender, about) {
@@ -20,4 +20,6 @@ async function registerUser(config, login, email, password, firstname, lastname,
         })
     });
     return response.json();
-    }
+}
+
+export { registerUser };
