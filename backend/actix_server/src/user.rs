@@ -128,7 +128,7 @@ pub(crate) async fn delete_user_service(
 #[post("/edit/{email}/{password}")]
 pub(crate) async fn edit_user_service(
     path: web::Path<(String, String)>,
-    info: web::Query<database::EditRequest>,
+    info: web::Query<database::EditUserRequest>,
     db_config: web::Data<DBconfig>,
 ) -> ActxResult<impl Responder> {
     let (email, password) = path.into_inner();
@@ -138,29 +138,6 @@ pub(crate) async fn edit_user_service(
                 "FAILED".to_owned(),
                 "You have not enough permissions to modify rating".to_owned(),
             );
-        }
-        let raw_info = [
-            info.username.as_ref(),
-            info.email.as_ref(),
-            info.password.as_ref(),
-            info.firstname.as_ref(),
-            info.lastname.as_ref(),
-            info.about.as_ref(),
-            info.age.as_ref(),
-            info.gender.as_ref(),
-        ];
-        if raw_info.iter().flatten().collect::<Vec<&&String>>().len() == 0 {
-            return (
-                "FAILED".to_owned(),
-                "Query must not be empty. What you want to edit?".to_owned(),
-            );
-        }
-        if !raw_info
-            .iter()
-            .flatten()
-            .all(|text| database::is_valid_sql(&text))
-        {
-            return ("FAILED".to_owned(), "Some query attr is invalid".to_owned());
         }
         let (_, mut connection) = match auth_get_user_connect(&email, &password, &db_config, 3) {
             Ok((user, connection)) => (user, connection),
@@ -263,7 +240,7 @@ pub(crate) async fn visit_user_service(
         if database::visit_exists(&mut connection, &user.email, user2.id) {
             return ("FAILED".to_owned(), "Already visited".to_owned());
         }
-        let info = database::EditRequest {
+        let info = database::EditUserRequest {
             username: None,
             email: None,
             password: None,

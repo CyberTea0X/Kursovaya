@@ -1,26 +1,23 @@
 use std::io::Write;
 
+use actix_multipart::Field;
 use actix_multipart::Multipart;
 use actix_web::{middleware, web, App, Error, HttpResponse, HttpServer};
 use futures::{StreamExt, TryStreamExt};
+use std::fs;
+use std::io;
 use std::path::Path;
 
 pub async fn save_file(
-    mut payload: Multipart,
+    field: &mut Field,
     dir_path: &str,
     file_name: &str,
     allowed_types: &[&str],
 ) -> Option<()> {
-    // iterate over multipart stream
-    let mut field = match payload.try_next().await {
-        Ok(Some(field)) => field,
-        _ => return None,
-    };
     let content_type = field.content_disposition();
     let extension = Path::new(content_type.get_filename()?)
         .extension()?
         .to_str()?;
-
     if !allowed_types.contains(&extension) {
         return None;
     }
@@ -42,4 +39,35 @@ pub async fn save_file(
     }
 
     Some(())
+}
+
+
+
+pub async fn get_extension(
+    field: &Field
+) -> Option<String> {
+    let content_type = field.content_disposition();
+    let extension = Path::new(content_type.get_filename()?)
+        .extension()?
+        .to_str()?;
+    Some(extension.to_owned())
+}
+
+pub async fn find_file(dir_path: &str, file_name: &str) -> Option<String> {
+    let dir_path = dir_path.to_owned();
+    let dir = web::block(|| fs::read_dir(dir_path)).await.ok()?.ok()?;
+    for entry in dir {
+        let path = entry.ok()?.path();
+        if path.is_file() {
+            if let Some(name) = path.file_name() {
+                if name.to_string_lossy().starts_with(file_name) {
+                    if let Some(ext) = path.extension() {
+                        let file_name_with_ext = format!("{}.{}", file_name, ext.to_string_lossy());
+                        return Some(file_name_with_ext);
+                    }
+                }
+            }
+        }
+    }
+    None
 }

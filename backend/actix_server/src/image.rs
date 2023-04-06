@@ -1,17 +1,18 @@
 use std::{
     fs::{self, File},
-    io::{Read, Write},
+    io::{Read, Write}, path::PathBuf,
 };
 
 use crate::{
     auth::auth_get_user_connect,
     database::{self, DBconfig},
-    files::save_file,
+    files::{self, save_file},
 };
 use actix_multipart::Multipart;
 use actix_web::{
     get, post, web, App, Error, HttpResponse, HttpServer, Responder, Result as ActxResult,
 };
+use futures::TryStreamExt;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
@@ -22,9 +23,41 @@ pub struct ImageAddRequest {
     pub tags: String,
 }
 
-#[post("/data/{image_id}")] // <- define path parameters
+#[post("/data/edit/{email}/{password}/{image_id}")]
+async fn edit_image_data_service(
+    path: web::Path<(String, String, u64)>,
+    info: web::Query<database::EditImageRequest>,
+    db_config: web::Data<DBconfig>,
+) -> ActxResult<impl Responder> {
+    let (email, password, image_id) = path.into_inner();
+    let (status, fail_reason) = (|| {
+        let (user, mut connection) = match auth_get_user_connect(&email, &password, &db_config, 3) {
+            Ok((user, connection)) => (user, connection),
+            Err(err) => return ("FAILED".to_owned(), err.to_string()),
+        };
+        let image = match database::get_image(&mut connection, image_id) {
+            Ok(Some(img)) => img,
+            Ok(None) => return ("FAILED".to_owned(), "Image already deleted".to_owned()),
+            Err(_) => return ("FAILED".to_owned(), "Database error".to_owned()),
+        };
+        if image.owner_id != user.id {
+            return ("FAILED".to_owned(), "Not enough permissions".to_owned());
+        }
+        if database::edit_image(&mut connection, image_id, &info).is_err() {
+            return ("FAILED".to_owned(), "Database error".to_owned());
+        }
+
+        return ("OK".to_owned(), "".to_owned());
+    })();
+    Ok(web::Json(json!({
+        "status": status,
+        "reason": fail_reason,
+    })))
+}
+
+#[get("/data/get/{image_id}")] // <- define path parameters
 async fn image_data_service(
-    path: web::Path<(u32)>,
+    path: web::Path<u64>,
     db_config: web::Data<DBconfig>,
 ) -> ActxResult<impl Responder> {
     let image_id = path.into_inner();
@@ -67,52 +100,167 @@ async fn image_data_service(
 
 #[post("/load/{email}/{password}")] // <- define path parameters
 async fn load_image_service(
-    payload: Multipart,
+    mut payload: Multipart,
     path: web::Path<(String, String)>,
     db_config: web::Data<DBconfig>,
     query: web::Query<ImageAddRequest>,
 ) -> ActxResult<impl Responder> {
     let (email, password) = path.into_inner();
-    let mut file_name = String::new();
-    let mut user_gallery = String::new();
-    let (status, fail_reason) = (|| {
-        let (user, mut connection) = match auth_get_user_connect(&email, &password, &db_config, 3) {
-            Ok((user, connection)) => (user, connection),
-            Err(err) => return ("FAILED".to_owned(), err.to_string()),
-        };
-        let (about, image_name, tags) = (&query.about, &query.image_name, &query.tags);
-        if database::add_image(&mut connection, user.id, &about, &image_name, &tags).is_err() {
-            return ("FAILED".to_owned(), "Database error".to_owned());
+    let (user, mut connection) = match auth_get_user_connect(&email, &password, &db_config, 3) {
+        Ok((user, connection)) => (user, connection),
+        Err(err) => return Ok(web::Json(json!({
+            "status": "FAILED",
+            "reason": err.to_string(),
+        }))),
+    };
+    let (about, image_name, tags) = (&query.about, &query.image_name, &query.tags);
+    let mut file = match payload.try_next().await {
+        Ok(Some(file)) => file,
+        _ => return Ok(web::Json(json!({
+            "status": "FAILED",
+            "reason": "Failed to save file",
+        })))
+    };
+    let extension = match files::get_extension(&file).await {
+        Some(ext) => ext,
+        None => return Ok(web::Json(json!({
+            "status": "FAILED",
+            "reason": "Wrong file format",
+        }))),
+    };
+    if database::add_image(&mut connection, user.id, &about, &image_name, &extension, &tags).is_err() {
+        return Ok(web::Json(json!({
+            "status": "FAILED",
+            "reason": "Database error",
+        })));
+    }
+    let image_id = connection.last_insert_id();
+    let user_gallery = format!("users/{}/gallery", user.id);
+    println!("{}, {}", user_gallery, image_id);
+    if save_file(
+        &mut file,
+        &user_gallery,
+        &image_id.to_string(),
+        &["png", "jpeg", "jpe", "jpg"],
+    )
+    .await
+    .is_none()
+    {
+        if database::delete_image(&mut connection, image_id).is_err() {
+            println!("Error deleting image_data after save file fail");
         }
-        file_name = connection.last_insert_id().to_string();
-        user_gallery = format!("users/{}/gallery", user.id);
-        ("OK".to_owned(), "".to_owned())
-    })();
-    if !user_gallery.is_empty() {
-        if save_file(
-            payload,
-            &user_gallery,
-            &file_name,
-            &["png", "jpeg", "jpe", "jpg"],
-        )
-        .await
-        .is_none()
-        {
-            return Ok(web::Json(json!({
-                "status": "FAILED",
-                "reason": "Failed to save file",
-            })));
-        }
+        return Ok(web::Json(json!({
+            "status": "FAILED",
+            "reason": "Failed to save file",
+        })));
     }
     Ok(web::Json(json!({
-        "status": status,
-        "reason": fail_reason,
+        "status": "OK",
+        "reason": "",
+    })))
+}
+
+#[post("/change/{email}/{password}/{image_id}")] // <- define path parameters
+async fn change_image_service(
+    mut payload: Multipart,
+    path: web::Path<(String, String, u64)>,
+    db_config: web::Data<DBconfig>,
+) -> ActxResult<impl Responder> {
+    let (email, password, image_id) = path.into_inner();
+    let (user, mut connection) = match auth_get_user_connect(&email, &password, &db_config, 3) {
+        Ok((user, connection)) => (user, connection),
+        Err(err) => return Ok(web::Json(json!({
+            "status": "FAILED",
+            "reason": err.to_string(),
+        }))),
+    };
+    let image = match database::get_image(&mut connection, image_id) {
+        Ok(Some(img)) => img,
+        Ok(None) => return Ok(web::Json(json!({
+            "status": "FAILED",
+            "reason": "Image not found",
+        }))),
+        Err(_) => return Ok(web::Json(json!({
+            "status": "FAILED",
+            "reason": "Database error",
+        }))),
+    };
+    if image.owner_id != user.id {
+        return Ok(web::Json(json!({
+            "status": "FAILED",
+            "reason": "Not enough permissions",
+        })));
+    }
+    let user_gallery = format!("users/{}/gallery", user.id);
+    let file_name = files::find_file(&user_gallery, image_id.to_string().as_str()).await;
+    let file_name = match file_name {
+        Some(file_name) => file_name,
+        None => return Ok(web::Json(json!({
+            "status": "FAILED",
+            "reason": "Image not found",
+        })))
+    };
+    let mut file = match payload.try_next().await {
+        Ok(Some(file)) => file,
+        _ => return Ok(web::Json(json!({
+            "status": "FAILED",
+            "reason": "Failed to save file",
+        })))
+    };
+    let extension = match files::get_extension(&file).await {
+        Some(ext) => ext,
+        None => return Ok(web::Json(json!({
+            "status": "FAILED",
+            "reason": "Wrong file format",
+        }))),
+    };
+    let request = database::EditImageRequest {
+        about: None,
+        image_name: None,
+        extension: Some(extension),
+        likes: None,
+        tags: None,
+        views: None
+    };
+    if database::edit_image(&mut connection, image_id, &request).is_err() {
+        return Ok(web::Json(json!({
+            "status": "FAILED",
+            "reason": "Database error",
+        })));
+    }
+    let file_path = PathBuf::from(&user_gallery).join(&file_name);
+    if fs::remove_file(file_path).is_err() {
+        return Ok(web::Json(json!({
+            "status": "FAILED",
+            "reason": "Internal server error",
+        })));
+    }
+    if save_file(
+        &mut file,
+        &user_gallery,
+        &image_id.to_string(),
+        &["png", "jpeg", "jpe", "jpg"],
+    )
+    .await
+    .is_none()
+    {
+        if database::delete_image(&mut connection, image_id).is_err() {
+            println!("Error deleting image_data after save file fail");
+        }
+        return Ok(web::Json(json!({
+            "status": "FAILED",
+            "reason": "Failed to save file",
+        })));
+    }
+    Ok(web::Json(json!({
+        "status": "OK",
+        "reason": "",
     })))
 }
 
 #[post("/delete/{email}/{password}/{image_id}")] // <- define path parameters
 async fn delete_image_service(
-    path: web::Path<(String, String, u32)>,
+    path: web::Path<(String, String, u64)>,
     db_config: web::Data<DBconfig>,
 ) -> ActxResult<impl Responder> {
     let (email, password, img_id) = path.into_inner();
@@ -197,7 +345,7 @@ async fn gallery_service(
 
 #[post("/set/{email}/{password}/{image_id}")] // <- define path parameters
 async fn set_logo_service(
-    path: web::Path<(String, String, u32)>,
+    path: web::Path<(String, String, u64)>,
     db_config: web::Data<DBconfig>,
 ) -> ActxResult<impl Responder> {
     let (email, password, img_id) = path.into_inner();

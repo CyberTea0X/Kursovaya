@@ -96,6 +96,8 @@ async fn main() -> std::io::Result<()> {
                     .service(image::load_image_service)
                     .service(image::delete_image_service)
                     .service(image::image_data_service)
+                    .service(image::change_image_service)
+                    .service(image::edit_image_data_service)
                     .service(fs::Files::new("/", "./users/.").show_files_listing()),
             )
             .service(

@@ -54,6 +54,7 @@ CREATE TABLE images (
     published_at DATETIME NOT NULL,
     about TEXT NOT NULL,
     image_name TEXT NOT NULL,
+    extension VARCHAR(5),
     tags TEXT NOT NULL,
     views INTEGER NOT NULL,
     likes INTEGER NOT NULL,

@@ -1,8 +1,9 @@
 use crate::register::RegisterInfo;
-use mysql;
+use mysql::{self, Params};
 use mysql::prelude::{FromRow, Queryable};
 use mysql::{params, Conn, OptsBuilder};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::fs::File;
 use std::io::Read;
 
@@ -90,7 +91,7 @@ impl FromRow for User {
 }
 
 #[derive(Serialize, Deserialize, Default)]
-pub struct EditRequest {
+pub struct EditUserRequest {
     pub username: Option<String>,
     pub email: Option<String>,
     pub password: Option<String>,
@@ -129,9 +130,20 @@ pub struct ImageData {
     pub published_at: String,
     pub about: String,
     pub image_name: String,
+    pub extension: String,
     pub tags: String,
     pub views: u32,
     pub likes: u32,
+}
+
+#[derive(Serialize, Deserialize, Debug, Default)]
+pub struct EditImageRequest {
+    pub about: Option<String>,
+    pub image_name: Option<String>,
+    pub extension: Option<String>,
+    pub tags: Option<String>,
+    pub views: Option<u32>,
+    pub likes: Option<u32>,
 }
 
 impl FromRow for Message {
@@ -219,17 +231,61 @@ pub fn delete_logo(connection: &mut Conn, owner_id: u32) -> Result<(), mysql::Er
     )
 }
 
-pub fn get_image(connection: &mut Conn, image_id: u32) -> Result<Option<ImageData>, mysql::Error> {
+pub fn edit_image(
+    connection: &mut Conn,
+    image_id: u64,
+    info: &EditImageRequest,
+) -> Result<(), mysql::Error> {
+    let mut params = Vec::new();
+    let mut clauses = Vec::new();
+    if let Some(about) = &info.about {
+        clauses.push("about = ?");
+        params.push(about);
+    }
+    if let Some(image_name) = &info.image_name {
+        clauses.push("image_name = ?");
+        params.push(image_name);
+        }
+        
+    if let Some(extension) = &info.extension {
+        clauses.push("extension = ?");
+        params.push(extension);
+    }
+    if let Some(tags) = &info.tags {
+        clauses.push("tags = ?");
+        params.push(tags);
+    }
+    let views = info.views.map(|v| v.to_string());
+    if let Some(views) = &views {
+        clauses.push("views = ?");
+        params.push(views);
+    }
+    
+    let likes = info.likes.map(|l| l.to_string());
+    if let Some(likes) = &likes {
+        clauses.push("likes = ?");
+        params.push(likes);
+    }
+    if params.is_empty() {
+        return Ok(());
+    }
+    let set_clause = clauses.join(",");
+    let query = format!("UPDATE images SET {} WHERE id = {}", set_clause, image_id);
+    connection.exec_drop(query, params)
+}
+
+pub fn get_image(connection: &mut Conn, image_id: u64) -> Result<Option<ImageData>, mysql::Error> {
     let query = format!("SELECT * FROM images WHERE id = '{}' LIMIT 1", image_id);
     Ok(connection
         .query_map(
             query,
-            |(id, owner_id, published_at, about, image_name, tags, views, likes)| ImageData {
+            |(id, owner_id, published_at, about, image_name, extension, tags, views, likes)| ImageData {
                 id,
                 owner_id,
                 published_at,
                 about,
                 image_name,
+                extension,
                 tags,
                 views,
                 likes,
@@ -238,7 +294,7 @@ pub fn get_image(connection: &mut Conn, image_id: u32) -> Result<Option<ImageDat
         .pop())
 }
 
-pub fn delete_image(connection: &mut Conn, id: u32) -> Result<(), mysql::Error> {
+pub fn delete_image(connection: &mut Conn, id: u64) -> Result<(), mysql::Error> {
     connection.exec_drop(
         "DELETE FROM images WHERE id = :id",
         params! {
@@ -251,12 +307,13 @@ pub fn get_images(connection: &mut Conn, owner_id: u32) -> Result<Vec<ImageData>
     let query = format!("SELECT * FROM images WHERE owner_id = '{}'", owner_id);
     Ok(connection.query_map(
         query,
-        |(id, owner_id, published_at, about, image_name, tags, views, likes)| ImageData {
+        |(id, owner_id, published_at, about, image_name, extension, tags, views, likes)| ImageData {
             id,
             owner_id,
             published_at,
             about,
             image_name,
+            extension,
             tags,
             views,
             likes,
@@ -269,15 +326,16 @@ pub fn add_image(
     owner_id: u32,
     about: &str,
     image_name: &str,
+    extension: &str,
     tags: &str,
 ) -> Result<(), mysql::Error> {
     let published_at = chrono::offset::Local::now()
         .format("%Y-%m-%d %H-%M-%S")
         .to_string();
     connection.exec_drop(
-        "INSERT INTO images (owner_id, published_at, about, image_name, tags, views, likes)
-    VALUES (?, ?, ?, ?, ?, ?, ?)",
-        (owner_id, published_at, about, image_name, tags, 0, 0),
+        "INSERT INTO images (owner_id, published_at, about, image_name, extension, tags, views, likes)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        (owner_id, published_at, about, image_name, extension, tags, 0, 0),
     )
 }
 
@@ -500,45 +558,56 @@ pub fn make_user_online(connection: &mut Conn, email: &str) -> Result<(), mysql:
 pub fn edit_user(
     connection: &mut Conn,
     email: &str,
-    info: &EditRequest,
+    info: &EditUserRequest,
 ) -> Result<(), mysql::Error> {
-    let mut expression = format!(
-        "UPDATE USERS SET {}{}{}{}{}{}{}{}{} WHERE email = :email",
-        info.username
-            .as_deref()
-            .map_or(String::new(), |u| format!("username=\"{}\", ", u)),
-        info.email
-            .as_deref()
-            .map_or(String::new(), |e| format!("email=\"{}\", ", e)),
-        info.password
-            .as_deref()
-            .map_or(String::new(), |p| format!("password=\"{}\", ", p)),
-        info.firstname
-            .as_deref()
-            .map_or(String::new(), |f| format!("firstname=\"{}\", ", f)),
-        info.lastname
-            .as_deref()
-            .map_or(String::new(), |l| format!("lastname=\"{}\", ", l)),
-        info.rating
-            .map_or(String::new(), |r| format!("rating=\"{}\", ", r)),
-        info.about
-            .as_deref()
-            .map_or(String::new(), |a| format!("about=\"{}\", ", a)),
-        info.age
-            .as_deref()
-            .map_or(String::new(), |a| format!("age=\"{}\", ", a)),
-        info.gender
-            .as_deref()
-            .map_or(String::new(), |g| format!("gender=\"{}\", ", g))
-    );
-    let trailing_comma = expression.rfind(',').unwrap();
-    expression.remove(trailing_comma);
-    connection.exec_drop(
-        expression,
-        params! {
-            "email" => email,
-        },
-    )
+    let mut set_clauses = Vec::new();
+    let mut params = Vec::new();
+
+    if let Some(username) = info.username.as_deref() {
+        set_clauses.push("username = ?");
+        params.push(username);
+    }
+    if let Some(email) = info.email.as_deref() {
+        set_clauses.push("email = ?");
+        params.push(email);
+        }
+    if let Some(password) = info.password.as_deref(){
+        set_clauses.push("password = ?");
+        params.push(password);
+    }
+    if let Some(firstname) = info.firstname.as_deref() {
+        set_clauses.push("firstname = ?");
+        params.push(firstname);
+    }
+    if let Some(lastname) = info.lastname.as_deref() {
+        set_clauses.push("lastname = ?");
+        params.push(lastname);
+    }
+    let rating = info.rating.map(|r| r.to_string());
+    if let Some(rating) = rating.as_deref() {
+        set_clauses.push("rating = ?");
+        params.push(rating);
+    }
+    if let Some(about) = info.about.as_deref() {
+        set_clauses.push("about = ?");
+        params.push(about);
+     }
+    if let Some(age) = info.age.as_deref() {
+        set_clauses.push("age = ?");
+        params.push(age);
+    }
+    if let Some(gender) = info.gender.as_deref() {
+        set_clauses.push("gender = ?");
+        params.push(gender);
+    }
+    if params.is_empty() {
+        return Ok(());
+    }
+    params.push(email);
+    let set_clause = set_clauses.join(", ");
+    let query = format!("UPDATE USERS SET {} WHERE email = ?", set_clause);
+
+    connection.exec_drop(query, params)
 }
 
 pub fn delete_user(connection: &mut Conn, email: &str) -> Result<(), mysql::Error> {
