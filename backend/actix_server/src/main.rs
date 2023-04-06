@@ -4,6 +4,7 @@ use actix_web::{get, post, web, App, HttpServer, Responder, Result as ActxResult
 use database::DBconfig;
 use serde_json::json;
 use std::fs::{create_dir, metadata};
+use actix_cors::Cors;
 
 pub mod auth;
 pub mod chat;
@@ -74,6 +75,7 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         let db_config = db_config.clone();
         App::new()
+            .wrap(Cors::permissive())
             .app_data(web::Data::new(db_config))
             .service(
                 web::scope("api/user")
