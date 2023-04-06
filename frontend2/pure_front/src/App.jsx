@@ -9,22 +9,12 @@ import {Header} from './navbar/Navbar.jsx';
 import { Log_in } from './pages/log_in/Log_in';
 import Chat from './pages/chat/chat';
 import {Account} from './pages/account/Account.jsx'
-import config from './config.json';
-import React, { useState, useEffect, createContext } from 'react';
-// Создаем контекст
-export const ServerStateContext = createContext(null);
 
 
 function App() {
-  const [serverState, setServerState] = useState(null);
-  useEffect(() => {
-    // Чтение конфига и сохранение его в состояние сервера
-    setServerState(config);
-  }, []);
   return (
-    <div>
-      {/* Оборачиваем приложение в провайдер контекста */}
-      <ServerStateContext.Provider value={serverState}>
+    <>
+      
         <Header />
           <Routes>
             <Route path="/" element={<Homepage />} />
@@ -36,8 +26,8 @@ function App() {
             <Route path="/Account" element={<Account/>} />
             <Route path="/Chat" element={<Chat/>} />
           </Routes>
-      </ServerStateContext.Provider>
-    </div>
+      
+    </>
   );
 }
 
