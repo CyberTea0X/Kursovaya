@@ -118,6 +118,7 @@ async fn main() -> std::io::Result<()> {
                     .service(search::search_login_service)
                     .service(search::search_popular_service)
                     .service(search::search_name_service)
+                    .service(search::search_tags_service)
                     .service(search::search_text_service),
             )
             .service(

@@ -1,5 +1,5 @@
 use crate::register::RegisterInfo;
-use mysql::{self, Params};
+use mysql::{self, Params, from_row};
 use mysql::prelude::{FromRow, Queryable};
 use mysql::{params, Conn, OptsBuilder};
 use serde::{Deserialize, Serialize};
@@ -178,11 +178,30 @@ impl FromRow for Message {
     }
 }
 
+pub struct TagInfo {
+    pub id: u64,
+    pub user_id: u64,
+    pub tags: String,
+}
+
+impl FromRow for TagInfo {
+    fn from_row_opt(row: mysql::Row) -> Result<Self, mysql::FromRowError>
+        where
+            Self: Sized {
+        let (id, user_id, tags) = mysql::from_row_opt(row)?;
+        Ok(Self { id, user_id, tags })
+    }
+    fn from_row(row: mysql::Row) -> Self
+        where
+            Self: Sized, {
+        Self::from_row_opt(row).unwrap()
+    }
+}
 pub fn user_tags_exists(connection: &mut Conn, user_id: u32) -> Result<bool, mysql::Error> {
     Ok(get_user_tags(connection, user_id)?.is_some())
 }
 
-pub fn get_user_tags_table(connection: &mut Conn) -> Result<Vec<(u32, u32, String)>, mysql::Error> {
+pub fn get_user_tags_table(connection: &mut Conn) -> Result<Vec<TagInfo>, mysql::Error> {
     connection.query("SELECT * FROM user_tags")
 }
 

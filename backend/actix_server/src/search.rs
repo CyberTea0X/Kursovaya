@@ -1,15 +1,48 @@
+use std::collections::HashMap;
+
 use crate::database::{self, DBconfig, User};
 use crate::user::hide_attributes;
 use actix_web::{post, web, Responder, Result as ActxResult};
 use mysql::Conn;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use similar_string::compare_similarity;
+use similar_string::{compare_similarity, get_similarity_ratings};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SeachName {
     pub firstname: Option<String>,
     pub lastname: Option<String>,
+}
+
+#[post("/tags/{tags}")]
+pub async fn search_tags_service(
+    db_config: web::Data<DBconfig>,
+    path: web::Path<String>,
+) -> ActxResult<impl Responder> {
+    let (status, fail_reason, items) = (|| {
+        let tags = path.into_inner();
+        let mut connection = match database::try_connect(&db_config, 3) {
+            Ok(conn) => conn,
+            Err(_) => {
+                println!("Failed to connect to database");
+                return (
+                    "FAILED".to_owned(),
+                    "Failed to connect to database".to_owned(),
+                    Vec::new(),
+                );
+            }
+        };
+        let users = match search_tags(&mut connection, &tags) {
+            Ok(users) => users,
+            Err(_) => return ("FAILED".to_owned(), "Database error".to_owned(), Vec::new()),
+        };
+        return ("OK".to_owned(), "".to_owned(), users);
+    })();
+    Ok(web::Json(json!({
+        "items": items,
+        "status": status,
+        "reason": fail_reason,
+    })))
 }
 
 #[post("/popular")]
@@ -150,6 +183,29 @@ pub fn search_text(connection: &mut Conn, text: &str) -> Result<Vec<User>, mysql
         (similarity * 10.0).round() as i32
     });
     Ok(query_result)
+}
+
+pub fn search_tags(connection: &mut Conn, tags: &str) -> Result<Vec<User>, mysql::Error> {
+    let mut users = database::get_all_users(connection)?;
+    users
+        .iter_mut()
+        .for_each(|user| hide_attributes(user, &["email", "password"]));
+    let tags: Vec<&str> = tags.split(",").collect();
+    let mut similarity_hash = HashMap::new();
+    for tag_info in database::get_user_tags_table(connection)? {
+        let user_id = tag_info.user_id;
+        let user_tags: Vec<&str> = tag_info.tags.split(",").collect();
+        let mut similarity = 0.0;
+        for tag in &tags {
+            similarity += get_similarity_ratings(tag, &user_tags).unwrap_or_default().iter().sum::<f64>();
+        }
+        let similarity = ((similarity * 10.0) as f64).round() as i32;
+        similarity_hash.insert(user_id,  similarity);
+    }
+    users.sort_by_key(|user| {
+        -similarity_hash.get(&(user.id as u64)).unwrap_or(&0)
+    });
+    Ok(users)
 }
 
 pub fn search_name(connection: &mut Conn, info: &SeachName) -> Result<Vec<User>, mysql::Error> {
