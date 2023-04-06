@@ -1,7 +1,7 @@
 import config from '../config.json';
 
 
-async function registerUser(config, login, email, password, firstname, lastname, age, gender, about) {
+async function registerUser(login, email, password, firstname, lastname, age, gender, about) {
     const url = `http://${config.serverIp}:${config.serverPort}/api/user/register/${login}/${email}/${password}`;
     const response = await fetch(url, {
         method: 'POST',
