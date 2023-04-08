@@ -4,6 +4,8 @@ import "./registration_main.css";
 import FormInput from "./FormInput";
 import { useNavigate } from 'react-router-dom';
 import { registerUser } from "../../server/server";
+import Cookies from 'js-cookie';
+import bcrypt from 'bcryptjs';
 
 const Signup = () => {
   const [values, setValues] = useState({
@@ -70,17 +72,19 @@ const Signup = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-    await registerUser(values.username, values.email.toLowerCase(), values.password)
-    .then(data => {
-        // аутентификации
-        if (data["status"] == "OK") {
-          alert("Регистрация успешна");
-        }
-        else {
-          throw Error(data["reason"])
-        }
-      })
-    }
+      await registerUser(values.username, values.email.toLowerCase(), values.password)
+      .then(data => {
+          // аутентификации
+          if (data["status"] == "OK") {
+              Cookies.set('email', values.email.toLowerCase());
+              Cookies.set('password', values.password);
+            alert("Регистрация успешна");
+          }
+          else {
+            throw Error(data["reason"])
+          }
+        })
+      }
     catch (error) {
       alert(error.message)
       return;
