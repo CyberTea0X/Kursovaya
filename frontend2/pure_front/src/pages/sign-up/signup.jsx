@@ -67,9 +67,24 @@ const Signup = () => {
     },
   ];
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log(registerUser(values.username, values.email.toLowerCase(), values.password))
+    try {
+    await registerUser(values.username, values.email.toLowerCase(), values.password)
+    .then(data => {
+        // аутентификации
+        if (data["status"] == "OK") {
+          alert("Регистрация успешна");
+        }
+        else {
+          throw Error(data["reason"])
+        }
+      })
+    }
+    catch (error) {
+      alert(error.message)
+      return;
+    }
     routeChange();
   };
 
