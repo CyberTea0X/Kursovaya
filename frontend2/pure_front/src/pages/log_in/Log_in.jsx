@@ -3,6 +3,7 @@ import "./log_in.css";
 import FormInput from "../sign-up/FormInput";
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
+import { login } from "../../server/server";
 
 const Log_in = () => {
   const [values, setValues] = useState({
@@ -49,8 +50,24 @@ const Log_in = () => {
     Cookies.set('password', values["password"]);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    try {
+      await login(values["email"].toLowerCase(), values["password"])
+      .then(data => {
+        // аутентификации
+        if (data["status"] == "OK") {
+          alert("Авторизация успешна");
+        }
+        else {
+          throw Error(data["reason"])
+        }
+      })
+    }
+    catch (error) {
+      alert(error.message)
+      return;
+    }
     save_to_cookies();
     routeChange();
   };
