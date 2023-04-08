@@ -2,6 +2,7 @@ import { useState } from "react";
 import "./log_in.css";
 import FormInput from "../sign-up/FormInput";
 import { useNavigate } from 'react-router-dom';
+import Cookies from 'js-cookie';
 
 const Log_in = () => {
   const [values, setValues] = useState({
@@ -43,8 +44,14 @@ const Log_in = () => {
 
   ];
 
+  const save_to_cookies = () => {
+    Cookies.set('email', values["email"]);
+    Cookies.set('password', values["password"]);
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
+    save_to_cookies();
     routeChange();
   };
 
