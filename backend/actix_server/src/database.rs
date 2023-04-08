@@ -624,7 +624,7 @@ pub fn edit_user(
     }
     params.push(email);
     let set_clause = set_clauses.join(", ");
-    let query = format!("UPDATE USERS SET {} WHERE email = ?", set_clause);
+    let query = format!("UPDATE `users` SET {} WHERE email = ?", set_clause);
 
     connection.exec_drop(query, params)
 }
