@@ -202,12 +202,12 @@ pub fn user_tags_exists(connection: &mut Conn, user_id: u32) -> Result<bool, mys
 }
 
 pub fn get_user_tags_table(connection: &mut Conn) -> Result<Vec<TagInfo>, mysql::Error> {
-    connection.query("SELECT * FROM user_tags")
+    connection.query("SELECT * FROM `user_tags`")
 }
 
 pub fn get_user_tags(connection: &mut Conn, user_id: u32) -> Result<Option<String>, mysql::Error> {
     let query = format!(
-        "SELECT tags FROM user_tags WHERE user_id = {} LIMIT 1",
+        "SELECT tags FROM `user_tags` WHERE user_id = {} LIMIT 1",
         user_id
     );
     connection.query_first(query)
@@ -215,7 +215,7 @@ pub fn get_user_tags(connection: &mut Conn, user_id: u32) -> Result<Option<Strin
 
 pub fn delete_user_tags(connection: &mut Conn, user_id: u32) -> Result<(), mysql::Error> {
     connection.exec_drop(
-        "DELETE FROM user_tags WHERE user_id = :id",
+        "DELETE FROM `user_tags` WHERE user_id = :id",
         params! {
             "id" => user_id
         },
@@ -224,26 +224,26 @@ pub fn delete_user_tags(connection: &mut Conn, user_id: u32) -> Result<(), mysql
 
 pub fn add_user_tags(connection: &mut Conn, user_id: u32, tags: &str) -> Result<(), mysql::Error> {
     connection.exec_drop(
-        "INSERT INTO user_tags (user_id, tags) VALUES (?, ?);",
+        "INSERT INTO `user_tags` (user_id, tags) VALUES (?, ?);",
         (user_id, tags),
     )
 }
 
 pub fn get_logo_id(connection: &mut Conn, owner_id: u32) -> Result<Option<u32>, mysql::Error> {
-    let query = format!("SELECT id FROM logos WHERE owner_id = {} LIMIT 1", owner_id);
+    let query = format!("SELECT id FROM `logos` WHERE owner_id = {} LIMIT 1", owner_id);
     connection.query_first(query)
 }
 
 pub fn set_logo(connection: &mut Conn, img_id: u32, owner_id: u32) -> Result<(), mysql::Error> {
     connection.exec_drop(
-        "INSERT INTO logos (id, owner_id) VALUES (?, ?);",
+        "INSERT INTO `logos` (id, owner_id) VALUES (?, ?);",
         (img_id, owner_id),
     )
 }
 
 pub fn delete_logo(connection: &mut Conn, owner_id: u32) -> Result<(), mysql::Error> {
     connection.exec_drop(
-        "DELETE FROM logos WHERE owner_id = :owner",
+        "DELETE FROM `logos` WHERE owner_id = :owner",
         params! {
             "owner" => owner_id
         },
@@ -289,12 +289,12 @@ pub fn edit_image(
         return Ok(());
     }
     let set_clause = clauses.join(",");
-    let query = format!("UPDATE images SET {} WHERE id = {}", set_clause, image_id);
+    let query = format!("UPDATE `images` SET {} WHERE id = {}", set_clause, image_id);
     connection.exec_drop(query, params)
 }
 
 pub fn get_image(connection: &mut Conn, image_id: u64) -> Result<Option<ImageData>, mysql::Error> {
-    let query = format!("SELECT * FROM images WHERE id = '{}' LIMIT 1", image_id);
+    let query = format!("SELECT * FROM `images` WHERE id = '{}' LIMIT 1", image_id);
     Ok(connection
         .query_map(
             query,
@@ -315,7 +315,7 @@ pub fn get_image(connection: &mut Conn, image_id: u64) -> Result<Option<ImageDat
 
 pub fn delete_image(connection: &mut Conn, id: u64) -> Result<(), mysql::Error> {
     connection.exec_drop(
-        "DELETE FROM images WHERE id = :id",
+        "DELETE FROM `images` WHERE id = :id",
         params! {
             "id" => id
         },
@@ -323,7 +323,7 @@ pub fn delete_image(connection: &mut Conn, id: u64) -> Result<(), mysql::Error> 
 }
 
 pub fn get_images(connection: &mut Conn, owner_id: u32) -> Result<Vec<ImageData>, mysql::Error> {
-    let query = format!("SELECT * FROM images WHERE owner_id = '{}'", owner_id);
+    let query = format!("SELECT * FROM `images` WHERE owner_id = '{}'", owner_id);
     Ok(connection.query_map(
         query,
         |(id, owner_id, published_at, about, image_name, extension, tags, views, likes)| ImageData {
@@ -372,7 +372,7 @@ pub fn mark_messages_as_read(
         .collect::<Vec<String>>()
         .join(",");
     let stmt = format!(
-        "UPDATE MESSAGES SET is_read=true WHERE id IN ({}) AND chat_id=:chat_id",
+        "UPDATE `messages` SET is_read=true WHERE id IN ({}) AND chat_id=:chat_id",
         items
     );
     connection.exec_drop(
@@ -389,7 +389,7 @@ pub fn get_messages(
     start: Option<usize>,
     end: Option<usize>,
 ) -> Result<Vec<Message>, mysql::Error> {
-    let query = format!("SELECT * FROM MESSAGES WHERE chat_id={}", chat_id);
+    let query = format!("SELECT * FROM `messages` WHERE chat_id={}", chat_id);
     let mut messages = connection.query(query)?;
     let len = messages.len();
     let start = start.unwrap_or(0).min(len);
@@ -409,7 +409,7 @@ pub fn send_message(
         .format("%Y-%m-%d %H-%M-%S")
         .to_string();
     connection.exec_drop(
-        "INSERT INTO messages (chat_id, content, owner_id, owner_name, send_time, is_read)
+        "INSERT INTO `messages` (chat_id, content, owner_id, owner_name, send_time, is_read)
         VALUES(:chat_id, :content, :owner_id, :owner_name, :send_time, :is_read)",
         params! {
             chat_id,
@@ -425,7 +425,7 @@ pub fn send_message(
 pub fn get_user_chats(connection: &mut Conn, userid1: u32) -> Result<Vec<Chat>, mysql::Error> {
     connection.query_map(
         format!(
-            "SELECT * FROM chats WHERE userid1 = {0} OR userid2 = {0}",
+            "SELECT * FROM `chats` WHERE userid1 = {0} OR userid2 = {0}",
             userid1
         ),
         |(id, userid1, userid2, created_at)| Chat {
@@ -440,7 +440,7 @@ pub fn get_user_chats(connection: &mut Conn, userid1: u32) -> Result<Vec<Chat>, 
 pub fn create_chat(connection: &mut Conn, userid1: u32, userid2: u32) -> Result<(), mysql::Error> {
     let created_at = chrono::offset::Local::now().format("%Y-%m-%d").to_string();
     connection.exec_drop(
-        "INSERT INTO chats (userid1, userid2, created_at) VALUES (:userid1, :userid2, :created_at)",
+        "INSERT INTO `chats` (userid1, userid2, created_at) VALUES (:userid1, :userid2, :created_at)",
         params! {
             "userid1" => userid1,
             "userid2" => userid2,
@@ -451,7 +451,7 @@ pub fn create_chat(connection: &mut Conn, userid1: u32, userid2: u32) -> Result<
 
 pub fn delete_chat(connection: &mut Conn, userid1: u32, userid2: u32) -> Result<(), mysql::Error> {
     connection.exec_drop(
-        r"DELETE FROM chats WHERE (userid1 = :userid1 AND userid2 = :userid2)
+        r"DELETE FROM `chats` WHERE (userid1 = :userid1 AND userid2 = :userid2)
         OR (userid1 = :userid2 AND userid2 = :userid1)",
         params! {
             "userid1" => userid1,
@@ -541,7 +541,7 @@ pub fn register_user(
     let last_online = register_date.format("%Y-%m-%d %H-%M-%S").to_string();
 
     connection.exec_drop(
-        r"INSERT INTO USERS (id, username, email, password, firstname,
+        r"INSERT INTO `users` (id, username, email, password, firstname,
         lastname, about, age, gender, last_online, reg_date)
         values (:id, :username, :email, :password, :firstname,
         :lastname, :about, :age, :gender, :last_online, :reg_date)",
@@ -566,7 +566,7 @@ pub fn make_user_online(connection: &mut Conn, email: &str) -> Result<(), mysql:
         .format("%Y-%m-%d %H-%M-%S")
         .to_string();
     connection.exec_drop(
-        "UPDATE USERS SET last_online=:last_online WHERE email = :email",
+        "UPDATE `users` SET last_online=:last_online WHERE email = :email",
         params! {
             "last_online" => last_online,
             "email" => email
@@ -631,7 +631,7 @@ pub fn edit_user(
 
 pub fn delete_user(connection: &mut Conn, email: &str) -> Result<(), mysql::Error> {
     connection.exec_drop(
-        "DELETE FROM USERS
+        "DELETE FROM `users`
     WHERE email=:email",
         params! {
             "email" => email
@@ -669,7 +669,7 @@ pub fn add_visit(
     let visit_date = chrono::offset::Local::now();
     let visit_date = visit_date.format("%Y-%m-%d").to_string();
     connection.exec_drop(
-        r"INSERT INTO VISITS (visitor_email, visiting_id, visit_date)
+        r"INSERT INTO `visits` (visitor_email, visiting_id, visit_date)
         values (:visitor_email, :visiting_id, :visit_date)",
         params! {
             "visitor_email" => visitor_email,
