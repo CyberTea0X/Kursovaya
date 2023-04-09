@@ -19,7 +19,7 @@ const Table = ({ data }) => {
                 borderRadius: '25px',
               }} />}{item.first_name}</td>
               <td>{item.username}</td>
-              <td>{item.last_name}</td>
+              <td>{item.about}</td>
             </tr>
           ))}
         </tbody>

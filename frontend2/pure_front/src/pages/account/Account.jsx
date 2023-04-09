@@ -109,7 +109,7 @@ const Account = () => {
                         <input className="account-input" placeholder="Пароль" type="password" onChange={(e) => setUser(user.clone({password: e.target.value}))}/>
                         <p className="account-title">Подтвердите пароль</p>
                         <input className="account-input" placeholder="Пароль" type="password"  />
-                        <form onSubmit={handleSubmit}>
+                        <form onSubmit={handleSubmit} style={{backgroundColor: "rgba(255, 255, 255, 0)"}}>
                         <button className="account-btn2" type="submit">Сохранить</button>
                         </form>
                     </div>
