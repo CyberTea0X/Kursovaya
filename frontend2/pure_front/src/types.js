@@ -35,6 +35,11 @@ class User {
     static emptyUser() {
       return new User();
     }
+
+    clone(attributesToChange={}) {
+        const { id=this.id, username=this.username, email=this.email, password=this.password, firstname=this.firstname, lastname=this.lastname, rating=this.rating, about=this.about, age=this.age, gender=this.gender, last_online=this.last_online, reg_date=this.reg_date } = attributesToChange;
+        return new User(id, username, email, password, firstname, lastname, rating, about, age, gender, last_online, reg_date);
+    }
 }
 
 export {User};

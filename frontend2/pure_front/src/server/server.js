@@ -10,6 +10,7 @@ async function registerUser(login, email, password) {
 
 
 async function editUser(email, password, user) {
+    console.log(user)
     const query = user.toQuery()
     const url = `http://${ip}:${port}/api/user/edit/${email}/${password}?${query}`;
     return postRequest(url)

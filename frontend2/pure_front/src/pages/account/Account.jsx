@@ -28,9 +28,12 @@ const Account = () => {
     const editUserProfile = async () => {
         alert("Y")
         try {
+            const user_clone = user.clone()
             let email = Cookies.get("email").toLowerCase();
             let password = Cookies.get("password")
-            await editUser(email, password, user)
+            user_clone.password = null;
+            user_clone.email = null;
+            await editUser(email, password, user_clone)
             .then(data => {
                 if (data["status"] != "OK") {
                     throw Error(data["reason"]);
@@ -66,17 +69,17 @@ const Account = () => {
                         </div>
                         <h3 className="account-title" style={{fontWeight: '700', padding:'0 0 20px 0'}}>Личная информация</h3>
                         <p className="account-title">Имя пользователя</p>
-                        <input className="account-input" placeholder="Введите имя" type="text" value={user.username ? user.username : ""} onChange={(e) => setUser({...user, username: e.target.value})} />
+                        <input className="account-input" placeholder="Введите имя" type="text" value={user.username ? user.username : ""} onChange={(e) => setUser(user.clone({username: e.target.value}))} />
                         <p className="account-title">Почта</p>
-                        <input className="account-input" placeholder="Введите email" type="email" value={user.email ? user.email : ""} onChange={(e) => setUser({...user, email: e.target.value})} />
+                        <input className="account-input" placeholder="Введите email" type="email" value={user.email ? user.email : ""} onChange={(e) => setUser(user.clone({email: e.target.value}))} />
                         <p className="account-title">Имя</p>
-                        <input className="account-input" placeholder="Введите имя" type="text" value={user.firstname ? user.firstname : ""} onChange={(e) => setUser({...user, firstname: e.target.value})} />
+                        <input className="account-input" placeholder="Введите имя" type="text" value={user.firstname ? user.firstname : ""} onChange={(e) => setUser(user.clone({firstname: e.target.value}))} />
                         <p className="account-title">Фамилия</p>
-                        <input className="account-input" placeholder="Введите фамилию" type="text" value={user.lastname ? user.lastname : ""} onChange={(e) => setUser({...user, lastname: e.target.value})} />
+                        <input className="account-input" placeholder="Введите фамилию" type="text" value={user.lastname ? user.lastname : ""} onChange={(e) => setUser(user.clone({lastname: e.target.value}))} />
                         <p className="account-title">Возраст</p>
-                        <input className="account-input" placeholder="Введите возраст" type="number" value={user.age ? user.age : ""} onChange={(e) => setUser({...user, age: e.target.value})} />
+                        <input className="account-input" placeholder="Введите возраст" type="number" value={user.age ? user.age : ""} onChange={(e) => setUser(user.clone({age: e.target.value}))} />
                         <p className="account-title">Пол</p>
-                        <select className="account-input" value={user.gender ? user.gender : ""} onChange={(e) => setUser({...user, gender: e.target.value})}>
+                        <select className="account-input" value={user.gender ? user.gender : ""} onChange={(e) => setUser(user.clone({gender: e.target.value}))}>
                         <option value="">Выберите пол</option>
                         <option value="male">Мужской</option>
                         <option value="female">Женский</option>
