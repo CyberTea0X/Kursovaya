@@ -30,8 +30,8 @@ const Account = () => {
             const user_clone = user.clone()
             let email = Cookies.get("email").toLowerCase();
             let password = Cookies.get("password")
-            user_clone.password = (user.password ==="secret") ? null: user.password;
-            user_clone.email = (user.email ==="secret") ? null: user.email;
+            user_clone.password = (user.password ==="secret") ? password: user.password;
+            user_clone.email = (user.email ==="secret") ? email: user.email;
             await editUser(email, password, user_clone)
             .then(data => {
                 if (data["status"] !== "OK") {
