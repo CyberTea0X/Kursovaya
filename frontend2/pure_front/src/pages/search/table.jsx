@@ -18,7 +18,7 @@ const Table = ({ data }) => {
                 height: '50px',
                 borderRadius: '25px',
               }} />}{item.first_name}</td>
-              <td>{item.email}</td>
+              <td>{item.username}</td>
               <td>{item.last_name}</td>
             </tr>
           ))}

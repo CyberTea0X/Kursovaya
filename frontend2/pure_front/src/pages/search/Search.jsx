@@ -2,51 +2,32 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import './search.css'
-import { Users } from "./users"
-
-
-
-const Table = ({ data }) => {
-    return (
-      <table>
-        <tbody>
-          <tr>
-            {/* <th>Profile</th>
-            <th>Name</th>
-            <th>Surname</th> */}
-          </tr>
-          {data.map((item) => (
-            <tr key={item.id}>
-              <td>{<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQkwNi3BaNAgeNdiKbvkcaQGEa8ZgVBHK5dmOxaKrc&s" style={{
-                width: '70px',
-                height: '70px',
-                borderRadius: '50%',
-                border: '2px solid gray'
-              }} />}</td>
-              
-              
-              <td>{item.first_name}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    );
-  };
+import { searchPopular } from "../../server/server";
+import { User as UserProfile} from "../../types";
+import { Table } from './table'
 
 
 const SearchPage = () => {
     const [query, setQuery] = useState("");
+    const [users, setUsers] = useState([]);
 
     const keys = ["first_name", "last_name", "email"]
 
-    const search = (data) => {
-        return data.filter((item) => 
-        keys.some(key=>item[key].toLowerCase().includes(query.toLowerCase()))
-
-        );
+    const search = async () => {
+      let users;
+      await searchPopular().then(data => {
+        // аутентификации
+        users = data["items"]
+        
+      });
+      users = users.map(function(user) {
+        return UserProfile.fromJson(user);
+      });
+      console.log(users);
+      setUsers(users);
     };
 
-
+    search();
     return (
         
         <div className="searchpage">
@@ -64,7 +45,7 @@ const SearchPage = () => {
                         #Anime<br/>
                         #Nature<br/>
                         #Landscape<br/></p>
-                <Table data={search(Users)}/>  
+                <Table data={users}/>  
                 
                 
             </div>
