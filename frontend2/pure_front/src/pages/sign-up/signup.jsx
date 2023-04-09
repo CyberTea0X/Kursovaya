@@ -5,7 +5,6 @@ import FormInput from "./FormInput";
 import { useNavigate } from 'react-router-dom';
 import { registerUser } from "../../server/server";
 import Cookies from 'js-cookie';
-import bcrypt from 'bcryptjs';
 
 const Signup = () => {
   const [values, setValues] = useState({

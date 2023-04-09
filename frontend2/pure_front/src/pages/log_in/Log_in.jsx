@@ -4,7 +4,6 @@ import FormInput from "../sign-up/FormInput";
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import { login } from "../../server/server";
-import bcrypt from 'bcryptjs';
 
 const Log_in = () => {
   const [values, setValues] = useState({

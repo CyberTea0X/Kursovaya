@@ -12,7 +12,7 @@ const Account = () => {
             let email = Cookies.get("email").toLowerCase();
             await userProfile(email)
             .then(data => {
-            if (data["status"] != "OK") {
+            if (data["status"] !== "OK") {
                 throw Error(data["reason"]);
             }
             let user_ = UserProfile.fromJson(data["user"])
@@ -26,20 +26,25 @@ const Account = () => {
     }
 
     const editUserProfile = async () => {
-        alert("Y")
         try {
             const user_clone = user.clone()
             let email = Cookies.get("email").toLowerCase();
             let password = Cookies.get("password")
-            user_clone.password = null;
-            user_clone.email = null;
+            user_clone.password = (user.password ==="secret") ? null: user.password;
+            user_clone.email = (user.email ==="secret") ? null: user.email;
             await editUser(email, password, user_clone)
             .then(data => {
-                if (data["status"] != "OK") {
+                if (data["status"] !== "OK") {
                     throw Error(data["reason"]);
                 }
                 else {
-                    throw Error(data["reason"]);
+                    if (user_clone.password !== "secret") {
+                        Cookies.set("password", user_clone.password);
+                    }
+                    if (user_clone.email !== "secret") {
+                        Cookies.set("email", user_clone.email);
+                    }
+                    alert("Изменения успешно внесены")
                 }
                 })
         }
@@ -96,14 +101,12 @@ const Account = () => {
                         #Landscape<br/>
                         </p>
                         </p>
-                        <textarea style={{resize:'none'}} className="account-input2" placeholder="Напишите что-нибудь о себе" type="text" value={user.about ? user.about : ""} />
-                        <p className="account-title">Введите номер телефона</p>
-                        <input className="account-input" placeholder="Введите номер телефона" type="tel" />
+                        <textarea style={{resize:'none'}} className="account-input2" placeholder="Напишите что-нибудь о себе" type="text" value={user.about ? user.about : ""} onChange={(e) => setUser(user.clone({about: e.target.value}))} />
                         <h3 className="account-title" style={{fontWeight: '700', padding:'0 0 20px 0'}}>Изменение пароля</h3>
                         <p className="account-title">Текущий пароль</p>
                         <input className="account-input" placeholder="Текущий пароль" type="password"  />
                         <p className="account-title">Новый пароль</p>
-                        <input className="account-input" placeholder="Пароль" type="password"  />
+                        <input className="account-input" placeholder="Пароль" type="password" onChange={(e) => setUser(user.clone({password: e.target.value}))}/>
                         <p className="account-title">Подтвердите пароль</p>
                         <input className="account-input" placeholder="Пароль" type="password"  />
                         <form onSubmit={handleSubmit}>
