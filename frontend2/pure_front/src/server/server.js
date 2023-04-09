@@ -3,6 +3,25 @@ import config from '../config.json';
 
 const { "backend-ip": ip, "backend-port": port } = config;
 
+
+async function searchText(text) {
+    const url = `http://${ip}:${port}/api/search/text/${text}`;
+    return postRequest(url)
+}
+
+
+async function searchLogin(login) {
+    const url = `http://${ip}:${port}/api/search/login/${login}`;
+    return postRequest(url)
+}
+
+
+async function searchPopular() {
+    const url = `http://${ip}:${port}/api/search/popular`;
+    return postRequest(url)
+}
+
+
 async function registerUser(login, email, password) {
     const url = `http://${ip}:${port}/api/user/register/${login}/${email}/${password}`;
     return postRequest(url)
@@ -44,4 +63,4 @@ async function postRequest(url) {
 }
 
 
-export { registerUser, login, userProfile, editUser };
+export { registerUser, login, userProfile, editUser, searchLogin, searchPopular, searchText };
