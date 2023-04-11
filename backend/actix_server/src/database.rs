@@ -639,13 +639,14 @@ pub fn delete_user(connection: &mut Conn, email: &str) -> Result<(), mysql::Erro
     )
 }
 
-pub fn user_exists(connection: &mut Conn, email: &str) -> Result<bool, mysql::Error> {
-    Ok(connection
-        .query_first::<String, String>(format!(
-            "SELECT `email` FROM `users` WHERE email = \"{}\"",
-            email
-        ))?
-        .is_some())
+pub fn user_exists(connection: &mut Conn, identifier: &str) -> Result<bool, mysql::Error> {
+    let query = if identifier.parse::<u32>().is_ok() {
+    format!("SELECT ? FROM users LIMIT 1")
+    } else {
+    format!("SELECT email FROM users WHERE email = ?")
+    };
+    let user: Option<String> = connection.exec_first(query, (identifier, ))?;
+    Ok(user.is_some())
 }
 
 pub fn visit_exists(connection: &mut Conn, visitor_email: &str, visiting_id: u32) -> bool {

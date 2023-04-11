@@ -3,7 +3,7 @@ use std::fs;
 use crate::{
     auth::auth_get_user_connect,
     database::{self, DBconfig, User},
-    email,
+    email, passwords,
 };
 use actix_web::{post, web, Responder, Result as ActxResult};
 use serde::Deserialize;
@@ -20,28 +20,22 @@ pub struct TagsQuery {
     tags: String,
 }
 
-#[post("tags/get/{email}/{password}")]
+#[post("tags/get/{id}")]
 pub(crate) async fn get_user_tags_service(
-    path: web::Path<(String, String)>,
+    path: web::Path<(u32)>,
     db_config: web::Data<DBconfig>,
 ) -> ActxResult<impl Responder> {
-    let (email, password) = path.into_inner();
+    let user_id = path.into_inner();
     let (status, fail_reason, tags) = (|| {
-        let (_, mut connection) = match auth_get_user_connect(&email, &password, &db_config, 3) {
-            Ok((user, connection)) => (user, connection),
-            Err(err) => return ("FAILED".to_owned(), err.to_string(), Vec::new()),
+        let mut connection = match database::try_connect(&db_config, 3) {
+            Ok(connection) => connection,
+            Err(_) => return ("FAILED".to_owned(), "Database error".to_owned(), Vec::new())
         };
-        let user_id = match database::user_email_to_id(&mut connection, &email) {
-            Ok(Some(id)) => id,
-            Ok(None) => {
-                return (
-                    "FAILED".to_owned(),
-                    "User does not exist".to_owned(),
-                    Vec::new(),
-                )
-            }
-            Err(_) => return ("FAILED".to_owned(), "Database error".to_owned(), Vec::new()),
-        };
+        match database::user_exists(&mut connection, &user_id.to_string()) {
+            Ok(true) => (),
+            Ok(false) => return ("FAILED".to_owned(), "User does not exist".to_owned(), Vec::new()),
+            Err(_) => return ("FAILED".to_owned(), "Database error".to_owned(), Vec::new())
+        }
         let tags = match database::get_user_tags(&mut connection, user_id) {
             Ok(Some(tags)) => tags,
             Ok(None) => String::new(),
@@ -143,6 +137,11 @@ pub(crate) async fn edit_user_service(
             Ok((user, connection)) => (user, connection),
             Err(err) => return ("Failed".to_owned(), err.to_string()),
         };
+        if let Some(password) = info.password.as_ref() {
+            if !passwords::is_valid_password(password) {
+                return ("FAILED".to_owned(), "New password is invalid".to_owned());
+            }
+        }
         if let Err(err) = database::edit_user(&mut connection, &email, &info) {
             println!("{:?}", err);
             let err_content = err.to_string();
