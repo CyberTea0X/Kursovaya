@@ -1,13 +1,23 @@
 import React, { useState, useEffect } from "react";
 import "./userprofile.css"
 import User from "./Unknown_person.jpg"
-import { userProfile, editUser } from "../../server/server";
+import { userProfile, editUser, get_tags, edit_tags} from "../../server/server";
 import { User as UserProfile} from "../../types";
 import Cookies from "js-cookie";
 
+function is_valid_tags(tags) {
+    const regex = /^[a-zA-Z0-9]+(,[\s]*[a-zA-Z0-9]+)*$/;
+    // Регулярное выражение проверяет, что строка начинается с буквы или цифры,
+    // затем может содержать запятую и пробелы, а затем снова букву или цифру.
+    // Это может повторяться неограниченное количество раз.
+    return regex.test(tags);
+}
+
 const Account = () => {
     const [user, setUser] = useState(UserProfile.emptyUser()); // хранение данных об аккаунте
+    const [tags, setTags] = useState(""); // хранение данных о тегах
     const getAccount = async () => {
+        
         try {
             let email = Cookies.get("email").toLowerCase();
             await userProfile(email)
@@ -101,6 +111,9 @@ const Account = () => {
                         #Landscape<br/>
                         </p>
                         </p>
+                        <p className="account-title"> Теги</p>
+                        <textarea style={{resize:'none'}} className="account-input2" placeholder="Напишите ваши теги через запятую" type="text" value={user.tags ? user.tags : ""} onChange={(e) => setUser(user.clone({tags: e.target.value}))} />
+                        <p className="account-title"> О себе</p>
                         <textarea style={{resize:'none'}} className="account-input2" placeholder="Напишите что-нибудь о себе" type="text" value={user.about ? user.about : ""} onChange={(e) => setUser(user.clone({about: e.target.value}))} />
                         <h3 className="account-title" style={{fontWeight: '700', padding:'0 0 20px 0'}}>Изменение пароля</h3>
                         <p className="account-title">Текущий пароль</p>

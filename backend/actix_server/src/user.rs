@@ -142,6 +142,11 @@ pub(crate) async fn edit_user_service(
                 return ("FAILED".to_owned(), "New password is invalid".to_owned());
             }
         }
+        if let Some(email) = info.email.as_ref() {
+            if !email::is_valid_email(email) {
+                return ("FAILED".to_owned(), "New email is invalid".to_owned());
+            }
+        }
         if let Err(err) = database::edit_user(&mut connection, &email, &info) {
             println!("{:?}", err);
             let err_content = err.to_string();

@@ -90,7 +90,7 @@ impl FromRow for User {
     }
 }
 
-#[derive(Serialize, Deserialize, Default)]
+#[derive(Serialize, Deserialize, Default, Debug)]
 pub struct EditUserRequest {
     pub username: Option<String>,
     pub email: Option<String>,

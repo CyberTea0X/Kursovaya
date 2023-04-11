@@ -1,8 +1,18 @@
-import config from '../config.json';
+import config from '../config_local.json';
 
 
 const { "backend-ip": ip, "backend-port": port } = config;
 
+
+async function edit_tags(email, password, new_tags) {
+    const url = `http://${ip}:${port}/api/user/tags/edit/?tags=${new_tags}`;
+    return postRequest(url)
+}
+
+async function get_tags(user_id) {
+    const url = `http://${ip}:${port}/api/user/tags/get/${user_id}`;
+    return postRequest(url)
+}
 
 async function searchText(text) {
     const url = `http://${ip}:${port}/api/search/text/${text}`;
@@ -63,4 +73,4 @@ async function postRequest(url) {
 }
 
 
-export { registerUser, login, userProfile, editUser, searchLogin, searchPopular, searchText };
+export { registerUser, login, userProfile, editUser, searchLogin, searchPopular, searchText, get_tags, edit_tags };
