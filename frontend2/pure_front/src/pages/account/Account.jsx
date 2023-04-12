@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./userprofile.css"
 import User from "./Unknown_person.jpg"
-import { userProfile, editUser, get_tags, edit_tags} from "../../server/server";
+import { userProfile, editUser, get_tags, edit_tags} from "../../server/requests";
 import { User as UserProfile} from "../../types";
 import Cookies from "js-cookie";
 
@@ -33,6 +33,25 @@ const Account = () => {
         catch (error) {
             alert(error.message);
         }
+    }
+
+    const getTags = async () => {
+    //     try {
+    //         let email = Cookies.get("email").toLowerCase();
+    //         await get_tags(email)
+    //         .then(data => {
+    //         if (data["status"] !== "OK") {
+    //             throw Error(data["reason"]);
+    //         }
+    //         let user_ = UserProfile.fromJson(data["user"])
+    //         user_.email = email;
+    //         setUser(user_);
+    //         })
+    //     }
+    //     catch (error) {
+    //         alert(error.message);
+    //     }
+    // }
     }
 
     const editUserProfile = async () => {
@@ -69,7 +88,7 @@ const Account = () => {
     }
     useEffect(() => {
         getAccount();
-    }, []); // вызываем getAccount() только один раз при загрузке компонента
+    }, []); // вызываем getAccount() и getTags() только один раз при загрузке компонента
     return (
         <div className="account">
             
@@ -112,7 +131,7 @@ const Account = () => {
                         </p>
                         </p>
                         <p className="account-title"> Теги</p>
-                        <textarea style={{resize:'none'}} className="account-input2" placeholder="Напишите ваши теги через запятую" type="text" value={user.tags ? user.tags : ""} onChange={(e) => setUser(user.clone({tags: e.target.value}))} />
+                        <textarea style={{resize:'none'}} className="account-input2" placeholder="Напишите ваши теги через запятую" type="text" value={tags ? tags : ""} onChange={(e) => setTags(e.target.value)} />
                         <p className="account-title"> О себе</p>
                         <textarea style={{resize:'none'}} className="account-input2" placeholder="Напишите что-нибудь о себе" type="text" value={user.about ? user.about : ""} onChange={(e) => setUser(user.clone({about: e.target.value}))} />
                         <h3 className="account-title" style={{fontWeight: '700', padding:'0 0 20px 0'}}>Изменение пароля</h3>

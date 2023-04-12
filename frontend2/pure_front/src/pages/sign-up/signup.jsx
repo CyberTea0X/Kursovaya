@@ -3,8 +3,8 @@ import "./registration.css";
 import "./registration_main.css";
 import FormInput from "./FormInput";
 import { useNavigate } from 'react-router-dom';
-import { registerUser } from "../../server/server";
-import Cookies from 'js-cookie';
+import { registerUser } from "../../server/requests";
+import { userToCookies, removeOldCookies } from "../../cookies";
 
 const Signup = () => {
   const [values, setValues] = useState({
@@ -19,7 +19,7 @@ const Signup = () => {
 
   let navigate = useNavigate(); 
   const routeChange = () =>{ 
-    let path = `/`; 
+    let path = `/Login`; 
     navigate(path);
   }
 
@@ -75,8 +75,8 @@ const Signup = () => {
       .then(data => {
           // аутентификации
           if (data["status"] == "OK") {
-              Cookies.set('email', values.email.toLowerCase());
-              Cookies.set('password', values.password);
+            userToCookies(values.email.toLowerCase(), values.password);
+            removeOldCookies();
             alert("Регистрация успешна");
           }
           else {

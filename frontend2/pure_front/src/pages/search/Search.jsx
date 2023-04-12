@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import './search.css'
-import { searchPopular } from "../../server/server";
+import { searchPopular } from "../../server/requests";
 import { User as UserProfile} from "../../types";
 import { Table } from './table'
 

@@ -3,13 +3,23 @@ import "./log_in.css";
 import FormInput from "../sign-up/FormInput";
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
-import { login } from "../../server/server";
+import { login, userProfile } from "../../server/requests";
 
 const Log_in = () => {
   const [values, setValues] = useState({
     email: "",
     password: "",
+    id: "",
 });
+
+async function authenticate(email, password) {
+  const data = await login(email.toLowerCase(), password);
+  if (data["status"] == "OK") {
+    alert("Авторизация успешна");
+  } else {
+    throw Error(data["reason"]);
+  }
+}
 
 
 
@@ -53,16 +63,7 @@ const Log_in = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await login(values["email"].toLowerCase(), values["password"])
-      .then(data => {
-        // аутентификации
-        if (data["status"] == "OK") {
-          alert("Авторизация успешна");
-        }
-        else {
-          throw Error(data["reason"])
-        }
-      })
+      authenticate(values["email"], values["password"]);
     }
     catch (error) {
       alert(error.message)
