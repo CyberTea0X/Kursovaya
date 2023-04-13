@@ -5,6 +5,7 @@ import FormInput from "./FormInput";
 import { useNavigate } from 'react-router-dom';
 import { registerUser } from "../../server/requests";
 import { userToCookies, removeOldCookies } from "../../cookies";
+import { getUserProfile } from "../../server/requests_handler";
 
 const Signup = () => {
   const [values, setValues] = useState({
@@ -19,7 +20,7 @@ const Signup = () => {
 
   let navigate = useNavigate(); 
   const routeChange = () =>{ 
-    let path = `/Login`; 
+    let path = `/`; 
     navigate(path);
   }
 
@@ -73,21 +74,18 @@ const Signup = () => {
     try {
       await registerUser(values.username, values.email.toLowerCase(), values.password)
       .then(data => {
-          // аутентификации
-          if (data["status"] == "OK") {
-            userToCookies(values.email.toLowerCase(), values.password);
-            removeOldCookies();
-            alert("Регистрация успешна");
-          }
-          else {
-            throw Error(data["reason"])
-          }
-        })
-      }
+          if (data["status"] != "OK") {
+            throw Error(data["reason"]);
+        }
+      });
+    }
     catch (error) {
       alert(error.message)
       return;
     }
+    let user = await getUserProfile(values.email.toLowerCase());
+    removeOldCookies();
+    userToCookies(values["email"].toLowerCase(), values.password, user.id);
     routeChange();
   };
 

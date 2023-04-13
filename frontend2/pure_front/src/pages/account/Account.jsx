@@ -1,60 +1,41 @@
 import React, { useState, useEffect } from "react";
 import "./userprofile.css"
 import User from "./Unknown_person.jpg"
-import { userProfile, editUser, get_tags, edit_tags} from "../../server/requests";
+import { editUser } from "../../server/requests";
 import { User as UserProfile} from "../../types";
+import { getUserProfile, getTagsArray, editTagsFromStr } from "../../server/requests_handler";
 import Cookies from "js-cookie";
 
-function is_valid_tags(tags) {
-    const regex = /^[a-zA-Z0-9]+(,[\s]*[a-zA-Z0-9]+)*$/;
-    // Регулярное выражение проверяет, что строка начинается с буквы или цифры,
-    // затем может содержать запятую и пробелы, а затем снова букву или цифру.
-    // Это может повторяться неограниченное количество раз.
-    return regex.test(tags);
-}
 
 const Account = () => {
     const [user, setUser] = useState(UserProfile.emptyUser()); // хранение данных об аккаунте
     const [tags, setTags] = useState(""); // хранение данных о тегах
+      
     const getAccount = async () => {
         
         try {
             let email = Cookies.get("email").toLowerCase();
-            await userProfile(email)
-            .then(data => {
-            if (data["status"] !== "OK") {
-                throw Error(data["reason"]);
-            }
-            let user_ = UserProfile.fromJson(data["user"])
+            let user_ = await getUserProfile(email);
             user_.email = email;
             setUser(user_);
-            })
         }
         catch (error) {
             alert(error.message);
         }
     }
 
-    const getTags = async () => {
-    //     try {
-    //         let email = Cookies.get("email").toLowerCase();
-    //         await get_tags(email)
-    //         .then(data => {
-    //         if (data["status"] !== "OK") {
-    //             throw Error(data["reason"]);
-    //         }
-    //         let user_ = UserProfile.fromJson(data["user"])
-    //         user_.email = email;
-    //         setUser(user_);
-    //         })
-    //     }
-    //     catch (error) {
-    //         alert(error.message);
-    //     }
-    // }
+    const retrieveUserTags = async () => {
+        try {
+            let id = Cookies.get("id");
+            let tags_arr = await getTagsArray(id);
+            setTags(tags_arr.join(', '));
+        }
+        catch (error) {
+            alert(error.message);
+        }
     }
 
-    const editUserProfile = async () => {
+    const editUserData = async () => {
         try {
             const user_clone = user.clone()
             let email = Cookies.get("email").toLowerCase();
@@ -73,21 +54,31 @@ const Account = () => {
                     if (user_clone.email !== "secret") {
                         Cookies.set("email", user_clone.email);
                     }
-                    alert("Изменения успешно внесены")
                 }
                 })
+            if (tags.length != 0) {
+                await editTagsFromStr(email, password, tags);
+            }
         }
         catch (error) {
             alert(error.message);
+            return;
         }
+        alert("Изменения успешно внесены");
     }
+    const addTag = (tag) => {
+        if (!tags.includes(tag)) {
+          setTags(tags ? tags + ", " + tag : tag);
+        }
+      }
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        editUserProfile()
+        editUserData()
     }
     useEffect(() => {
         getAccount();
+        retrieveUserTags();
     }, []); // вызываем getAccount() и getTags() только один раз при загрузке компонента
     return (
         <div className="account">
@@ -121,17 +112,18 @@ const Account = () => {
                         </select>
                         <p className="account-title">Если Вы художник, пожалуйста, выберите теги из предложенных, под которыми вы рисуете:<br/>
                         <p className="Tags">
-                        #Traditional<br/>
-                        #Digital<br/>
-                        #Portraits<br/>
-                        #Animalistic<br/>
-                        #Anime<br/>
-                        #Nature<br/>
-                        #Landscape<br/>
+                        <div className="tags-container">
+                        <div className="tag" onClick={() => addTag("#Traditional")}>#Traditional</div>
+                        <div className="tag" onClick={() => addTag("#Digital")}>#Digital</div>
+                        <div className="tag" onClick={() => addTag("#Portraits")}>#Portraits</div>
+                        <div className="tag" onClick={() => addTag("#Animalistic")}>#Animalistic</div>
+                        <div className="tag" onClick={() => addTag("#Anime")}>#Anime</div>
+                        <div className="tag" onClick={() => addTag("#Nature")}>#Nature</div>
+                        <div className="tag" onClick={() => addTag("#Landscape")}>#Landscape</div>
+                        </div>
+                        <textarea style={{resize:'none'}} className="account-input2" placeholder="Ваши теги" type="text" value={tags ? tags : ""} onChange={(e) => setTags(e.target.value)} />
                         </p>
                         </p>
-                        <p className="account-title"> Теги</p>
-                        <textarea style={{resize:'none'}} className="account-input2" placeholder="Напишите ваши теги через запятую" type="text" value={tags ? tags : ""} onChange={(e) => setTags(e.target.value)} />
                         <p className="account-title"> О себе</p>
                         <textarea style={{resize:'none'}} className="account-input2" placeholder="Напишите что-нибудь о себе" type="text" value={user.about ? user.about : ""} onChange={(e) => setUser(user.clone({about: e.target.value}))} />
                         <h3 className="account-title" style={{fontWeight: '700', padding:'0 0 20px 0'}}>Изменение пароля</h3>

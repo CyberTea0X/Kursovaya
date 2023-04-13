@@ -1,11 +1,11 @@
-import config from '../config_local.json';
+import config from '../config.json';
 
 
 const { "backend-ip": ip, "backend-port": port } = config;
 
 
 async function edit_tags(email, password, new_tags) {
-    const url = `http://${ip}:${port}/api/user/tags/edit/?tags=${new_tags}`;
+    const url = `http://${ip}:${port}/api/user/tags/edit/${email}/${password}?tags=${new_tags}`;
     return postRequest(url)
 }
 
