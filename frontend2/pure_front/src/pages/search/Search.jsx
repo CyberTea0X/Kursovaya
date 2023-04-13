@@ -1,5 +1,5 @@
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import './search.css'
 import { searchPopular } from "../../server/requests";
@@ -13,21 +13,20 @@ const SearchPage = () => {
 
     const keys = ["first_name", "last_name", "email"]
 
-    const search = async () => {
-      let users;
-      await searchPopular().then(data => {
-        // аутентификации
-        users = data["items"]
-        
-      });
-      users = users.map(function(user) {
-        return UserProfile.fromJson(user);
-      });
-      console.log(users);
-      setUsers(users);
-    };
-
-    search();
+    useEffect(() => {
+      const search = async () => {
+          let users;
+          await searchPopular().then(data => {
+              // аутентификации
+              users = data["items"]
+          });
+          users = users.map(function(user) {
+              return UserProfile.fromJson(user);
+          });
+          setUsers(users);
+      };
+      search();
+  }, []);
     return (
         
         <div className="searchpage">
