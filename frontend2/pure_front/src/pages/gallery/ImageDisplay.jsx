@@ -5,8 +5,7 @@ import React, { useEffect, useState } from 'react';
 const ImageDisplay = ({ img, onClose, onPrevious, onNext }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [description, setDescription] = useState('Автор ничего не рассказал нам о картинке');
-  const [tags, setTags] = useState([]);
-  const [title, setTitle] = useState('Автор не назвал картинку');
+  const [title, setTitle] = useState('Без названия');
 
   const handlePrevious = () => {
     if (onPrevious) {
