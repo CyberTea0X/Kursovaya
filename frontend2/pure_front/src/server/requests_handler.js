@@ -1,4 +1,4 @@
-import { userProfile, get_tags, edit_tags } from "./requests.js"
+import { userProfile, get_tags, get_many_tags, edit_tags } from "./requests.js"
 import { User } from "../types.js"
 
 function is_valid_tags(tags) {
@@ -18,6 +18,18 @@ async function getUserProfile(email) {
     let user = User.fromJson(data["user"]);
     user.email = email;
     return user;
+}
+
+async function getManyTagsArray(range, add_hstag=true, sep=", ") {
+    const data = await get_many_tags(range);
+    if (data["status"] !== "OK") {
+        throw Error(data["reason"]);
+    }
+    let items = data["items"]
+    if (add_hstag) {
+        items = items.map(tags => [tags[0], tags[1].map(tag => `#${tag}`).join(sep)]);
+    } 
+    return items;
 }
 
 async function getTagsArray(user_id, add_hstag=true) {
@@ -43,4 +55,4 @@ async function editTagsFromStr(email, password, newtags) {
     }
 }
 
-export {getUserProfile, getTagsArray, editTagsFromStr}
+export {getUserProfile, getTagsArray, getManyTagsArray, editTagsFromStr}

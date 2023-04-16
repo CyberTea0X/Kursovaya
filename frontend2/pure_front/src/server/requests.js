@@ -1,4 +1,4 @@
-import config from '../config.json';
+import config from '../config_local.json';
 
 
 const { "backend-ip": ip, "backend-port": port } = config;
@@ -9,8 +9,13 @@ async function edit_tags(email, password, new_tags) {
     return postRequest(url)
 }
 
+async function get_many_tags(range) {
+    const url = `http://${ip}:${port}/api/user/tags/many/${range}`;
+    return postRequest(url)
+}
+
 async function get_tags(user_id) {
-    const url = `http://${ip}:${port}/api/user/tags/get/${user_id}`;
+    const url = `http://${ip}:${port}/api/user/tags/one/${user_id}`;
     return postRequest(url)
 }
 
@@ -73,4 +78,5 @@ async function postRequest(url) {
 }
 
 
-export { registerUser, login, userProfile, editUser, searchLogin, searchPopular, searchText, get_tags, edit_tags };
+export { registerUser, login, userProfile, editUser, searchLogin, searchPopular, searchText, get_tags, edit_tags,
+         get_many_tags };

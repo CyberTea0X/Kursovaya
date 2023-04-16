@@ -6,6 +6,7 @@ use crate::{
     email, passwords,
 };
 use actix_web::{post, web, Responder, Result as ActxResult};
+use regex::Regex;
 use serde::Deserialize;
 use serde_json::json;
 
@@ -26,13 +27,19 @@ pub(crate) async fn users_tags_service(
     db_config: web::Data<DBconfig>,
 ) -> ActxResult<impl Responder> {
     let (status, fail_reason, tags) = (|| {
-        let users: Vec<u32> = path
-            .into_inner()
+        let range = path.into_inner();
+        let re = Regex::new(r"^\d+\.\.(\d+)$").unwrap();
+        if !re.is_match(&range) {
+            return ("FAILED".to_owned(), "Wrong range format".to_owned(), Vec::new());
+        }
+        let users: Vec<u32> = range
             .split("..")
             .flat_map(|x| x.parse::<u32>())
             .collect();
+        if users[0] >= users[1] {
+            return ("FAILED".to_owned(), "Wrong range format".to_owned(), Vec::new());
+        }
         let users: Vec<u32> = (users[0]..=users[1]).collect();
-        println!("{:?}", users);
         let mut connection = match database::try_connect(&db_config, 3) {
             Ok(connection) => connection,
             Err(_) => return ("FAILED".to_owned(), "Database error".to_owned(), Vec::new()),

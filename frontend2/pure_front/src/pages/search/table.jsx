@@ -1,7 +1,14 @@
-import React from "react";
+import { useState, useEffect } from 'react'
 
+const Table = ({ users, tags }) => {
+  // создаем хэш-таблицу для тегов
+  const [tagsMap, setTagsMap] = useState(new Map());
 
-const Table = ({ data }) => {
+  useEffect(() => {
+    if (tags.length > 0) {
+      setTagsMap(new Map(tags.map(([id, tags]) => [id, tags])));
+    }
+  }, [tags]);
     return (
       <table>
         <tbody>
@@ -11,7 +18,7 @@ const Table = ({ data }) => {
             <th>Name</th>
             <th>Surname</th> */}
           </tr>
-          {data.map((item) => (
+          {users.map((item) => (
             <tr key={item.id}>
               <td>{<img src="https://avatars.dzeninfra.ru/get-zen_doc/1884623/pub_60be1f9abcbf42494ea7da85_60be206a746af706906e32df/scale_1200" style={{
                 width: '50px',
@@ -19,7 +26,7 @@ const Table = ({ data }) => {
                 borderRadius: '25px',
               }} />}{item.first_name}</td>
               <td>{item.username}</td>
-              <td>{item.about}</td>
+              <td>{tagsMap.get(item.id)}</td>
             </tr>
           ))}
         </tbody>
@@ -27,4 +34,4 @@ const Table = ({ data }) => {
     );
   };
 
-    export {Table}
+export {Table}

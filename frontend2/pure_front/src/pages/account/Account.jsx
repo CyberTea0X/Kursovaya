@@ -79,7 +79,7 @@ const Account = () => {
     useEffect(() => {
         getAccount();
         retrieveUserTags();
-    }, []); // вызываем getAccount() и getTags() только один раз при загрузке компонента
+    }, []); // вызываем getAccount() и retrieveUserTags() только один раз при загрузке компонента
     return (
         <div className="account">
             

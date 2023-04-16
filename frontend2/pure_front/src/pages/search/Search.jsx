@@ -5,28 +5,43 @@ import './search.css'
 import { searchPopular } from "../../server/requests";
 import { User as UserProfile} from "../../types";
 import { Table } from './table'
+import { getManyTagsArray } from '../../server/requests_handler';
 
 
 const SearchPage = () => {
     const [query, setQuery] = useState("");
     const [users, setUsers] = useState([]);
+    const [tags, setTags] = useState([]);
 
     const keys = ["first_name", "last_name", "email"]
 
-    useEffect(() => {
       const search = async () => {
-          let users;
+          let users_;
           await searchPopular().then(data => {
               // аутентификации
-              users = data["items"]
+              users_ = data["items"]
           });
-          users = users.map(function(user) {
+          users_ = users_.map(function(user) {
               return UserProfile.fromJson(user);
           });
-          setUsers(users);
+          setUsers(users_);
+          
       };
-      search();
-  }, []);
+      const get_tags = async () => {
+        let user_ids = users.map(user => user.id);
+        let range = `${Math.min(...user_ids)}..${Math.max(...user_ids)}`
+        setTags(await getManyTagsArray(range));
+
+    };
+    useEffect(() => {
+        search();
+    }, []); // вызываем search() только один раз при загрузке компонента
+
+    useEffect(() => {
+        if (users.length > 0) {
+          get_tags();
+        }
+      }, [users]);
     return (
         
         <div className="searchpage">
@@ -44,7 +59,7 @@ const SearchPage = () => {
                         #Anime<br/>
                         #Nature<br/>
                         #Landscape<br/></p>
-                <Table data={users}/>  
+                <Table users={users} tags={tags}/>  
                 
                 
             </div>
