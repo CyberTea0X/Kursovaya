@@ -8,7 +8,7 @@ import {Text} from 'react'
     import Img5 from './img/img5.png'
     
     import './trends.css';
-import { ArtistProfile } from '../artistProfile/ArtistProfile'
+import { Gallery } from '../gallery/Gallery'
     
 
 const Trends = () => {

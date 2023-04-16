@@ -1,6 +1,6 @@
 import { Routes, Route, Link } from 'react-router-dom';
 import { Homepage } from './pages/homepage/Homepage';
-import { ArtistProfile } from './pages/artistProfile/ArtistProfile';
+import { Gallery } from './pages/gallery/Gallery';
 import { Trends } from './pages/trends/Trends';
 import { Signup } from './pages/sign-up/signup';
 import { SearchPage } from './pages/search/Search.jsx';
@@ -18,7 +18,7 @@ function App() {
         <Header />
           <Routes>
             <Route path="/" element={<Homepage />} />
-            <Route path="/Gallery" element={<ArtistProfile />} />
+            <Route path="/Gallery" element={<Gallery />} />
             <Route path="/Trends" element={<Trends />} />
             <Route path="/Signup" element={<Signup />} />
             <Route path="/Search" element={<SearchPage/>} />
