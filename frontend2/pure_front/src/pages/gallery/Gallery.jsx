@@ -21,8 +21,9 @@ const images = [
 "https://i.pinimg.com/474x/24/fa/f7/24faf7e2d2d1195e879d3a86bf138955.jpg",
 ]
 
-  const Gallery = () => {
+const Gallery = () => {
     const [data, setData] = useState({ img: '', i: 0 });
+    const totalImages = images.length;
   
     // function to display an image
     const viewImage = (img, i) => {
@@ -33,10 +34,12 @@ const images = [
     const imgAction = (action) => {
       let i = data.i;
       if (action === 'next-img') {
-        setData({ img: images[i + 1], i: i + 1 });
+        i = (i + 1) % totalImages;
+        setData({ img: images[i], i });
       }
       if (action === 'previous-img') {
-        setData({ img: images[i - 1], i: i - 1 });
+        i = (i - 1 + totalImages) % totalImages;
+        setData({ img: images[i], i });
       }
       if (!action) {
         setData({ img: '', i: 0 });
