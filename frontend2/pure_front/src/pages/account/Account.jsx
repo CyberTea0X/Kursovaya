@@ -13,8 +13,8 @@ const Account = () => {
     const [tags, setTags] = useState(""); // хранение данных о тегах
 
     let navigate = useNavigate(); 
-    const routeChange = () =>{ 
-        let path = `/Login`; 
+    const routeChange = (route) =>{ 
+        let path = `/${route}`; 
         navigate(path);
     }
       
@@ -27,7 +27,7 @@ const Account = () => {
         }
         catch (error) {
             if (error instanceof TypeError) {
-                routeChange();
+                routeChange("Login");
                 return;
             }
             alert(error.message);
@@ -102,7 +102,7 @@ const Account = () => {
                         <h2 className="account-title">Фото профиля</h2>
                         <div className="account-user">
                             <img className="account-img" src={User} alt="" />
-                            <button className="account-btn">Выбрать фотографию</button>
+                            <a href="/Gallery" className="account-link">Выбрать фотографию</a>
                         </div>
                         <h3 className="account-title" style={{fontWeight: '700', padding:'0 0 20px 0'}}>Личная информация</h3>
                         <p className="account-title">Имя пользователя</p>
