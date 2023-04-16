@@ -148,4 +148,25 @@
         color: #000;
         border-radius: 5
     }
+
+    .title-input {
+        width: 100%;
+        height: 40px;
+        border: none;
+        background-color: rgba(255, 255, 255, 0.5);
+        color: #000;
+        border-radius: 5px;
+        margin-bottom: 10px;
+        font-size: 16px;
+        padding: 5px;
+      }
+      
+      .title {
+        position: absolute;
+        bottom: 100%;
+        left: 20px;
+        color: #fff;
+        font-size: 24px;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+      }
         

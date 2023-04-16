@@ -6,6 +6,7 @@ const ImageDisplay = ({ img, onClose, onPrevious, onNext }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [description, setDescription] = useState('Автор ничего не рассказал нам о картинке');
   const [tags, setTags] = useState([]);
+  const [title, setTitle] = useState('Автор не назвал картинку');
 
   const handlePrevious = () => {
     if (onPrevious) {
@@ -72,20 +73,29 @@ const ImageDisplay = ({ img, onClose, onPrevious, onNext }) => {
             <FaPencilAlt />
         </div>
         {isEditing && (
-            <div className="edit-container">
+        <div className="edit-container">
+            <input
+            className="title-input"
+            placeholder="Enter title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            />
             <textarea
-                className="description-input"
-                placeholder="Enter description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
+            className="description-input"
+            placeholder="Enter description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
             />
             <button className="save-button" onClick={handleSave}>
-                Save
+            Save
             </button>
-            </div>
+        </div>
         )}
         {!isEditing && (
-        <p className="description">{description}</p>
+        <div>
+            <h2 className="title">{title}</h2>
+            <p className="description">{description}</p>
+        </div>
         )}
       </div>
       <button className="button-previous" onClick={handlePrevious}>
