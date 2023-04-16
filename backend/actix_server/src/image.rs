@@ -1,6 +1,7 @@
 use std::{
     fs::{self, File},
-    io::{Read, Write}, path::PathBuf,
+    io::{Read, Write},
+    path::PathBuf,
 };
 
 use crate::{
@@ -108,27 +109,42 @@ async fn load_image_service(
     let (email, password) = path.into_inner();
     let (user, mut connection) = match auth_get_user_connect(&email, &password, &db_config, 3) {
         Ok((user, connection)) => (user, connection),
-        Err(err) => return Ok(web::Json(json!({
-            "status": "FAILED",
-            "reason": err.to_string(),
-        }))),
+        Err(err) => {
+            return Ok(web::Json(json!({
+                "status": "FAILED",
+                "reason": err.to_string(),
+            })))
+        }
     };
     let (about, image_name, tags) = (&query.about, &query.image_name, &query.tags);
     let mut file = match payload.try_next().await {
         Ok(Some(file)) => file,
-        _ => return Ok(web::Json(json!({
-            "status": "FAILED",
-            "reason": "Failed to save file",
-        })))
+        _ => {
+            return Ok(web::Json(json!({
+                "status": "FAILED",
+                "reason": "Failed to save file",
+            })))
+        }
     };
     let extension = match files::get_extension(&file).await {
         Some(ext) => ext,
-        None => return Ok(web::Json(json!({
-            "status": "FAILED",
-            "reason": "Wrong file format",
-        }))),
+        None => {
+            return Ok(web::Json(json!({
+                "status": "FAILED",
+                "reason": "Wrong file format",
+            })))
+        }
     };
-    if database::add_image(&mut connection, user.id, &about, &image_name, &extension, &tags).is_err() {
+    if database::add_image(
+        &mut connection,
+        user.id,
+        &about,
+        &image_name,
+        &extension,
+        &tags,
+    )
+    .is_err()
+    {
         return Ok(web::Json(json!({
             "status": "FAILED",
             "reason": "Database error",
@@ -169,21 +185,27 @@ async fn change_image_service(
     let (email, password, image_id) = path.into_inner();
     let (user, mut connection) = match auth_get_user_connect(&email, &password, &db_config, 3) {
         Ok((user, connection)) => (user, connection),
-        Err(err) => return Ok(web::Json(json!({
-            "status": "FAILED",
-            "reason": err.to_string(),
-        }))),
+        Err(err) => {
+            return Ok(web::Json(json!({
+                "status": "FAILED",
+                "reason": err.to_string(),
+            })))
+        }
     };
     let image = match database::get_image(&mut connection, image_id) {
         Ok(Some(img)) => img,
-        Ok(None) => return Ok(web::Json(json!({
-            "status": "FAILED",
-            "reason": "Image not found",
-        }))),
-        Err(_) => return Ok(web::Json(json!({
-            "status": "FAILED",
-            "reason": "Database error",
-        }))),
+        Ok(None) => {
+            return Ok(web::Json(json!({
+                "status": "FAILED",
+                "reason": "Image not found",
+            })))
+        }
+        Err(_) => {
+            return Ok(web::Json(json!({
+                "status": "FAILED",
+                "reason": "Database error",
+            })))
+        }
     };
     if image.owner_id != user.id {
         return Ok(web::Json(json!({
@@ -195,24 +217,30 @@ async fn change_image_service(
     let file_name = files::find_file(&user_gallery, image_id.to_string().as_str()).await;
     let file_name = match file_name {
         Some(file_name) => file_name,
-        None => return Ok(web::Json(json!({
-            "status": "FAILED",
-            "reason": "Image not found",
-        })))
+        None => {
+            return Ok(web::Json(json!({
+                "status": "FAILED",
+                "reason": "Image not found",
+            })))
+        }
     };
     let mut file = match payload.try_next().await {
         Ok(Some(file)) => file,
-        _ => return Ok(web::Json(json!({
-            "status": "FAILED",
-            "reason": "Failed to save file",
-        })))
+        _ => {
+            return Ok(web::Json(json!({
+                "status": "FAILED",
+                "reason": "Failed to save file",
+            })))
+        }
     };
     let extension = match files::get_extension(&file).await {
         Some(ext) => ext,
-        None => return Ok(web::Json(json!({
-            "status": "FAILED",
-            "reason": "Wrong file format",
-        }))),
+        None => {
+            return Ok(web::Json(json!({
+                "status": "FAILED",
+                "reason": "Wrong file format",
+            })))
+        }
     };
     let request = database::EditImageRequest {
         about: None,
@@ -220,7 +248,7 @@ async fn change_image_service(
         extension: Some(extension),
         likes: None,
         tags: None,
-        views: None
+        views: None,
     };
     if database::edit_image(&mut connection, image_id, &request).is_err() {
         return Ok(web::Json(json!({

@@ -41,11 +41,7 @@ pub async fn save_file(
     Some(())
 }
 
-
-
-pub async fn get_extension(
-    field: &Field
-) -> Option<String> {
+pub async fn get_extension(field: &Field) -> Option<String> {
     let content_type = field.content_disposition();
     let extension = Path::new(content_type.get_filename()?)
         .extension()?
