@@ -20,21 +20,57 @@ pub struct TagsQuery {
     tags: String,
 }
 
-#[post("tags/get/{id}")]
-pub(crate) async fn get_user_tags_service(
-    path: web::Path<(u32)>,
+#[post("tags/many/{range}")]
+pub(crate) async fn users_tags_service(
+    path: web::Path<String>,
+    db_config: web::Data<DBconfig>,
+) -> ActxResult<impl Responder> {
+    let (status, fail_reason, tags) = (|| {
+        let users: Vec<u32> = path
+            .into_inner()
+            .split("..")
+            .flat_map(|x| x.parse::<u32>())
+            .collect();
+        let users: Vec<u32> = (users[0]..=users[1]).collect();
+        println!("{:?}", users);
+        let mut connection = match database::try_connect(&db_config, 3) {
+            Ok(connection) => connection,
+            Err(_) => return ("FAILED".to_owned(), "Database error".to_owned(), Vec::new()),
+        };
+        let tags = match database::get_users_tags(&mut connection, &users) {
+            Ok(tags) => tags,
+            Err(_) => return ("FAILED".to_owned(), "Database error".to_owned(), Vec::new()),
+        };
+        return ("OK".to_owned(), "".to_owned(), tags);
+    })();
+    Ok(web::Json(json!({
+        "status": status,
+        "reason": fail_reason,
+        "items": tags,
+    })))
+}
+
+#[post("tags/one/{id}")]
+pub(crate) async fn user_tags_service(
+    path: web::Path<u32>,
     db_config: web::Data<DBconfig>,
 ) -> ActxResult<impl Responder> {
     let user_id = path.into_inner();
     let (status, fail_reason, tags) = (|| {
         let mut connection = match database::try_connect(&db_config, 3) {
             Ok(connection) => connection,
-            Err(_) => return ("FAILED".to_owned(), "Database error".to_owned(), Vec::new())
+            Err(_) => return ("FAILED".to_owned(), "Database error".to_owned(), Vec::new()),
         };
         match database::user_exists(&mut connection, &user_id.to_string()) {
             Ok(true) => (),
-            Ok(false) => return ("FAILED".to_owned(), "User does not exist".to_owned(), Vec::new()),
-            Err(_) => return ("FAILED".to_owned(), "Database error".to_owned(), Vec::new())
+            Ok(false) => {
+                return (
+                    "FAILED".to_owned(),
+                    "User does not exist".to_owned(),
+                    Vec::new(),
+                )
+            }
+            Err(_) => return ("FAILED".to_owned(), "Database error".to_owned(), Vec::new()),
         }
         let tags = match database::get_user_tags(&mut connection, user_id) {
             Ok(Some(tags)) => tags,

@@ -197,14 +197,15 @@ pub fn search_tags(connection: &mut Conn, tags: &str) -> Result<Vec<User>, mysql
         let user_tags: Vec<&str> = tag_info.tags.split(",").collect();
         let mut similarity = 0.0;
         for tag in &tags {
-            similarity += get_similarity_ratings(tag, &user_tags).unwrap_or_default().iter().sum::<f64>();
+            similarity += get_similarity_ratings(tag, &user_tags)
+                .unwrap_or_default()
+                .iter()
+                .sum::<f64>();
         }
         let similarity = ((similarity * 10.0) as f64).round() as i32;
-        similarity_hash.insert(user_id,  similarity);
+        similarity_hash.insert(user_id, similarity);
     }
-    users.sort_by_key(|user| {
-        -similarity_hash.get(&(user.id as u64)).unwrap_or(&0)
-    });
+    users.sort_by_key(|user| -similarity_hash.get(&(user.id as u64)).unwrap_or(&0));
     Ok(users)
 }
 

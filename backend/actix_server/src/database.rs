@@ -1,6 +1,6 @@
 use crate::register::RegisterInfo;
-use mysql::{self, Params, from_row};
 use mysql::prelude::{FromRow, Queryable};
+use mysql::{self, from_row, Params};
 use mysql::{params, Conn, OptsBuilder};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -186,14 +186,16 @@ pub struct TagInfo {
 
 impl FromRow for TagInfo {
     fn from_row_opt(row: mysql::Row) -> Result<Self, mysql::FromRowError>
-        where
-            Self: Sized {
+    where
+        Self: Sized,
+    {
         let (id, user_id, tags) = mysql::from_row_opt(row)?;
         Ok(Self { id, user_id, tags })
     }
     fn from_row(row: mysql::Row) -> Self
-        where
-            Self: Sized, {
+    where
+        Self: Sized,
+    {
         Self::from_row_opt(row).unwrap()
     }
 }
@@ -213,6 +215,24 @@ pub fn get_user_tags(connection: &mut Conn, user_id: u32) -> Result<Option<Strin
     connection.query_first(query)
 }
 
+pub fn get_users_tags(
+    connection: &mut Conn,
+    user_ids: &[u32],
+) -> Result<Vec<(u32, Vec<String>)>, mysql::Error> {
+    let query = format!(
+        "SELECT user_id, tags FROM user_tags WHERE user_id IN ({})",
+        user_ids
+            .iter()
+            .map(|id| id.to_string())
+            .collect::<Vec<String>>()
+            .join(",")
+    );
+    connection.query_map(query, |(user_id, tags): (u32, String)| {
+        let tags = tags.split(",").map(|tag| tag.to_string()).collect();
+        (user_id, tags)
+    })
+}
+
 pub fn delete_user_tags(connection: &mut Conn, user_id: u32) -> Result<(), mysql::Error> {
     connection.exec_drop(
         "DELETE FROM `user_tags` WHERE user_id = :id",
@@ -230,7 +250,10 @@ pub fn add_user_tags(connection: &mut Conn, user_id: u32, tags: &str) -> Result<
 }
 
 pub fn get_logo_id(connection: &mut Conn, owner_id: u32) -> Result<Option<u32>, mysql::Error> {
-    let query = format!("SELECT id FROM `logos` WHERE owner_id = {} LIMIT 1", owner_id);
+    let query = format!(
+        "SELECT id FROM `logos` WHERE owner_id = {} LIMIT 1",
+        owner_id
+    );
     connection.query_first(query)
 }
 
@@ -264,8 +287,8 @@ pub fn edit_image(
     if let Some(image_name) = &info.image_name {
         clauses.push("image_name = ?");
         params.push(image_name);
-        }
-        
+    }
+
     if let Some(extension) = &info.extension {
         clauses.push("extension = ?");
         params.push(extension);
@@ -279,7 +302,7 @@ pub fn edit_image(
         clauses.push("views = ?");
         params.push(views);
     }
-    
+
     let likes = info.likes.map(|l| l.to_string());
     if let Some(likes) = &likes {
         clauses.push("likes = ?");
@@ -298,16 +321,18 @@ pub fn get_image(connection: &mut Conn, image_id: u64) -> Result<Option<ImageDat
     Ok(connection
         .query_map(
             query,
-            |(id, owner_id, published_at, about, image_name, extension, tags, views, likes)| ImageData {
-                id,
-                owner_id,
-                published_at,
-                about,
-                image_name,
-                extension,
-                tags,
-                views,
-                likes,
+            |(id, owner_id, published_at, about, image_name, extension, tags, views, likes)| {
+                ImageData {
+                    id,
+                    owner_id,
+                    published_at,
+                    about,
+                    image_name,
+                    extension,
+                    tags,
+                    views,
+                    likes,
+                }
             },
         )?
         .pop())
@@ -326,16 +351,18 @@ pub fn get_images(connection: &mut Conn, owner_id: u32) -> Result<Vec<ImageData>
     let query = format!("SELECT * FROM `images` WHERE owner_id = '{}'", owner_id);
     Ok(connection.query_map(
         query,
-        |(id, owner_id, published_at, about, image_name, extension, tags, views, likes)| ImageData {
-            id,
-            owner_id,
-            published_at,
-            about,
-            image_name,
-            extension,
-            tags,
-            views,
-            likes,
+        |(id, owner_id, published_at, about, image_name, extension, tags, views, likes)| {
+            ImageData {
+                id,
+                owner_id,
+                published_at,
+                about,
+                image_name,
+                extension,
+                tags,
+                views,
+                likes,
+            }
         },
     )?)
 }
@@ -589,8 +616,8 @@ pub fn edit_user(
     if let Some(email) = info.email.as_deref() {
         set_clauses.push("email = ?");
         params.push(email);
-        }
-    if let Some(password) = info.password.as_deref(){
+    }
+    if let Some(password) = info.password.as_deref() {
         set_clauses.push("password = ?");
         params.push(password);
     }
@@ -610,7 +637,7 @@ pub fn edit_user(
     if let Some(about) = info.about.as_deref() {
         set_clauses.push("about = ?");
         params.push(about);
-     }
+    }
     if let Some(age) = info.age.as_deref() {
         set_clauses.push("age = ?");
         params.push(age);
@@ -641,11 +668,11 @@ pub fn delete_user(connection: &mut Conn, email: &str) -> Result<(), mysql::Erro
 
 pub fn user_exists(connection: &mut Conn, identifier: &str) -> Result<bool, mysql::Error> {
     let query = if identifier.parse::<u32>().is_ok() {
-    format!("SELECT id FROM users WHERE id = ?")
+        format!("SELECT id FROM users WHERE id = ?")
     } else {
-    format!("SELECT email FROM users WHERE email = ?")
+        format!("SELECT email FROM users WHERE email = ?")
     };
-    let user: Option<mysql::Row> = connection.exec_first(query, (identifier, ))?;
+    let user: Option<mysql::Row> = connection.exec_first(query, (identifier,))?;
     Ok(user.is_some())
 }
 

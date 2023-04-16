@@ -1,10 +1,10 @@
 use actix_files as fs;
 
+use actix_cors::Cors;
 use actix_web::{get, post, web, App, HttpServer, Responder, Result as ActxResult};
 use database::DBconfig;
 use serde_json::json;
 use std::fs::{create_dir, metadata};
-use actix_cors::Cors;
 
 pub mod auth;
 pub mod chat;
@@ -86,7 +86,8 @@ async fn main() -> std::io::Result<()> {
                     .service(user::delete_user_service)
                     .service(user::visit_user_service)
                     .service(user::edit_user_tags_service)
-                    .service(user::get_user_tags_service),
+                    .service(user::users_tags_service)
+                    .service(user::user_tags_service),
             )
             .service(
                 web::scope("api/logo")
