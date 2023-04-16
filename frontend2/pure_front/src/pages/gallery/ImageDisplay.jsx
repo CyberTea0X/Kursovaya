@@ -19,16 +19,23 @@ const ImageDisplay = ({ img, onClose, onPrevious, onNext }) => {
     }
   };
 
-  const handleEdit = () => {
-    setIsEditing(true);
-  };
-
   const handleSave = () => {
     setIsEditing(false);
   };
 
+  const handleEdit = () => {
+    if (isEditing) {
+        setIsEditing(false);
+    }
+    else {
+        setIsEditing(true);
+    }
+  };
+
+  let handleKeyDown = {};
+
   useEffect(() => {
-    const handleKeyDown = (event) => {
+    handleKeyDown = (event) => {
       if (isEditing === false) {
         if (event.key === 'Escape') {
           onClose();
