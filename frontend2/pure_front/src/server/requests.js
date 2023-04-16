@@ -19,6 +19,11 @@ async function get_tags(user_id) {
     return postRequest(url)
 }
 
+async function searchTags(tags) {
+    const url = `http://${ip}:${port}/api/search/tags/${tags}`;
+    return postRequest(url)
+}
+
 async function searchText(text) {
     const url = `http://${ip}:${port}/api/search/text/${text}`;
     return postRequest(url)
@@ -79,4 +84,4 @@ async function postRequest(url) {
 
 
 export { registerUser, login, userProfile, editUser, searchLogin, searchPopular, searchText, get_tags, edit_tags,
-         get_many_tags };
+         get_many_tags, searchTags };

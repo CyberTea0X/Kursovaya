@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import './search.css'
-import { searchPopular } from "../../server/requests";
+import { searchPopular, searchLogin, searchText, searchTags } from "../../server/requests";
 import { User as UserProfile} from "../../types";
 import { Table } from './table'
 import { getManyTagsArray } from '../../server/requests_handler';
@@ -12,15 +12,35 @@ const SearchPage = () => {
     const [query, setQuery] = useState("");
     const [users, setUsers] = useState([]);
     const [tags, setTags] = useState([]);
+    const [searchBy, setSearchBy] = useState("popular");
 
     const keys = ["first_name", "last_name", "email"]
 
       const search = async () => {
           let users_;
-          await searchPopular().then(data => {
-              // аутентификации
-              users_ = data["items"]
-          });
+          switch (searchBy) {
+            case "text":
+                await searchText(query).then(data => {
+                    users_ = data["items"]
+                });
+                break;
+            case "login":
+                await searchLogin(query).then(data => {
+                    users_ = data["items"]
+                });
+                break;
+            case "tags":
+                let tags_ = query.replace(/#/g, '').replace(/ /g, '')
+                await searchTags(tags_).then(data => {
+                    users_ = data["items"]
+                });
+                break;
+            case "popular":
+                await searchPopular().then(data => {
+                    users_ = data["items"]
+                });
+                break;
+          }
           users_ = users_.map(function(user) {
               return UserProfile.fromJson(user);
           });
@@ -42,6 +62,15 @@ const SearchPage = () => {
           get_tags();
         }
       }, [users]);
+
+    const handleSearchByChange = (event) => {
+        setSearchBy(event.target.value);
+    }
+    
+    const handleQueryChange = (event) => {
+        setQuery(event.target.value);
+        search();
+    }
     return (
         
         <div className="searchpage">
@@ -50,7 +79,14 @@ const SearchPage = () => {
                   
                 </div> 
                 <div className='page'>
-                <input type="text" placeholder='Поиск...' className="search" onChange={e=> setQuery(e.target.value)} />
+                <div className="search-bar">
+                <input type="text" placeholder='Поиск...' className="search" onChange={handleQueryChange} />
+                <select value={searchBy} onChange={handleSearchByChange}>
+                    <option value="text">По тексту</option>
+                    <option value="login">По логину</option>
+                    <option value="tags">По тегам</option>
+                </select>
+                </div>
                 <p className='p'>Вы можете найти художника не только по имени, но и по тегам:</p>
                 <p className='p2'> #Traditional<br/>
                         #Digital<br/>

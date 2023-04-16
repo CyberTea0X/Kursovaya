@@ -58,7 +58,25 @@ table {
     flex-direction: row
 }
 
-
+.search-bar select {
+    margin-left: 20px;
+    font-size: 20px;
+    border-radius: 30px;
+    border: 2px solid gray;
+    padding: 5px 10px;
+    background-color: white;
+    color: black;
+    cursor: pointer;
+    }
+    
+.search-bar select:hover {
+    background-color: #ddd;
+}
+    
+.search-bar select:focus {
+    outline: none;
+    box-shadow: 0 0 5px #6c63ff;
+}
 
 table tr:hover {
     background-color: #ddd;
