@@ -5,14 +5,20 @@ import { editUser } from "../../server/requests";
 import { User as UserProfile} from "../../types";
 import { getUserProfile, getTagsArray, editTagsFromStr } from "../../server/requests_handler";
 import Cookies from "js-cookie";
+import { useNavigate } from 'react-router-dom';
 
 
 const Account = () => {
     const [user, setUser] = useState(UserProfile.emptyUser()); // хранение данных об аккаунте
     const [tags, setTags] = useState(""); // хранение данных о тегах
+
+    let navigate = useNavigate(); 
+    const routeChange = () =>{ 
+        let path = `/Login`; 
+        navigate(path);
+    }
       
     const getAccount = async () => {
-        
         try {
             let email = Cookies.get("email").toLowerCase();
             let user_ = await getUserProfile(email);
@@ -20,6 +26,10 @@ const Account = () => {
             setUser(user_);
         }
         catch (error) {
+            if (error instanceof TypeError) {
+                routeChange();
+                return;
+            }
             alert(error.message);
         }
     }
@@ -78,7 +88,9 @@ const Account = () => {
     }
     useEffect(() => {
         getAccount();
-        retrieveUserTags();
+        if (user.reg_date !== null) {
+            retrieveUserTags();
+        }
     }, []); // вызываем getAccount() и retrieveUserTags() только один раз при загрузке компонента
     return (
         <div className="account">

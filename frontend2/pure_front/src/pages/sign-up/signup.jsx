@@ -108,6 +108,12 @@ const Signup = () => {
           />
         ))}
         <button className="register-button">Регистрация</button>
+        <center>
+        <p className="register-link">
+        Уже есть аккаунт?{" "}
+        <a href="/Login">Вход</a>
+      </p>
+      </center>
       </form>
     </div>
   );

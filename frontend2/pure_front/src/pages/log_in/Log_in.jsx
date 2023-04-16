@@ -2,7 +2,6 @@ import { useState } from "react";
 import "./log_in.css";
 import FormInput from "../sign-up/FormInput";
 import { useNavigate } from 'react-router-dom';
-import Cookies from 'js-cookie';
 import { login } from "../../server/requests";
 import { getUserProfile } from "../../server/requests_handler";
 import { userToCookies, removeOldCookies} from "../../cookies";
@@ -89,6 +88,10 @@ const Log_in = () => {
           />
         ))}
         <button className="register-button">Войти</button>
+        <p className="register-link">
+        Ещё не зарегистрированы?{" "}
+        <a href="/Signup">Регистрация</a>
+      </p>
       </form>
     </div>
   );
