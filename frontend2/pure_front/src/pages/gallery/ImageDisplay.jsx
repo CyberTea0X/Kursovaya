@@ -79,12 +79,6 @@ const ImageDisplay = ({ img, onClose, onPrevious, onNext }) => {
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
             />
-            <input
-                className="tags-input"
-                placeholder="Enter tags"
-                value={tags.join(',')}
-                onChange={(e) => setTags(e.target.value.split(','))}
-            />
             <button className="save-button" onClick={handleSave}>
                 Save
             </button>
