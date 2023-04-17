@@ -3,6 +3,16 @@ import config from '../config_local.json';
 
 const { "backend-ip": ip, "backend-port": port } = config;
 
+async function edit_image_data(image_id, about="", image_name="", tags="") {
+    let query = []
+    if (about) query.push(`about=${about}`);
+    if (image_name) query.push(`image_name=${image_name}`);
+    if (tags) query.push(`tags=${tags}`);
+    query = (query) ? '?' + query.join("&"): "";
+    //const query = `about=${about}&image_name=${image_name}&tags=${tags}`
+    const url = `http://${ip}:${port}/api/images/data/get/${image_id}${query}`;
+    return postRequest(url)
+}
 
 async function get_image_data(image_id) {
     const url = `http://${ip}:${port}/api/images/data/get/${image_id}`;
@@ -28,7 +38,7 @@ async function load_image(email, password, file, about="", image_name="", tags="
   about = about || "Автор ничего не рассказал о картинке";
   image_name = image_name || "Без имени";
   tags = tags || "new";
-  const query = `about=Nice Anime Art&image_name=no connection&tags=fun`
+  const query = `about=${about}&image_name=${image_name}&tags=${tags}`
   const formData = new FormData();
   formData.append("file", file);
 
@@ -133,4 +143,4 @@ async function postRequest(url) {
 
 
 export { registerUser, login, userProfile, editUser, searchLogin, searchPopular, searchText, get_tags, edit_tags,
-         get_many_tags, searchTags };
+         get_many_tags, searchTags, change_image, load_image, get_image_data, edit_image_data};
