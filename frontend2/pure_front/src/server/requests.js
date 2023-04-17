@@ -4,6 +4,55 @@ import config from '../config_local.json';
 const { "backend-ip": ip, "backend-port": port } = config;
 
 
+async function get_image_data(image_id) {
+    const url = `http://${ip}:${port}/api/images/data/get/${image_id}`;
+    return postRequest(url)
+}
+
+async function change_image(file, email, password, image_id) {
+    const formData = new FormData();
+    formData.append("file", file);
+  
+    const url = `http://${ip}:${port}/api/images/change/${email}/${password}/${image_id}`;
+  
+    const response = await fetch(url, {
+      method: "POST",
+      body: formData
+    });
+  
+    const data = await response.json();
+    return data;
+}
+
+async function load_image(email, password, file, about="", image_name="", tags="") {
+  about = about || "Автор ничего не рассказал о картинке";
+  image_name = image_name || "Без имени";
+  tags = tags || "new";
+  const query = `about=Nice Anime Art&image_name=no connection&tags=fun`
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const url = `http://${ip}:${port}/api/images/load/${email}/${password}?${query}`;
+
+  const response = await fetch(url, {
+    method: "POST",
+    body: formData
+  });
+
+  const data = await response.json();
+  return data;
+}
+
+async function delete_image(email, password, image_id) {
+    const url = `http://${ip}:${port}/api/images/delete/${email}/${password}/${image_id}`;
+    return postRequest(url)
+}
+
+async function gallery(user_id) {
+    const url = `http://${ip}:${port}/api/gallery/${user_id}`;
+    return postRequest(url)
+}
+
 async function edit_tags(email, password, new_tags) {
     const url = `http://${ip}:${port}/api/user/tags/edit/${email}/${password}?tags=${new_tags}`;
     return postRequest(url)
