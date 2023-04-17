@@ -1,16 +1,53 @@
 import React, { useState, useEffect } from 'react';
 import Masonry, { ResponsiveMasonry } from 'react-responsive-masonry';
 import './gallery.css';
-import User from '../account/Unknown_person.jpg';
+import UnknownPerson from '../account/Unknown_person.jpg';
 import { ImageDisplay } from './ImageDisplay';
 import { FaPlusSquare } from 'react-icons/fa';
+import { User } from '../../types';
+import { useNavigate } from 'react-router-dom';
+import Cookies from 'js-cookie';
+import { getUserProfile, getGalleryUrls } from '../../server/requests_handler';
+import { upload_image } from '../../server/requests';
 
 
 const Gallery = () => {
+
   const [data, setData] = useState({ img: '', i: 0 });
   const [uploadFormActive, setUploadFormActive] = useState(false);
   const [images, setImages] = useState([]);
+  const [user, setUser] = useState(User.emptyUser());
+  const [logo, setLogo] = useState(UnknownPerson);
   const totalImages = images.length;
+
+  let navigate = useNavigate(); 
+  const routeChange = (route) =>{ 
+      let path = `/${route}`; 
+      navigate(path);
+  }
+    
+  const getAccount = async () => {
+      try {
+          let email = Cookies.get("email").toLowerCase();
+          let user_ = await getUserProfile(email);
+          user_.email = email;
+          setUser(user_);
+      }
+      catch (error) {
+          if (error instanceof TypeError) {
+              routeChange("Login");
+              return;
+          }
+          alert(error.message);
+      }
+  }
+
+  const getGallery = async () => {
+    let user_id = Cookies.get("id");
+    let image_urls = await getGalleryUrls(user_id);
+    setImages(image_urls);
+    console.log(image_urls)
+  }
 
   // function to display an image
   const viewImage = (img, i) => {
@@ -39,17 +76,19 @@ const Gallery = () => {
       return;
     }
     const file = e.target.files[0];
-    const reader = new FileReader();
-
-    reader.onload = () => {
-      const newImages = [...images, reader.result]; 
-      // создаем новый массив, содержащий все старые изображения
-      // и новое добавленное изображение
-      setImages(newImages); // устанавливаем новый массив в качестве состояния images
-    };
-
-    reader.readAsDataURL(file);
+    let email = Cookies.get("email").toLowerCase();
+    let pw = Cookies.get("password");
+    upload_image(email, pw, file).then(() => {getGallery()})
   };
+
+  useEffect(() => {
+    getAccount();
+  }, []);
+  useEffect(() => {
+    if (images.length == 0) {
+      getGallery();
+    }
+  }, [user]);
 
   // render the gallery UI
   return (
@@ -65,7 +104,7 @@ const Gallery = () => {
       ) : null}
 
       {/* display the user profile image */}
-      <img className="profile-img" src={User} alt="" />
+      <img className="profile-img" src={logo} alt="" />
 
       {/* display the image grid */}
       <div style={{ padding: '10px' }}>

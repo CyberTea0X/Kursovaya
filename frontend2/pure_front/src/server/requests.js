@@ -34,7 +34,7 @@ async function change_image(file, email, password, image_id) {
     return data;
 }
 
-async function load_image(email, password, file, about="", image_name="", tags="") {
+async function upload_image(email, password, file, about="", image_name="", tags="") {
   about = about || "Автор ничего не рассказал о картинке";
   image_name = image_name || "Без имени";
   tags = tags || "new";
@@ -60,7 +60,7 @@ async function delete_image(email, password, image_id) {
 
 async function gallery(user_id) {
     const url = `http://${ip}:${port}/api/gallery/${user_id}`;
-    return postRequest(url)
+    return getRequest(url)
 }
 
 async function edit_tags(email, password, new_tags) {
@@ -141,6 +141,21 @@ async function postRequest(url) {
     });
 }
 
+async function getRequest(url) {
+    try {
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+        });
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        throw new Error(error);
+    }
+}
 
-export { registerUser, login, userProfile, editUser, searchLogin, searchPopular, searchText, get_tags, edit_tags,
-         get_many_tags, searchTags, change_image, load_image, get_image_data, edit_image_data};
+
+export { ip, port, registerUser, login, userProfile, editUser, searchLogin, searchPopular, searchText, get_tags, edit_tags,
+         get_many_tags, searchTags, change_image, upload_image, get_image_data, edit_image_data, gallery, delete_image};

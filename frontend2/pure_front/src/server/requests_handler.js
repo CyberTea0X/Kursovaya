@@ -1,5 +1,22 @@
-import { userProfile, get_tags, get_many_tags, edit_tags } from "./requests.js"
+import { userProfile, get_tags, get_many_tags, edit_tags, get_image_data, edit_image_data,
+         change_image, load_image, gallery, ip, port } from "./requests.js"
 import { User } from "../types.js"
+
+
+async function getGalleryUrls(user_id) {
+
+    const data = await gallery(user_id);
+    console.log(data)
+    if (data.status !== "OK") {
+      throw Error(data.reason);
+    }
+    const images = data["images"];
+    const urls = images.map((image) => {
+      return `http://${ip}:${port}/api/images/${user_id}/gallery/${image.id}.${image.extension}`;
+    });
+    return urls;
+}
+
 
 function is_valid_tags(tags) {
     const regex = /^[a-zA-Z0-9]+(,[a-zA-Z0-9]+)*$/;
@@ -55,4 +72,4 @@ async function editTagsFromStr(email, password, newtags) {
     }
 }
 
-export {getUserProfile, getTagsArray, getManyTagsArray, editTagsFromStr}
+export {getUserProfile, getTagsArray, getManyTagsArray, editTagsFromStr, getGalleryUrls}
