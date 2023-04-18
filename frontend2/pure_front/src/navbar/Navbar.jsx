@@ -26,7 +26,7 @@ function Header() {
         <Link to="/Trends">Популярное</Link> 
         <Link to="/Chat"><img src={Chat} style={{width: '40px', margin: '15px', float:'left'}} /></Link>       
         <Link to="/Account">Профиль</Link>
-        <Link to="/Gallery">Галерея</Link>
+        <Link to="/Gallery/-1">Галерея</Link>
       </div>
     </div>
     )

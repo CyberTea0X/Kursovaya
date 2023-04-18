@@ -27,13 +27,16 @@ function is_valid_tags(tags) {
     return regex.test(tags) && tagsArray.length === uniqueTags.size;
 }
 
-async function getUserProfile(email) {
-    const data = await userProfile(email);
+
+async function getUserProfile(idOrEmail) {
+    const data = await userProfile(idOrEmail);
     if (data["status"] !== "OK") {
         throw Error(data["reason"]);
     }
     let user = User.fromJson(data["user"]);
-    user.email = email;
+    if (isNaN(parseInt(idOrEmail))) {
+        user.email = idOrEmail;
+    }
     return user;
 }
 

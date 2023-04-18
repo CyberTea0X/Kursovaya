@@ -116,7 +116,7 @@ async function editUser(email, password, user) {
 
 
 async function userProfile(idOrEmail) {
-    const query = (typeof idOrEmail === 'number') ? `id=${idOrEmail}`: `email=${idOrEmail}`;
+    const query = (isNaN(parseInt(idOrEmail))) ? `email=${idOrEmail}`: `id=${idOrEmail}`;
     const url = `http://${ip}:${port}/api/user/profile?${query}`;
     return postRequest(url)
 }

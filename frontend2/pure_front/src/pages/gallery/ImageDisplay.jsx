@@ -2,7 +2,7 @@ import { FaPencilAlt } from 'react-icons/fa';
 import './ImageDisplay.css';
 import React, { useEffect, useState } from 'react';
 
-const ImageDisplay = ({ img, onClose, onPrevious, onNext }) => {
+const ImageDisplay = ({ img, onClose, onPrevious, onNext, isOwner }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [description, setDescription] = useState('Автор ничего не рассказал нам о картинке');
   const [title, setTitle] = useState('Без названия');
@@ -68,9 +68,11 @@ const ImageDisplay = ({ img, onClose, onPrevious, onNext }) => {
       </button>
       <div className="image-container">
         <img src={img} className="image" />
-        <div style={{ color: 'white' }} onClick={handleEdit}>
+        {isOwner &&
+        (<div style={{ color: 'white' }} onClick={handleEdit}>
             <FaPencilAlt />
-        </div>
+        </div>)
+        }
         {isEditing && (
         <div className="edit-container">
             <input

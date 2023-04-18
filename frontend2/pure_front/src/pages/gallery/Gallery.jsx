@@ -9,15 +9,17 @@ import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import { getUserProfile, getGalleryUrls } from '../../server/requests_handler';
 import { upload_image } from '../../server/requests';
+import { useParams } from 'react-router-dom';
 
 
 const Gallery = () => {
-
   const [data, setData] = useState({ img: '', i: 0 });
   const [uploadFormActive, setUploadFormActive] = useState(false);
   const [images, setImages] = useState([]);
   const [user, setUser] = useState(User.emptyUser());
   const [logo, setLogo] = useState(UnknownPerson);
+  const [isOwner, setIsOwner] = useState(false);
+  const { userId } = useParams();
   const totalImages = images.length;
 
   let navigate = useNavigate(); 
@@ -27,10 +29,10 @@ const Gallery = () => {
   }
     
   const getAccount = async () => {
+    let userIdOrEmail;
       try {
-          let email = Cookies.get("email").toLowerCase();
-          let user_ = await getUserProfile(email);
-          user_.email = email;
+        userIdOrEmail = (userId == -1) ? Cookies.get("email").toLowerCase(): userId;
+          let user_ = await getUserProfile(userIdOrEmail);
           setUser(user_);
       }
       catch (error) {
@@ -43,10 +45,8 @@ const Gallery = () => {
   }
 
   const getGallery = async () => {
-    let user_id = Cookies.get("id");
-    let image_urls = await getGalleryUrls(user_id);
+    let image_urls = await getGalleryUrls(user.id);
     setImages(image_urls);
-    console.log(image_urls)
   }
 
   // function to display an image
@@ -88,6 +88,9 @@ const Gallery = () => {
     if (images.length == 0) {
       getGallery();
     }
+    if (user.id == Cookies.get("id")) {
+      setIsOwner(true)
+    }
   }, [user]);
 
   // render the gallery UI
@@ -100,6 +103,7 @@ const Gallery = () => {
           onClose={() => imgAction()}
           onPrevious={() => imgAction('previous-img')}
           onNext={() => imgAction('next-img')}
+          isOwner={isOwner}
         />
       ) : null}
 
@@ -149,20 +153,23 @@ const Gallery = () => {
       </div>
 
       {/* display the image upload form */}
-      <div
-        className={`upload-form ${uploadFormActive ? 'active' : ''}`}
-        onClick={() => setUploadFormActive(!uploadFormActive)}
-      >
-        <label htmlFor="image-upload" className="upload-label">
-          <FaPlusSquare size={50} color="#ccc" />
-        </label>
-        <input
-          type="file"
-          id="image-upload"
-          accept="image/*"
-          onChange={handleImageUpload}
-        />
-      </div>
+        {isOwner && (
+          <div
+          className={`upload-form ${uploadFormActive ? 'active' : ''}`}
+          onClick={() => setUploadFormActive(!uploadFormActive)}
+        >
+                  <label htmlFor="image-upload" className="upload-label">
+            <FaPlusSquare size={50} color="#ccc" />
+          </label>
+          <input
+            type="file"
+            id="image-upload"
+            accept="image/*"
+            onChange={handleImageUpload}
+          />
+          </div>
+        )}
+ 
     </>
   );
 };
