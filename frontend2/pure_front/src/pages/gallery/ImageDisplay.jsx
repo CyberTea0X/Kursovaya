@@ -1,11 +1,12 @@
 import { FaPencilAlt } from 'react-icons/fa';
 import './ImageDisplay.css';
 import React, { useEffect, useState } from 'react';
+import { edit_image_data } from '../../server/requests';
 
 const ImageDisplay = ({ img, onClose, onPrevious, onNext, isOwner }) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [description, setDescription] = useState('Автор ничего не рассказал нам о картинке');
-  const [title, setTitle] = useState('Без названия');
+  const [description, setDescription] = useState(img.about);
+  const [title, setTitle] = useState(img.image_name);
 
   const handlePrevious = () => {
     if (onPrevious) {
@@ -21,6 +22,7 @@ const ImageDisplay = ({ img, onClose, onPrevious, onNext, isOwner }) => {
 
   const handleSave = () => {
     setIsEditing(false);
+    edit_image_data(img.id, description, title);
   };
 
   const handleEdit = () => {
@@ -67,7 +69,7 @@ const ImageDisplay = ({ img, onClose, onPrevious, onNext, isOwner }) => {
         X
       </button>
       <div className="image-container">
-        <img src={img} className="image" />
+        <img src={img.url} className="image" />
         {isOwner &&
         (<div style={{ color: 'white' }} onClick={handleEdit}>
             <FaPencilAlt />

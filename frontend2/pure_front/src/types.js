@@ -42,4 +42,41 @@ class User {
     }
 }
 
-export {User};
+class Image {
+  constructor(id, owner_id, published_at, about, image_name, extension, tags, views, likes) {
+    this.id = id;
+    this.owner_id = owner_id;
+    this.published_at = published_at;
+    this.about = about;
+    this.image_name = image_name;
+    this.extension = extension;
+    this.tags = tags;
+    this.views = views;
+    this.likes = likes;
+    this.url = null
+  }
+
+
+  setUrl(ip, port, user_id) {
+    this.url = `http://${ip}:${port}/api/images/${user_id}/gallery/${this.id}.${this.extension}`
+  }
+
+  static fromJson(json) {
+    const image = new Image(
+      json.id,
+      json.owner_id,
+      new Date(json.published_at),
+      json.about,
+      json.image_name,
+      json.extension,
+      json.tags,
+      json.views,
+      json.likes
+    );
+    return image;
+  }
+}
+
+
+
+export {User, Image};

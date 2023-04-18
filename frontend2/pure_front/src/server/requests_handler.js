@@ -1,20 +1,19 @@
-import { userProfile, get_tags, get_many_tags, edit_tags, get_image_data, edit_image_data,
-         change_image, load_image, gallery, ip, port } from "./requests.js"
-import { User } from "../types.js"
+import { userProfile, get_tags, get_many_tags, edit_tags, gallery, ip, port } from "./requests.js"
+import { User, Image } from "../types.js"
 
 
-async function getGalleryUrls(user_id) {
+async function getImages(user_id) {
 
     const data = await gallery(user_id);
-    console.log(data)
     if (data.status !== "OK") {
       throw Error(data.reason);
     }
-    const images = data["images"];
-    const urls = images.map((image) => {
-      return `http://${ip}:${port}/api/images/${user_id}/gallery/${image.id}.${image.extension}`;
+    const images = data["images"].map((image) => {
+      image = Image.fromJson(image);
+      image.setUrl(ip, port, user_id);
+      return image;
     });
-    return urls;
+    return images;
 }
 
 
@@ -75,4 +74,4 @@ async function editTagsFromStr(email, password, newtags) {
     }
 }
 
-export {getUserProfile, getTagsArray, getManyTagsArray, editTagsFromStr, getGalleryUrls}
+export {getUserProfile, getTagsArray, getManyTagsArray, editTagsFromStr, getImages}

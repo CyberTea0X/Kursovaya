@@ -7,7 +7,7 @@ import { FaPlusSquare } from 'react-icons/fa';
 import { User } from '../../types';
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
-import { getUserProfile, getGalleryUrls } from '../../server/requests_handler';
+import { getUserProfile, getImages } from '../../server/requests_handler';
 import { upload_image } from '../../server/requests';
 import { useParams } from 'react-router-dom';
 
@@ -45,8 +45,7 @@ const Gallery = () => {
   }
 
   const getGallery = async () => {
-    let image_urls = await getGalleryUrls(user.id);
-    setImages(image_urls);
+    setImages(await getImages(user.id));
   }
 
   // function to display an image
@@ -137,7 +136,7 @@ const Gallery = () => {
             {images.map((image, i) => (
               <img
                 key={i}
-                src={image}
+                src={image.url}
                 style={{
                   width: '100%',
                   display: 'block',
