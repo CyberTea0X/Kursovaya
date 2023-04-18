@@ -1,9 +1,64 @@
 .profile-img {
+    flex: 1;
     height: 200px;
     width: 200px;
     border-radius: 50%;
     background-color: rgb(139, 139, 139);
     cursor: pointer;
     display: block;
-    margin: 140px auto 50px auto;
+    margin: 20px auto 10px auto;
+}
+
+.user-name {
+    flex: 1;
+    font-size: 2em;
+    font-weight: bold;
+    text-align: center;
+    color: #333;
+    text-shadow: 1px 1px 1px #ccc;
+}
+
+.user-info {
+    margin-top: 10%;
+    margin-left: 10%;
+    display: flex;
+}
+
+.main-info {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.additional-info {
+    margin-top: 5%;
+    margin-left: 10%;
+    font-size: 1em;
+    display: flex;
+    flex: 3;
+    flex-direction: column;
+}
+
+.user-fullname {
+    flex: 8;
+    font-size: 2em;
+}
+
+.user-about {
+    flex: 16;
+    font-size: 1em;
+}
+
+.additional-info p {
+    margin: 0;
+}
+
+.rating-container {
+    font-size: 1.5em;
+    display: flex;
+    flex: 1;
+}
+
+.rating-container div {
+    margin-left: 10%;
 }

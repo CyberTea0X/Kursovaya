@@ -104,10 +104,28 @@ const Gallery = () => {
       ) : null}
 
       {/* display the user profile image */}
-      <img className="profile-img" src={logo} alt="" />
+      <div className="user-info">
+        <div className="main-info">
+          <div className="user-name"> {user.username} </div>
+          <img className="profile-img" src={logo} alt="" />
+          <div className="rating-container">
+            <b> Рейтинг: </b>
+            <div> {user.rating} </div>
+          </div>
+        </div>
+        <div className="additional-info">
+          <div className='user-fullname'>
+            <p> {user.firstname}</p>
+            <p> {user.lastname}</p>
+          </div>
+            <p className='user-about'>
+              {user.about}
+            </p>
+        </div>
+      </div>
 
       {/* display the image grid */}
-      <div style={{ padding: '10px' }}>
+      <div style={{ padding: '10px'}}>
         <ResponsiveMasonry
           columnsCountBreakPoints={{ 350: 3, 750: 4, 900: 5 }}
         >
