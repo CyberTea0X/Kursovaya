@@ -91,7 +91,13 @@ const Account = () => {
         if (user.reg_date !== null) {
             retrieveUserTags();
         }
-    }, []); // вызываем getAccount() и retrieveUserTags() только один раз при загрузке компонента
+    }, []);
+
+    useEffect(() => {
+        if (user.email !== undefined) {
+            retrieveUserTags();
+        }
+    }, [user])
     return (
         <div className="account">
             
