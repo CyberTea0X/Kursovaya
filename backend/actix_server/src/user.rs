@@ -302,7 +302,7 @@ pub(crate) async fn visit_user_service(
         if database::add_visit(&mut connection, &user.email, user2.id).is_err() {
             return ("FAILED".to_owned(), "Database error".to_owned());
         }
-        if database::edit_user(&mut connection, &email, &info).is_err() {
+        if database::edit_user(&mut connection, &user2.email, &info).is_err() {
             return ("FAILED".to_owned(), "Database error".to_owned());
         }
         return ("OK".to_owned(), "".to_owned());

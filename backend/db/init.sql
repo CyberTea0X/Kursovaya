@@ -19,7 +19,7 @@ CREATE TABLE users (
 
 DROP TABLE IF EXISTS visits;
 CREATE TABLE visits (
-    visitor_email VARCHAR(256) UNIQUE NOT NULL,
+    visitor_email VARCHAR(256) NOT NULL,
     visiting_id INTEGER NOT NULL,
     visit_date DATE NOT NULL,
     FOREIGN KEY (visiting_id)  REFERENCES users (id) ON DELETE CASCADE
