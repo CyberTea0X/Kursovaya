@@ -2,8 +2,9 @@ import { FaPencilAlt } from 'react-icons/fa';
 import './ImageDisplay.css';
 import React, { useEffect, useState } from 'react';
 import { edit_image_data } from '../../server/requests';
+import Cookies from 'js-cookie';
 
-const ImageDisplay = ({ img, onClose, onPrevious, onNext, isOwner }) => {
+const ImageView = ({ img, onClose, onPrevious, onNext, isOwner}) => {
   const [isEditing, setIsEditing] = useState(false);
   const [description, setDescription] = useState(img.about);
   const [title, setTitle] = useState(img.image_name);
@@ -22,7 +23,9 @@ const ImageDisplay = ({ img, onClose, onPrevious, onNext, isOwner }) => {
 
   const handleSave = () => {
     setIsEditing(false);
-    edit_image_data(img.id, description, title);
+    let email = Cookies.get("email").toLowerCase();
+    let pw = Cookies.get("password");
+    edit_image_data(email, pw, img.id, description, title);
   };
 
   const handleEdit = () => {
@@ -62,6 +65,11 @@ const ImageDisplay = ({ img, onClose, onPrevious, onNext, isOwner }) => {
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, [onClose, onPrevious, onNext]);
+
+  useEffect(() => {
+    setDescription(img.about);
+    setTitle(img.image_name);
+  }, [img]);
 
   return (
     <div className="image-display">
@@ -111,4 +119,4 @@ const ImageDisplay = ({ img, onClose, onPrevious, onNext, isOwner }) => {
   );
 };
 
-export { ImageDisplay };
+export { ImageView };

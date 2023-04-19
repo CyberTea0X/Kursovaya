@@ -3,14 +3,14 @@ import config from '../config_local.json';
 
 const { "backend-ip": ip, "backend-port": port } = config;
 
-async function edit_image_data(image_id, about="", image_name="", tags="") {
+async function edit_image_data(email, password, image_id, about="", image_name="", tags="") {
     let query = []
     if (about) query.push(`about=${about}`);
     if (image_name) query.push(`image_name=${image_name}`);
     if (tags) query.push(`tags=${tags}`);
     query = (query) ? '?' + query.join("&"): "";
     //const query = `about=${about}&image_name=${image_name}&tags=${tags}`
-    const url = `http://${ip}:${port}/api/images/data/get/${image_id}${query}`;
+    const url = `http://${ip}:${port}/api/images/data/edit/${email}/${password}/${image_id}${query}`;
     return postRequest(url)
 }
 

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Masonry, { ResponsiveMasonry } from 'react-responsive-masonry';
 import './gallery.css';
 import UnknownPerson from '../account/Unknown_person.jpg';
-import { ImageDisplay } from './ImageDisplay';
+import { ImageView } from './ImageDisplay';
 import { FaPlusSquare } from 'react-icons/fa';
 import { User } from '../../types';
 import { useNavigate } from 'react-router-dom';
@@ -92,12 +92,16 @@ const Gallery = () => {
     }
   }, [user]);
 
+  useEffect(() => {
+    getGallery();
+  }, [data.img]);
+
   // render the gallery UI
   return (
     <>
       {/* display the image button */}
       {data.img ? (
-        <ImageDisplay
+        <ImageView
           img={data.img}
           onClose={() => imgAction()}
           onPrevious={() => imgAction('previous-img')}
