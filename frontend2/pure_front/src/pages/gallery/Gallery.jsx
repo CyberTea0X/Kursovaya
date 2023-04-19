@@ -30,12 +30,11 @@ const Gallery = () => {
   }
     
   const getAccount = async () => {
+    let userIdOrEmail;
       try {
-        if (userId == "undefined") {
-          throw TypeError("Not authorized")
-        }
-        let user_ = await getUserProfile(userId);
-        setUser(user_);
+        userIdOrEmail = (userId == "me") ? Cookies.get("email").toLowerCase(): userId;
+          let user_ = await getUserProfile(userIdOrEmail);
+          setUser(user_);
       }
       catch (error) {
           if (error instanceof TypeError) {

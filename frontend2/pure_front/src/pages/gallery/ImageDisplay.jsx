@@ -1,7 +1,7 @@
-import { FaPencilAlt } from 'react-icons/fa';
+import { FaPencilAlt, FaTrashAlt } from 'react-icons/fa';
 import './ImageDisplay.css';
 import React, { useEffect, useState } from 'react';
-import { edit_image_data } from '../../server/requests';
+import { edit_image_data, delete_image } from '../../server/requests';
 import Cookies from 'js-cookie';
 
 const ImageView = ({ img, onClose, onPrevious, onNext, isOwner}) => {
@@ -36,6 +36,13 @@ const ImageView = ({ img, onClose, onPrevious, onNext, isOwner}) => {
         setIsEditing(true);
     }
   };
+
+  const handleDelete = () => {
+    let email = Cookies.get("email").toLowerCase();
+    let pw = Cookies.get("password");
+    delete_image(email, pw, img.id);
+    onPrevious();
+  }
 
   let handleKeyDown = {};
 
@@ -79,9 +86,16 @@ const ImageView = ({ img, onClose, onPrevious, onNext, isOwner}) => {
       <div className="image-container">
         <img src={img.url} className="image" />
         {isOwner &&
-        (<div style={{ color: 'white' }} onClick={handleEdit}>
-            <FaPencilAlt />
-        </div>)
+        (
+        <div className='image-display-widgets'>
+          <div style={{ color: 'white' }} onClick={handleEdit}>
+              <FaPencilAlt />
+          </div>
+          <div style={{ color: 'white' }} onClick={handleDelete}>
+              <FaTrashAlt />
+          </div>
+        </div>
+        )
         }
         {isEditing && (
         <div className="edit-container">
