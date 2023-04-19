@@ -1,8 +1,15 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom';
 
 const Table = ({ users, tags }) => {
   // создаем хэш-таблицу для тегов
   const [tagsMap, setTagsMap] = useState(new Map());
+
+  let navigate = useNavigate(); 
+  const goToProfile = (id) =>{ 
+    let path = `/Gallery/${id}`; 
+    navigate(path);
+  }
 
   useEffect(() => {
     if (tags.length > 0) {
@@ -19,7 +26,7 @@ const Table = ({ users, tags }) => {
             <th>Surname</th> */}
           </tr>
           {users.map((item) => (
-            <tr key={item.id}>
+            <tr key={item.id} onClick={() => goToProfile(item.id)}>
               <td>{<img src="https://avatars.dzeninfra.ru/get-zen_doc/1884623/pub_60be1f9abcbf42494ea7da85_60be206a746af706906e32df/scale_1200" style={{
                 width: '50px',
                 height: '50px',

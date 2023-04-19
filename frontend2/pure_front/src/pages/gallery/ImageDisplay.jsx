@@ -87,7 +87,7 @@ const ImageView = ({ img, onClose, onPrevious, onNext, isOwner}) => {
         <img src={img.url} className="image" />
         {isOwner &&
         (
-        <div className='image-display-widgets'>
+        <div className='image-toolbar'>
           <div style={{ color: 'white' }} onClick={handleEdit}>
               <FaPencilAlt />
           </div>
