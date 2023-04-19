@@ -4,6 +4,7 @@ import Logo from '../pages/img/751347.png';
 import { Link } from 'react-router-dom';
 import Search from './Search2.png';
 import Chat from './chat2.png'
+import Cookies from 'js-cookie';
 
 
 
@@ -26,7 +27,7 @@ function Header() {
         <Link to="/Trends">Популярное</Link> 
         <Link to="/Chat"><img src={Chat} style={{width: '40px', margin: '15px', float:'left'}} /></Link>       
         <Link to="/Account">Профиль</Link>
-        <Link to="/Gallery/-1">Галерея</Link>
+        <Link to={`/Gallery/${Cookies.get("id")}`}>Галерея</Link>
       </div>
     </div>
     )

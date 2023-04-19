@@ -7,7 +7,7 @@ import { FaPlusSquare } from 'react-icons/fa';
 import { User } from '../../types';
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
-import { getUserProfile, getImages } from '../../server/requests_handler';
+import { getUserProfile, getImages, getTagsArray } from '../../server/requests_handler';
 import { upload_image } from '../../server/requests';
 import { useParams } from 'react-router-dom';
 
@@ -19,6 +19,7 @@ const Gallery = () => {
   const [user, setUser] = useState(User.emptyUser());
   const [logo, setLogo] = useState(UnknownPerson);
   const [isOwner, setIsOwner] = useState(false);
+  const [tags, setTags] = useState([]); // хранение данных о тегах
   const { userId } = useParams();
   const totalImages = images.length;
 
@@ -29,11 +30,12 @@ const Gallery = () => {
   }
     
   const getAccount = async () => {
-    let userIdOrEmail;
       try {
-        userIdOrEmail = (userId == -1) ? Cookies.get("email").toLowerCase(): userId;
-          let user_ = await getUserProfile(userIdOrEmail);
-          setUser(user_);
+        if (userId == "undefined") {
+          throw TypeError("Not authorized")
+        }
+        let user_ = await getUserProfile(userId);
+        setUser(user_);
       }
       catch (error) {
           if (error instanceof TypeError) {
@@ -52,6 +54,19 @@ const Gallery = () => {
   const viewImage = (img, i) => {
     setData({ img, i });
   };
+
+  const retrieveUserTags = async () => {
+    try {
+        let tags_arr = await getTagsArray(user.id);
+        if (tags_arr.length > 0) {
+          setTags(tags_arr);
+        }
+    }
+    catch (error) {
+        alert(error.message);
+    }
+  }
+  
 
   // function to handle image navigation
   const imgAction = (action) => {
@@ -84,6 +99,10 @@ const Gallery = () => {
     getAccount();
   }, []);
   useEffect(() => {
+    if (user.id == undefined) {
+      return;
+    }
+    retrieveUserTags()
     if (images.length == 0) {
       getGallery();
     }
@@ -92,7 +111,11 @@ const Gallery = () => {
     }
   }, [user]);
 
+
   useEffect(() => {
+    if (user.id == undefined) {
+      return;
+    }
     getGallery();
   }, [data.img]);
 
@@ -128,6 +151,11 @@ const Gallery = () => {
             <p className='user-about'>
               {user.about}
             </p>
+          <div className='user-tags'>
+            {tags.map((tag, i) => (
+              <span key={i}> {tag} </span>
+            ))}
+          </div>
         </div>
       </div>
 

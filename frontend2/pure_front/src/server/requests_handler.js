@@ -57,6 +57,9 @@ async function getTagsArray(user_id, add_hstag=true) {
         throw Error(data["reason"]);
     }
     let tags = data["tags"]
+    if (tags == '') {
+        return []
+    }
     if (add_hstag) {
         tags = tags.map(tag => `#${tag}`);
     }

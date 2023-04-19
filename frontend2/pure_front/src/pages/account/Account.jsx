@@ -88,9 +88,6 @@ const Account = () => {
     }
     useEffect(() => {
         getAccount();
-        if (user.reg_date !== null) {
-            retrieveUserTags();
-        }
     }, []);
 
     useEffect(() => {

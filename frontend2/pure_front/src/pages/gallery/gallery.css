@@ -34,7 +34,6 @@
     margin-top: 5%;
     margin-left: 10%;
     font-size: 1em;
-    display: flex;
     flex: 3;
     flex-direction: column;
 }
@@ -62,4 +61,20 @@
 
 .rating-container div {
     margin-left: 10%;
+}
+
+.user-tags {
+    margin-top: 2%;
+}
+
+.user-tags span {
+    display: inline-block;
+    padding: 5px 10px;
+    margin-right: 10px;
+    margin-bottom: 10px;
+    border-radius: 20px;
+    background-color: #f2f2f2;
+    color: #333;
+    font-size: 14px;
+    cursor: pointer;
 }
