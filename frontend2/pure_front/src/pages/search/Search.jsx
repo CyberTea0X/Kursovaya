@@ -53,6 +53,7 @@ const SearchPage = () => {
         setTags(await getManyTagsArray(range));
 
     };
+
     useEffect(() => {
         search();
     }, []); // вызываем search() только один раз при загрузке компонента
