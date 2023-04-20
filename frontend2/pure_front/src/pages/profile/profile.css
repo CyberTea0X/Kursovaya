@@ -93,3 +93,8 @@
     border-radius: 5px;
     margin-top: 20px;
 }
+
+.profile-cog {
+    font-size: 4rem;
+    margin-right: 5%;
+}
