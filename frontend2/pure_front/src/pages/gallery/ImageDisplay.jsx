@@ -1,13 +1,27 @@
-import { FaPencilAlt, FaTrashAlt } from 'react-icons/fa';
+import { FaPencilAlt, FaTrashAlt, FaEllipsisH } from 'react-icons/fa';
 import './ImageDisplay.css';
 import React, { useEffect, useState } from 'react';
-import { edit_image_data, delete_image } from '../../server/requests';
+import { edit_image_data, delete_image, set_as_avatar } from '../../server/requests';
 import Cookies from 'js-cookie';
+import { Menu, useContextMenu, Item } from 'react-contexify';
+import "react-contexify/dist/ReactContexify.css";
+
 
 const ImageView = ({ img, onClose, onPrevious, onNext, isOwner}) => {
   const [isEditing, setIsEditing] = useState(false);
   const [description, setDescription] = useState(img.about);
   const [title, setTitle] = useState(img.image_name);
+  const MENU_ID = "menu-id";
+
+  const { show } = useContextMenu({
+    id: MENU_ID
+  });
+
+  function handleContextMenu(e){
+    show({
+      event: e,
+    });
+  }
 
   const handlePrevious = () => {
     if (onPrevious) {
@@ -38,11 +52,19 @@ const ImageView = ({ img, onClose, onPrevious, onNext, isOwner}) => {
   };
 
   const handleDelete = () => {
-    let email = Cookies.get("email").toLowerCase();
-    let pw = Cookies.get("password");
+    const email = Cookies.get("email").toLowerCase();
+    const pw = Cookies.get("password");
     delete_image(email, pw, img.id);
     onPrevious();
   }
+
+  const handleSetAvatar = async () => {
+    const email = Cookies.get("email").toLowerCase();
+    const pw = Cookies.get("password");
+    const id = Cookies.get("id");
+    const data = await set_as_avatar(email, pw, img.id);
+    console.log(data);
+  }    
 
   let handleKeyDown = {};
 
@@ -94,6 +116,12 @@ const ImageView = ({ img, onClose, onPrevious, onNext, isOwner}) => {
           <div style={{ color: 'white' }} onClick={handleDelete}>
               <FaTrashAlt />
           </div>
+          <div style={{ color: "white" }} onClick={handleContextMenu}>
+            <FaEllipsisH />
+          </div>
+              <Menu id={MENU_ID}>
+                <Item onClick={handleSetAvatar}>Установить как аватар</Item>
+              </Menu>
         </div>
         )
         }

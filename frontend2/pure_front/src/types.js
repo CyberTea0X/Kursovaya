@@ -57,8 +57,13 @@ class Image {
   }
 
 
-  setUrl(ip, port, user_id) {
-    this.url = `http://${ip}:${port}/api/images/${user_id}/gallery/${this.id}.${this.extension}`
+  setUrl(ip, port) {
+    this.url = `http://${ip}:${port}/api/images/${this.owner_id}/gallery/${this.id}.${this.extension}`
+  }
+
+  withUrl(ip, port) {
+    this.setUrl(ip, port)
+    return this;
   }
 
   static fromJson(json) {

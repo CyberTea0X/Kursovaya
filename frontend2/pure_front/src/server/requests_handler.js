@@ -1,5 +1,18 @@
-import { userProfile, get_tags, get_many_tags, edit_tags, gallery, ip, port } from "./requests.js"
+import { userProfile, get_tags, get_many_tags, edit_tags, gallery, ip, port, get_avatar, get_image_data } from "./requests.js"
 import { User, Image } from "../types.js"
+
+
+async function getAvatarImage(user_id) {
+    let data = await get_avatar(user_id)
+    if (data.status !== "OK") {
+        throw Error(data.reason);
+    }
+    data = await get_image_data(data["logo_id"]);
+    if (data.status !== "OK") {
+        throw Error(data.reason);
+    }
+    return Image.fromJson(data["image"]).withUrl(ip, port);
+}
 
 
 async function getImages(user_id) {
@@ -77,4 +90,4 @@ async function editTagsFromStr(email, password, newtags) {
     }
 }
 
-export {getUserProfile, getTagsArray, getManyTagsArray, editTagsFromStr, getImages}
+export {getUserProfile, getTagsArray, getManyTagsArray, editTagsFromStr, getImages, getAvatarImage}

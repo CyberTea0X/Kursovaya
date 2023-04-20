@@ -163,71 +163,71 @@
         margin-bottom: 10px;
         font-size: 16px;
         padding: 5px;
-      }
+    }
       
-      .title {
-        position: absolute;
-        bottom: 100%;
-        left: 20px;
-        color: #fff;
-        font-size: 24px;
-        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
-      }
+  .title {
+      position: absolute;
+      bottom: 100%;
+      left: 20px;
+      color: #fff;
+      font-size: 24px;
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+    }
 
-      .upload-form {
-        position: relative;
-        width: 100%;
-        height: 200px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        margin-top: 20px;
-      }
+    .upload-form {
+      position: relative;
+      width: 100%;
+      height: 200px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-top: 20px;
+    }
+    
+    .upload-label {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+    }
+    
+    .upload-label i {
+      font-size: 50px;
+      color: #ccc;
+    }
+    
+    #image-upload {
+      display: none;
+    }
+    
+    .upload-form::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: 2px dashed #ccc;
+      border-radius: 10px;
+      box-sizing: border-box;
+    }
+    
+    .upload-form.active::before {
+      border-color: #007bff;
+    }
+    
+    .upload-form.active i {
+      color: #007bff;
+    }
+    .image-toolbar {
+      padding: 10px;
+      background-color: rgba(0, 0, 0, 0.5);
+      border: none;
+      border-radius: 5px;
+      display: flex;
+      gap: 2%;
+    }
       
-      .upload-label {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        cursor: pointer;
-      }
-      
-      .upload-label i {
-        font-size: 50px;
-        color: #ccc;
-      }
-      
-      #image-upload {
-        display: none;
-      }
-      
-      .upload-form::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        border: 2px dashed #ccc;
-        border-radius: 10px;
-        box-sizing: border-box;
-      }
-      
-      .upload-form.active::before {
-        border-color: #007bff;
-      }
-      
-      .upload-form.active i {
-        color: #007bff;
-      }
-      .image-toolbar {
-        padding: 10px;
-        background-color: rgba(0, 0, 0, 0.5);
-        border: none;
-        border-radius: 5px;
-        display: flex;
-        gap: 2%;
-      }
-        

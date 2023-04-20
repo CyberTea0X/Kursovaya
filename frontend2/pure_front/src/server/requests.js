@@ -3,6 +3,21 @@ import config from '../config_local.json';
 
 const { "backend-ip": ip, "backend-port": port } = config;
 
+async function get_avatar(user_id) {
+    const url = `http://${ip}:${port}/api/logo/get/${user_id}`;
+    return getRequest(url);
+}
+
+async function set_as_avatar(email, password, image_id) {
+    const url = `http://${ip}:${port}/api/logo/set/${email}/${password}/${image_id}`;
+    return postRequest(url);
+}
+
+async function visit(email, password, id) {
+    const url = `http://${ip}:${port}/api/user/visit/${email}/${password}/${id}`;
+    return postRequest(url);
+}
+
 async function edit_image_data(email, password, image_id, about="", image_name="", tags="") {
     let query = []
     if (about) query.push(`about=${about}`);
@@ -16,7 +31,7 @@ async function edit_image_data(email, password, image_id, about="", image_name="
 
 async function get_image_data(image_id) {
     const url = `http://${ip}:${port}/api/images/data/get/${image_id}`;
-    return postRequest(url)
+    return getRequest(url)
 }
 
 async function change_image(file, email, password, image_id) {
@@ -108,7 +123,6 @@ async function registerUser(login, email, password) {
 
 
 async function editUser(email, password, user) {
-    console.log(user)
     const query = user.toQuery()
     const url = `http://${ip}:${port}/api/user/edit/${email}/${password}?${query}`;
     return postRequest(url)
@@ -158,4 +172,5 @@ async function getRequest(url) {
 
 
 export { ip, port, registerUser, login, userProfile, editUser, searchLogin, searchPopular, searchText, get_tags, edit_tags,
-         get_many_tags, searchTags, change_image, upload_image, get_image_data, edit_image_data, gallery, delete_image};
+         get_many_tags, searchTags, change_image, upload_image, get_image_data, edit_image_data, gallery, delete_image,
+         visit, set_as_avatar, get_avatar};

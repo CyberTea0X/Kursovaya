@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Masonry, { ResponsiveMasonry } from 'react-responsive-masonry';
+import { FaComment } from 'react-icons/fa';
 import './gallery.css';
 import UnknownPerson from '../account/Unknown_person.jpg';
 import { ImageView } from './ImageDisplay';
@@ -7,9 +8,10 @@ import { FaPlusSquare } from 'react-icons/fa';
 import { User } from '../../types';
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
-import { getUserProfile, getImages, getTagsArray } from '../../server/requests_handler';
-import { upload_image } from '../../server/requests';
+import { getUserProfile, getImages, getTagsArray, getAvatarImage } from '../../server/requests_handler';
+import { upload_image, visit } from '../../server/requests';
 import { useParams } from 'react-router-dom';
+import { Image } from '../../types';
 
 
 const Gallery = () => {
@@ -17,7 +19,7 @@ const Gallery = () => {
   const [uploadFormActive, setUploadFormActive] = useState(false);
   const [images, setImages] = useState([]);
   const [user, setUser] = useState(User.emptyUser());
-  const [logo, setLogo] = useState(UnknownPerson);
+  const [avatar, setAvatar] = useState(UnknownPerson);
   const [isOwner, setIsOwner] = useState(false);
   const [tags, setTags] = useState([]); // хранение данных о тегах
   const { userId } = useParams();
@@ -47,6 +49,13 @@ const Gallery = () => {
 
   const getGallery = async () => {
     setImages(await getImages(user.id));
+  }
+
+  const loadAvatar = async () => {
+    let logo_img = await getAvatarImage(user.id);
+    if (logo_img !== undefined) {
+      setAvatar(logo_img.url);
+    }
   }
 
   // function to display an image
@@ -108,6 +117,12 @@ const Gallery = () => {
     if (user.id == Cookies.get("id")) {
       setIsOwner(true)
     }
+    else {
+      let email = Cookies.get("email").toLowerCase();
+      let pw = Cookies.get("password");
+      visit(email, pw, user.id);
+    }
+    loadAvatar()
   }, [user]);
 
 
@@ -131,15 +146,16 @@ const Gallery = () => {
           isOwner={isOwner}
         />
       ) : null}
-
-      {/* display the user profile image */}
       <div className="user-info">
         <div className="main-info">
           <div className="user-name"> {user.username} </div>
-          <img className="profile-img" src={logo} alt="" />
+          <img className="profile-img" src={avatar || UnknownPerson} alt="" />
           <div className="rating-container">
             <b> Рейтинг: </b>
             <div> {user.rating} </div>
+          </div>
+          <div className='message-user'>
+            Сообщение
           </div>
         </div>
         <div className="additional-info">
