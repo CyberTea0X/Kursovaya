@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import Masonry, { ResponsiveMasonry } from 'react-responsive-masonry';
-import { FaComment } from 'react-icons/fa';
 import './gallery.css';
 import UnknownPerson from '../account/Unknown_person.jpg';
 import { ImageView } from './ImageDisplay';
@@ -11,7 +10,6 @@ import Cookies from 'js-cookie';
 import { getUserProfile, getImages, getTagsArray, getAvatarImage } from '../../server/requests_handler';
 import { upload_image, visit } from '../../server/requests';
 import { useParams } from 'react-router-dom';
-import { Image } from '../../types';
 
 
 const Gallery = () => {
