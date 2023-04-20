@@ -60,6 +60,7 @@ const Settings = () => {
             "Вы собираетесь удалить свой профиль! Введите свой логин для подтверждения!"
             ) == user.username;
         if (!really_delete) {
+            alert("Неверно введён логин, надеемся, вы передумали");
             return;
         }
         const email = Cookies.get("email").toLowerCase();
@@ -72,7 +73,7 @@ const Settings = () => {
             alert(data["reason"])
             return;
         }
-        routeChange("Signup");
+        routeChange('');
     }
 
     const editUserData = async () => {
