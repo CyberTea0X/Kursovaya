@@ -293,7 +293,7 @@ pub(crate) async fn visit_user_service(
             password: None,
             firstname: None,
             lastname: None,
-            rating: Some(user.rating + 1),
+            rating: Some(user2.rating + 1),
             about: None,
             age: None,
             gender: None,
