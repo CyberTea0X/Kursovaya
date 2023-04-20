@@ -7,7 +7,7 @@ import { SearchPage } from './pages/search/Search.jsx';
 import './index.css';
 import {Header} from './navbar/Navbar.jsx';
 import { Log_in } from './pages/log_in/Log_in';
-import Chat from './pages/chat/chat';
+import { Messenger } from './pages/messenger/Messenger';
 import {Settings} from './pages/account-settings/settings.jsx'
 
 
@@ -24,7 +24,7 @@ function App() {
             <Route path="/Search" element={<SearchPage/>} />
             <Route path="/Login" element={<Log_in/>} />
             <Route path="/Settings" element={<Settings/>} />
-            <Route path="/Chat" element={<Chat/>} />
+            <Route path="/Messenger/*" element={<Messenger/>} />
           </Routes>
       
     </>
