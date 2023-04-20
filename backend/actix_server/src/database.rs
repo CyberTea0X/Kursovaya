@@ -249,9 +249,17 @@ pub fn add_user_tags(connection: &mut Conn, user_id: u32, tags: &str) -> Result<
     )
 }
 
-pub fn get_logo_id(connection: &mut Conn, owner_id: u32) -> Result<Option<u32>, mysql::Error> {
+// pub fn get_logo_id(connection: &mut Conn, owner_id: u32) -> Result<Option<u32>, mysql::Error> {
+//     let query = format!(
+//         "SELECT id FROM `logos` WHERE owner_id = {} LIMIT 1",
+//         owner_id
+//     );
+//     connection.query_first(query)
+// }
+
+pub fn get_logo_image_id(connection: &mut Conn, owner_id: u32) -> Result<Option<u32>, mysql::Error> {
     let query = format!(
-        "SELECT id FROM `logos` WHERE owner_id = {} LIMIT 1",
+        "SELECT image_id FROM `logos` WHERE owner_id = {} LIMIT 1",
         owner_id
     );
     connection.query_first(query)

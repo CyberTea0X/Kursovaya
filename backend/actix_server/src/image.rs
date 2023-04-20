@@ -407,7 +407,7 @@ async fn get_logo_service(
     db_config: web::Data<DBconfig>,
 ) -> ActxResult<impl Responder> {
     let user_id = path.into_inner();
-    let (status, fail_reason, logo_id) = (|| {
+    let (status, fail_reason, image_id) = (|| {
         let mut connection = match database::try_connect(&db_config, 3) {
             Ok(conn) => conn,
             Err(_) => return ("FAILED".to_owned(), "Database error".to_owned(), -1),
@@ -416,7 +416,7 @@ async fn get_logo_service(
             Some(user) => user,
             None => return ("FAILED".to_owned(), "User not found".to_owned(), -1),
         };
-        match database::get_logo_id(&mut connection, user.id) {
+        match database::get_logo_image_id(&mut connection, user.id) {
             Ok(Some(id)) => ("OK".to_owned(), "".to_owned(), id as i32),
             Ok(None) => return ("FAILED".to_owned(), "Logo not found".to_owned(), -1),
             Err(_) => return ("FAILED".to_owned(), "Database error".to_owned(), -1),
@@ -425,6 +425,6 @@ async fn get_logo_service(
     Ok(web::Json(json!({
         "status": status,
         "reason": fail_reason,
-        "logo_id": logo_id
+        "image_id": image_id
     })))
 }
