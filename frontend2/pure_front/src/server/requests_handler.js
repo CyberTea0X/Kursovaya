@@ -7,7 +7,7 @@ async function getAvatarImage(user_id) {
     if (data.status !== "OK") {
         throw Error(data.reason);
     }
-    data = await get_image_data(data["logo_id"]);
+    data = await get_image_data(data["image_id"]);
     if (data.status !== "OK") {
         throw Error(data.reason);
     }

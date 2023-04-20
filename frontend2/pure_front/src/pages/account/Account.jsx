@@ -115,7 +115,7 @@ const Account = () => {
                         
                         <h2 className="account-title">Фото профиля</h2>
                         <div className="account-user">
-                            <img className="account-img" src={avatar || UnknownPerson} alt="" />
+                            <img className="account-img" src={avatar} alt="" />
                             <a href="/Gallery/me" className="account-link">Выбрать фотографию</a>
                         </div>
                         <h3 className="account-title" style={{fontWeight: '700', padding:'0 0 20px 0'}}>Личная информация</h3>
