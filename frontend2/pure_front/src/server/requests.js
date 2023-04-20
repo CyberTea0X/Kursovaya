@@ -3,6 +3,11 @@ import config from '../config_local.json';
 
 const { "backend-ip": ip, "backend-port": port } = config;
 
+async function delete_profile(email, password) {
+    const url = `http://${ip}:${port}/api/user/delete/${email}/${password}`
+    postRequest(url);
+}
+
 async function get_avatar(user_id) {
     const url = `http://${ip}:${port}/api/logo/get/${user_id}`;
     return getRequest(url);
@@ -173,4 +178,4 @@ async function getRequest(url) {
 
 export { ip, port, registerUser, login, userProfile, editUser, searchLogin, searchPopular, searchText, get_tags, edit_tags,
          get_many_tags, searchTags, change_image, upload_image, get_image_data, edit_image_data, gallery, delete_image,
-         visit, set_as_avatar, get_avatar};
+         visit, set_as_avatar, get_avatar, delete_profile};

@@ -6,6 +6,7 @@ import { User as UserProfile} from "../../types";
 import { getUserProfile, getTagsArray, editTagsFromStr, getAvatarImage  } from "../../server/requests_handler";
 import Cookies from "js-cookie";
 import { useNavigate } from 'react-router-dom';
+import { delete_profile } from "../../server/requests";
 
 
 const Settings = () => {
@@ -52,6 +53,26 @@ const Settings = () => {
         catch (error) {
             alert(error.message);
         }
+    }
+
+    const handleDeleteProfile = async () => {
+        let really_delete = prompt(
+            "Вы собираетесь удалить свой профиль! Введите свой логин для подтверждения!"
+            ) == user.username;
+        if (!really_delete) {
+            return;
+        }
+        const email = Cookies.get("email").toLowerCase();
+        const pw = Cookies.get("password");
+        Cookies.remove("id", { path: '/' });
+        Cookies.remove("email", { path: '/' });
+        Cookies.remove("password", { path: '/' });
+        let data = await delete_profile(email, pw);
+        if (data["status"] != "OK") {
+            alert(data["reason"])
+            return;
+        }
+        routeChange("Signup");
     }
 
     const editUserData = async () => {
@@ -159,13 +180,17 @@ const Settings = () => {
                         <input className="account-input" placeholder="Пароль" type="password" onChange={(e) => setUser(user.clone({password: e.target.value}))}/>
                         <p className="account-title">Подтвердите пароль</p>
                         <input className="account-input" placeholder="Пароль" type="password"  />
+                        <div style={{display: "flex", flexDirection: "row"}}>
                         <form onSubmit={handleSubmit} style={{backgroundColor: "rgba(255, 255, 255, 0)"}}>
-                        <button className="account-btn2" type="submit">Сохранить</button>
+                            <button className="account-btn2" type="submit">Сохранить</button>
                         </form>
+                        <form onSubmit={handleDeleteProfile} style={{backgroundColor: "rgba(255, 255, 255, 0)"}}>
+                            <button className="account-delete" type="submit">Удалить профиль</button>
+                        </form>
+                        </div>
                     </div>
-                
+                </div>
             </div>
-        </div>
     )
 }
 

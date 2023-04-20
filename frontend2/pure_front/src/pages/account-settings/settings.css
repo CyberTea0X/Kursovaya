@@ -105,7 +105,6 @@
 
 .account-btn2 {
     display: block;
-    border: 2px solid rgb(0, 28, 121);
     border: none;
     border-radius: 15px;
     cursor: pointer;
@@ -114,8 +113,32 @@
     font-size: 15px;
     font-weight: 500;
     background: rgb(138, 230, 255);
+    transition: all 0.3s ease-in-out;
 }
-
+    
+.account-btn2:hover {
+    background: rgb(102, 204, 255);
+    transform: scale(1.1);
+}
+    
+.account-delete {
+    display: block;
+    color: white;
+    border: none;
+    border-radius: 15px;
+    cursor: pointer;
+    padding: 10px 15px;
+    margin: 20px 0;
+    font-size: 15px;
+    font-weight: 500;
+    background: rgb(255, 0, 0);
+    transition: all 0.3s ease-in-out;
+}
+    
+.account-delete:hover {
+    background: rgb(204, 0, 0);
+    transform: scale(1.1);
+}
 .account-input2 {
     width: 600px;
     height: 100px;
