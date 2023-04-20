@@ -259,7 +259,7 @@ pub fn get_logo_id(connection: &mut Conn, owner_id: u32) -> Result<Option<u32>, 
 
 pub fn set_logo(connection: &mut Conn, img_id: u32, owner_id: u32) -> Result<(), mysql::Error> {
     connection.exec_drop(
-        "INSERT INTO `logos` (id, owner_id) VALUES (?, ?);",
+        "INSERT INTO `logos` (image_id, owner_id) VALUES (?, ?);",
         (img_id, owner_id),
     )
 }
