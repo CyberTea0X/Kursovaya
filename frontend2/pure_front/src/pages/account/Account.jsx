@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import "./userprofile.css"
-import User from "./Unknown_person.jpg"
+import UnknownPerson from "./Unknown_person.jpg"
 import { editUser } from "../../server/requests";
 import { User as UserProfile} from "../../types";
-import { getUserProfile, getTagsArray, editTagsFromStr } from "../../server/requests_handler";
+import { getUserProfile, getTagsArray, editTagsFromStr, getAvatarImage  } from "../../server/requests_handler";
 import Cookies from "js-cookie";
 import { useNavigate } from 'react-router-dom';
 
@@ -11,6 +11,8 @@ import { useNavigate } from 'react-router-dom';
 const Account = () => {
     const [user, setUser] = useState(UserProfile.emptyUser()); // хранение данных об аккаунте
     const [tags, setTags] = useState(""); // хранение данных о тегах
+    const [avatar, setAvatar] = useState(UnknownPerson);
+
 
     let navigate = useNavigate(); 
     const routeChange = (route) =>{ 
@@ -33,6 +35,13 @@ const Account = () => {
             alert(error.message);
         }
     }
+
+    const loadAvatar = async () => {
+        let logo_img = await getAvatarImage(user.id);
+        if (logo_img !== undefined) {
+          setAvatar(logo_img.url);
+        }
+      }
 
     const retrieveUserTags = async () => {
         try {
@@ -91,9 +100,11 @@ const Account = () => {
     }, []);
 
     useEffect(() => {
-        if (user.email !== undefined) {
-            retrieveUserTags();
+        if (user.email === undefined) {
+            return;
         }
+        loadAvatar();
+        retrieveUserTags();
     }, [user])
     return (
         <div className="account">
@@ -104,8 +115,8 @@ const Account = () => {
                         
                         <h2 className="account-title">Фото профиля</h2>
                         <div className="account-user">
-                            <img className="account-img" src={User} alt="" />
-                            <a href="/Gallery" className="account-link">Выбрать фотографию</a>
+                            <img className="account-img" src={avatar || UnknownPerson} alt="" />
+                            <a href="/Gallery/me" className="account-link">Выбрать фотографию</a>
                         </div>
                         <h3 className="account-title" style={{fontWeight: '700', padding:'0 0 20px 0'}}>Личная информация</h3>
                         <p className="account-title">Имя пользователя</p>

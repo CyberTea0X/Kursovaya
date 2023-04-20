@@ -91,7 +91,7 @@
     background-color: rgb(139, 139, 139);
     cursor: pointer;
     border: 1px solid black;
-    
+    object-fit: cover;
 }
 
 .account-input {
