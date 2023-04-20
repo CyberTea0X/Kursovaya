@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Masonry, { ResponsiveMasonry } from 'react-responsive-masonry';
-import './gallery.css';
-import UnknownPerson from '../account/Unknown_person.jpg';
+import './profile.css';
+import UnknownPerson from "../img/Unknown_person.jpg";
 import { ImageView } from './ImageDisplay';
 import { FaPlusSquare } from 'react-icons/fa';
 import { User } from '../../types';
@@ -12,7 +12,7 @@ import { upload_image, visit } from '../../server/requests';
 import { useParams } from 'react-router-dom';
 
 
-const Gallery = () => {
+const Profile = () => {
   const [data, setData] = useState({ img: '', i: 0 });
   const [uploadFormActive, setUploadFormActive] = useState(false);
   const [images, setImages] = useState([]);
@@ -218,4 +218,4 @@ const Gallery = () => {
   );
 };
   
-export { Gallery };
+export { Profile };
