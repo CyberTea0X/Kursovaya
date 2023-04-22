@@ -4,6 +4,7 @@ import { Chat } from '../../types';
 import { getUserChats } from '../../server/requests_handler';
 import Cookies from 'js-cookie';
 import { Chats } from './Chats';
+import Fuse from 'fuse.js';
 
 const chats = [
     new Chat(1, 1, 2, '2022-01-01'),
@@ -20,7 +21,19 @@ const Messenger = () => {
     }, [])
 
     const handleSearch = (event) => {
-        console.log(event.target.value);
+        if (chats === undefined) {
+            return;
+        }
+        console.log(chats);
+        let query = event.target.value;
+        const fuse = new Fuse(chats, {
+            keys: ['user2.username'],
+            includeScore: true,
+        })
+        const result = fuse.search(query);
+        const sorted_chats = result.map(r => r.item);
+        const other_chats = chats.filter(chat => !sorted_chats.includes(chat));
+        setChats(sorted_chats.concat(other_chats));
     }
     
     return (
