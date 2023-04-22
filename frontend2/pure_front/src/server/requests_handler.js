@@ -1,5 +1,20 @@
-import { userProfile, get_tags, get_many_tags, edit_tags, gallery, ip, port, get_avatar, get_image_data } from "./requests.js"
-import { User, Image } from "../types.js"
+import { userProfile, get_tags, get_many_tags, edit_tags, gallery, ip, port, get_avatar, get_image_data, all_user_profiles,
+         get_user_chats } from "./requests.js"
+import { User, Image, Chat } from "../types.js"
+
+
+async function getUserChats(email, password, include_user2=true) {
+    let data = await get_user_chats(email, password);
+    if (data.status !== "OK") {
+        throw Error(data.reason);
+    }
+    let chats = data["chats"].map((chat) => Chat.fromJson(chat));
+    if (!include_user2) {
+        return chats;
+    }
+    let users_map = new Map( (await getAllUserProfiles()).map((user) => [user.id, user]));
+    return chats.map((chat) => chat.withUser2(users_map.get(chat.userid2)))
+}
 
 
 async function getAvatarImage(user_id) {
@@ -39,6 +54,17 @@ function is_valid_tags(tags) {
     return regex.test(tags) && tagsArray.length === uniqueTags.size;
 }
 
+async function getAllUserProfiles() {
+    const data = await all_user_profiles();
+    if (data["status"] !== "OK") {
+        throw Error(data["reason"]);
+    }
+    let users = data["users"].map((user) => {
+        return User.fromJson(user)
+    })
+    return users;
+}
+
 
 async function getUserProfile(idOrEmail) {
     const data = await userProfile(idOrEmail);
@@ -70,7 +96,7 @@ async function getTagsArray(user_id, add_hstag=true) {
         throw Error(data["reason"]);
     }
     let tags = data["tags"]
-    if (tags == '') {
+    if (tags === '') {
         return []
     }
     if (add_hstag) {
@@ -90,4 +116,4 @@ async function editTagsFromStr(email, password, newtags) {
     }
 }
 
-export {getUserProfile, getTagsArray, getManyTagsArray, editTagsFromStr, getImages, getAvatarImage}
+export {getUserProfile, getTagsArray, getManyTagsArray, editTagsFromStr, getImages, getAvatarImage, getAllUserProfiles, getUserChats}

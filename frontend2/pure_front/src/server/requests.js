@@ -3,9 +3,24 @@ import config from '../config_local.json';
 
 const { "backend-ip": ip, "backend-port": port } = config;
 
+async function create_chat(email, password, user2id) {
+    const url = `http://${ip}:${port}/api/chat/create/${email}/${password}/${user2id}`
+    return postRequest(url);
+}
+
+async function get_user_chats(email, password) {
+    const url = `http://${ip}:${port}/api/chat/user/${email}/${password}`
+    return postRequest(url);
+}
+
+async function all_user_profiles() {
+    const url = `http://${ip}:${port}/api/user/profiles`
+    return postRequest(url);
+}
+
 async function delete_profile(email, password) {
     const url = `http://${ip}:${port}/api/user/delete/${email}/${password}`
-    postRequest(url);
+    return postRequest(url);
 }
 
 async function get_avatar(user_id) {
@@ -178,4 +193,4 @@ async function getRequest(url) {
 
 export { ip, port, registerUser, login, userProfile, editUser, searchLogin, searchPopular, searchText, get_tags, edit_tags,
          get_many_tags, searchTags, change_image, upload_image, get_image_data, edit_image_data, gallery, delete_image,
-         visit, set_as_avatar, get_avatar, delete_profile};
+         visit, set_as_avatar, get_avatar, delete_profile, all_user_profiles, get_user_chats, create_chat};
