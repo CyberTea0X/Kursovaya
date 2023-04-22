@@ -1,36 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import "./styles/Searchbar.css";
 
-const Searchbar = ({chats, users}) => {
-
-    const [searchText, setSearchText] = useState('');
-    const [items, setItems] = useState([]);
-    
-    const handleSearch = (event) => {
-      setSearchText(event.target.value);
-    };
-
-    useEffect(() => {
-      if (chats === undefined) {
-        return;
-      }
-      console.log(chats);
-      const new_items = chats.filter((item) =>
-        item.created_at.toLowerCase().includes(searchText.toLowerCase())
-      );
-      setItems(new_items);
-        
-
-    }, [chats]);
+const Searchbar = ({onSearch}) => {
 
     return (
         <div className='search-container'>
-          <input type="text" value={searchText} onChange={handleSearch} className='search-input' />
-          <ul>
-            {items.map((item) => (
-              <li key={item.id}> Amogus </li>
-            ))}
-          </ul>
+          <input type="text" onChange={onSearch} className='search-input' />
         </div>
       );
 };
