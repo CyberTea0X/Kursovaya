@@ -266,6 +266,47 @@ pub(crate) async fn user_profile_service(
     })))
 }
 
+#[post("/profiles")] // <- define path parameters
+pub(crate) async fn user_profiles_service(
+    db_config: web::Data<DBconfig>,
+) -> ActxResult<impl Responder> {
+    let (status, fail_reason, user) = (|| {
+        let mut connection = match database::try_connect(&db_config, 3) {
+            Ok(conn) => conn,
+            Err(_) => {
+                println!("Failed to connect to database");
+                return (
+                    "FAILED".to_owned(),
+                    "Failed to connect to database".to_owned(),
+                    Vec::new(),
+                );
+            }
+        };
+        let users = match database::get_all_users(&mut connection) {
+            Ok(users) => {
+                users.into_iter().map(|mut user| {
+                        hide_attributes(&mut user, &["email", "password"]);
+                        user
+                    }
+                ).collect()
+            }
+            _ => {
+                return (
+                    "FAILED".to_owned(),
+                    "Database error".to_owned(),
+                    Vec::new(),
+                )
+            }
+        };
+        return ("OK".to_owned(), "".to_owned(), users);
+    })();
+    Ok(web::Json(json!({
+        "status": status,
+        "reason": fail_reason,
+        "users": user,
+    })))
+}
+
 #[post("/visit/{visitor_email}/{visitor_password}/{id}")] // <- define path parameters
 pub(crate) async fn visit_user_service(
     path: web::Path<(String, String, u32)>,

@@ -87,6 +87,7 @@ async fn main() -> std::io::Result<()> {
                     .service(user::visit_user_service)
                     .service(user::edit_user_tags_service)
                     .service(user::users_tags_service)
+                    .service(user::user_profiles_service)
                     .service(user::user_tags_service),
             )
             .service(
