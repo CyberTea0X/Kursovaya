@@ -1,35 +1,18 @@
-import React, { useState } from 'react';
-import { Link, Route, Routes } from 'react-router-dom';
-import { ChatHeader } from './Header';
-import { ChatList } from './ChatList';
-import { ChatWindow } from './ChatWindow';
-import './styles/Messenger.css';
+import React, { useState, useEffect } from 'react';
+import { Searchbar } from './Seachbar';
+import { Chat } from '../../types';
+
+const chats = [
+    new Chat(1, 1, 2, '2022-01-01'),
+    new Chat(2, 1, 3, '2022-01-02'),
+    new Chat(3, 2, 3, '2022-01-03'),
+];
 
 const Messenger = () => {
-  const [currentChat, setCurrentChat] = useState(null);
+    return (
+    <Searchbar chats={chats}></Searchbar>
+    )
 
-  const handleChatClick = (chat) => {
-    setCurrentChat(chat);
-  };
-
-  return (
-    <div className="messenger">
-      <ChatHeader />
-      <div className="messenger-content">
-        <ChatList onChatClick={handleChatClick} />
-        <div className="chat-window">
-          <Routes>
-            <Route path="/" element={<h2>Welcome to Messenger!</h2>} />
-            <Route path="/chat/:chatId" element={<ChatWindow chat={currentChat} />} />
-          </Routes>
-        </div>
-      </div>
-      <div className="messenger-footer">
-        <input type="text" placeholder="Type a message..." />
-        <button>Send</button>
-      </div>
-    </div>
-  );
-};
+}
 
 export { Messenger };
