@@ -82,6 +82,37 @@ class Image {
   }
 }
 
+class Message {
+  constructor(id=null, chat_id=null, content=null, owner_id=null, owner_name=null, send_time=null, is_read=null) {
+    this.id = id;
+    this.chat_id = chat_id;
+    this.content = content;
+    this.owner_id = owner_id;
+    this.owner_name = owner_name;
+    this.send_time = send_time;
+    this.is_read = is_read;
+  }
+
+  static fromJson(json) {
+    const { id, chat_id, content, owner_id, owner_name, send_time, is_read } = json;
+    return new Message(id, chat_id, content, owner_id, owner_name, new Date(send_time), is_read);
+  }
+
+}
+
+class Chat {
+  constructor(id=null, userid1=null, userid2=null, created_at=null) {
+    this.id = id;
+    this.userid1 = userid1;
+    this.userid2 = userid2;
+    this.created_at = created_at;
+  }
+
+  static fromJson(json) {
+    const { id, userid1, userid2, created_at } = json;
+    return new Chat(id, userid1, userid2, new Date(created_at));
+  }
+}
 
 
-export {User, Image};
+export {User, Image, Message, Chat};
