@@ -6,12 +6,14 @@ import { User } from '../../types';
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import { getUserProfile, getTagsArray, getImages, getAvatarImage} from '../../server/requests_handler';
+import { create_chat } from '../../server/requests';
 import { visit } from '../../server/requests';
 import { useParams } from 'react-router-dom';
 import { Gallery } from './Gallery';
 
 
 const Profile = () => {
+  const [email, pw] = [Cookies.get("email").toLowerCase(), Cookies.get("password")];
   const [user, setUser] = useState(User.emptyUser());
   const [avatar, setAvatar] = useState(UnknownPerson);
   const [isOwner, setIsOwner] = useState(false);
@@ -38,6 +40,10 @@ const Profile = () => {
           }
           alert(error.message);
       }
+  }
+
+  const handleMessageUser = () => {
+    create_chat(email, pw, user.id);
   }
 
   const retrieveUserTags = async () => {
@@ -72,8 +78,6 @@ const Profile = () => {
       setIsOwner(true)
     }
     else {
-      let email = Cookies.get("email").toLowerCase();
-      let pw = Cookies.get("password");
       visit(email, pw, user.id);
     }
     loadAvatar()
@@ -90,9 +94,9 @@ const Profile = () => {
             <b> Рейтинг: </b>
             <div> {user.rating} </div>
           </div>
-          <div className='message-user'>
+          <button className='message-user' onClick={handleMessageUser}>
             Сообщение
-          </div>
+          </button>
         </div>
         <div className="additional-info">
           <div className='user-fullname'>
