@@ -101,16 +101,22 @@ class Message {
 }
 
 class Chat {
-  constructor(id=null, userid1=null, userid2=null, created_at=null) {
+  constructor(id=null, userid1=null, userid2=null, created_at=null, user2=null) {
     this.id = id;
     this.userid1 = userid1;
     this.userid2 = userid2;
     this.created_at = created_at;
+    this.user2 = user2;
   }
 
   static fromJson(json) {
     const { id, userid1, userid2, created_at } = json;
     return new Chat(id, userid1, userid2, new Date(created_at));
+  }
+
+  withUser2(user2) {
+    this.user2 = user2;
+    return this;
   }
 }
 
