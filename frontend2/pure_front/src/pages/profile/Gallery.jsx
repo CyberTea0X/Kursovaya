@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Masonry, { ResponsiveMasonry } from 'react-responsive-masonry';
 import { FaPlusSquare } from 'react-icons/fa';
 import { ImageView } from './ImageDisplay';
@@ -18,16 +18,16 @@ const Gallery = ({user, isOwner}) => {
     setData({ img, i });
   };
 
-  const getGallery = async () => {
+  const getGallery = useCallback( async () => {
     setImages(await getImages(user.id));
-  }
+  }, [user.id])
 
   useEffect(() => {
-    if (user.id == undefined) {
+    if (user.id === undefined) {
       return;
     }
     getGallery();
-  }, [user]);
+  }, [user, getGallery]);
 
   // function to handle image navigation
   const imgAction = (action) => {
@@ -47,7 +47,7 @@ const Gallery = ({user, isOwner}) => {
 
   // function to handle image upload
   const handleImageUpload = (e) => {
-    if (e.target.files.length == 0) {
+    if (e.target.files.length === 0) {
       return;
     }
     const file = e.target.files[0];

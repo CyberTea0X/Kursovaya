@@ -74,7 +74,7 @@ const Signup = () => {
     try {
       await registerUser(values.username, values.email.toLowerCase(), values.password)
       .then(data => {
-          if (data["status"] != "OK") {
+          if (data["status"] !== "OK") {
             throw Error(data["reason"]);
         }
       });

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import "./settings.css"
 import UnknownPerson from "../../img/Unknown_person.jpg";
 import { editUser } from "../../server/requests";
@@ -16,12 +16,19 @@ const Settings = () => {
 
 
     let navigate = useNavigate(); 
-    const routeChange = (route) =>{ 
+    const routeChange = useCallback((route) =>{ 
         let path = `/${route}`; 
         navigate(path);
-    }
+    }, [navigate])
+
+    const loadAvatar = useCallback(async () => {
+        let logo_img = await getAvatarImage(user.id);
+        if (logo_img !== undefined) {
+          setAvatar(logo_img.url);
+        }
+    }, [user.id])
       
-    const getAccount = async () => {
+    const getAccount = useCallback( async () => {
         try {
             let email = Cookies.get("email").toLowerCase();
             let user_ = await getUserProfile(email);
@@ -35,14 +42,7 @@ const Settings = () => {
             }
             alert(error.message);
         }
-    }
-
-    const loadAvatar = async () => {
-        let logo_img = await getAvatarImage(user.id);
-        if (logo_img !== undefined) {
-          setAvatar(logo_img.url);
-        }
-      }
+    }, [routeChange])
 
     const retrieveUserTags = async () => {
         try {
@@ -58,7 +58,7 @@ const Settings = () => {
     const handleDeleteProfile = async () => {
         let really_delete = prompt(
             "Вы собираетесь удалить свой профиль! Введите свой логин для подтверждения!"
-            ) == user.username;
+            ) === user.username;
         if (!really_delete) {
             alert("Неверно введён логин, надеемся, вы передумали");
             return;
@@ -69,7 +69,7 @@ const Settings = () => {
         Cookies.remove("email", { path: '/' });
         Cookies.remove("password", { path: '/' });
         let data = await delete_profile(email, pw);
-        if (data["status"] != "OK") {
+        if (data["status"] !== "OK") {
             alert(data["reason"])
             return;
         }
@@ -97,7 +97,7 @@ const Settings = () => {
                     }
                 }
                 })
-            if (tags.length != 0) {
+            if (tags.length !== 0) {
                 await editTagsFromStr(email, password, tags);
             }
         }
@@ -119,7 +119,7 @@ const Settings = () => {
     }
     useEffect(() => {
         getAccount();
-    }, []);
+    }, [getAccount]);
 
     useEffect(() => {
         if (user.email === undefined) {
@@ -127,7 +127,7 @@ const Settings = () => {
         }
         loadAvatar();
         retrieveUserTags();
-    }, [user])
+    }, [user, loadAvatar])
     return (
         <div className="account">
             

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Searchbar } from './Searchbar';
-import { Chat } from '../../types';
 import { getUserChats } from '../../server/requests_handler';
 import Cookies from 'js-cookie';
 import { Chats } from './Chats';
@@ -13,7 +12,7 @@ const Messenger = () => {
 
     useEffect(() => {
         getUserChats(email, password).then((chats) => setChats(chats));
-    }, [])
+    }, [email, password])
 
     const handleSearch = (event) => {
         if (chats === undefined) {

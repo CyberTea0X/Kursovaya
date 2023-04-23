@@ -16,7 +16,7 @@ const Avatar = ({user_id, onClick}) => {
 
     return (
       <div onClick={onClick} className='avatar-container'>
-        <img className='avatar-image' src={(avatar && avatar.url) || UnknownPerson}></img>
+        <img className='avatar-image' alt="" src={(avatar !== undefined) ? avatar.url: UnknownPerson}></img>
       </div>
       );
 };

@@ -1,10 +1,9 @@
 import './navbar.css';
 import '../index.css';
-import Logo from '../pages/img/751347.png';
+import Logo from '../img/751347.png';
 import { Link } from 'react-router-dom';
 import Search from './Search2.png';
 import Chat from './chat2.png'
-import Cookies from 'js-cookie';
 
 
 
@@ -15,7 +14,7 @@ function Header() {
     <div className='navbar'>
 
       <div className="leftside">
-         <img src={Logo} style={{width: '60px', margin: '15px', float:'left'}} />  
+         <img alt="" src={Logo} style={{width: '60px', margin: '15px', float:'left'}} />  
          <p className='navbar-p'>DeltaArt</p>
       </div>
 
@@ -23,9 +22,9 @@ function Header() {
         
 
         <Link to="/">Главная</Link>
-        <Link to="/Search"><img src={Search} style={{width: '45px', margin: '15px', float:'left'}} /></Link>
+        <Link to="/Search"><img alt="" src={Search} style={{width: '45px', margin: '15px', float:'left'}} /></Link>
         <Link to="/Trends">Популярное</Link> 
-        <Link to="/Messenger"><img src={Chat} style={{width: '40px', margin: '15px', float:'left'}} /></Link>       
+        <Link to="/Messenger"><img alt="" src={Chat} style={{width: '40px', margin: '15px', float:'left'}} /></Link>       
         <Link to="/Profile/me">Профиль</Link>
       </div>
     </div>

@@ -1,6 +1,6 @@
 import { FaPencilAlt, FaTrashAlt, FaEllipsisH } from 'react-icons/fa';
 import './ImageDisplay.css';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { edit_image_data, delete_image, set_as_avatar } from '../../server/requests';
 import Cookies from 'js-cookie';
 import { Menu, useContextMenu, Item } from 'react-contexify';
@@ -23,17 +23,17 @@ const ImageView = ({ img, onClose, onPrevious, onNext, isOwner}) => {
     });
   }
 
-  const handlePrevious = () => {
+  const handlePrevious = useCallback( () => {
     if (onPrevious) {
       onPrevious();
     }
-  };
+  }, [onPrevious]);
 
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
     if (onNext) {
       onNext();
     }
-  };
+  }, [onNext]);
 
   const handleSave = () => {
     setIsEditing(false);
@@ -61,39 +61,37 @@ const ImageView = ({ img, onClose, onPrevious, onNext, isOwner}) => {
   const handleSetAvatar = async () => {
     const email = Cookies.get("email").toLowerCase();
     const pw = Cookies.get("password");
-    const id = Cookies.get("id");
     const data = await set_as_avatar(email, pw, img.id);
     console.log(data);
   }    
 
-  let handleKeyDown = {};
-
-  useEffect(() => {
-    handleKeyDown = (event) => {
-      if (isEditing === false) {
-        if (event.key === 'Escape') {
-          onClose();
-        } else if (event.key === 'ArrowLeft' || event.keyCode === 65) {
-          handlePrevious();
-        } else if (event.key === 'ArrowRight' || event.keyCode === 68) {
-          handleNext();
-        }
+  let handleKeyDown = useCallback((event) => {
+    if (isEditing === false) {
+      if (event.key === 'Escape') {
+        onClose();
+      } else if (event.key === 'ArrowLeft' || event.keyCode === 65) {
+        handlePrevious();
+      } else if (event.key === 'ArrowRight' || event.keyCode === 68) {
+        handleNext();
       }
-    };
+    }
+  }, [handleNext, handlePrevious, isEditing, onClose]);
+
+  useEffect(() => {
   
     document.addEventListener('keydown', handleKeyDown);
   
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isEditing, onClose, handlePrevious, handleNext]);
+  }, [isEditing, onClose, handlePrevious, handleNext, handleKeyDown]);
 
   useEffect(() => {
     document.addEventListener('keydown', handleKeyDown);
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [onClose, onPrevious, onNext]);
+  }, [onClose, onPrevious, onNext, handleKeyDown]);
 
   useEffect(() => {
     setDescription(img.about);
@@ -106,7 +104,7 @@ const ImageView = ({ img, onClose, onPrevious, onNext, isOwner}) => {
         X
       </button>
       <div className="image-container">
-        <img src={img.url} className="image" />
+        <img alt="" src={img.url} className="image" />
         {isOwner &&
         (
         <div className='image-toolbar'>

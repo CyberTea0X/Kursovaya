@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import "./styles/chats.css";
 import { Avatar } from '../../sharedComponents/Avatar';
 import { useNavigate } from 'react-router-dom';

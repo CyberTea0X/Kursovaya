@@ -23,15 +23,6 @@ const Table = ({ users, tags }) => {
     }
   }
 
-  const loadAvatars = async (users) => {
-    let new_avatars = {}
-    await Promise.all(users.map(async (user) => {
-      let avatar = await loadAvatar(user.id);
-      new_avatars[user.id] = avatar;
-    }))
-    setAvatars(new_avatars);
-  }
-
   useEffect(() => {
     if (tags.length > 0) {
       setTagsMap(new Map(tags.map(([id, tags]) => [id, tags])));
@@ -39,6 +30,14 @@ const Table = ({ users, tags }) => {
   }, [tags]);
 
   useEffect(() => {
+    const loadAvatars = async (users) => {
+      let new_avatars = {}
+      await Promise.all(users.map(async (user) => {
+        let avatar = await loadAvatar(user.id);
+        new_avatars[user.id] = avatar;
+      }))
+      setAvatars(new_avatars);
+    }
     if (users !== undefined) {
       loadAvatars(users);
     }
@@ -57,6 +56,7 @@ const Table = ({ users, tags }) => {
             <td>
               <img 
                 src={avatars[item.id] || UnknownPerson} 
+                alt=""
                 style={{
                   width: '50px',
                   height: '50px',

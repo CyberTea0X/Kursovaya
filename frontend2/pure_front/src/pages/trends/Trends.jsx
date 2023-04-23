@@ -63,7 +63,7 @@ const Trends = () => {
                     return(
                         <div className="pics" key={index} >
                             
-                            <img src ={item.imgSrc} style={{width: '100%', borderRadius: '30px', border: '2px solid black'}}/>
+                            <img alt="" src ={item.imgSrc} style={{width: '100%', borderRadius: '30px', border: '2px solid black'}}/>
                             <Link to="/gallery" className='trends-link'>{item.name}</Link>
                              
                             

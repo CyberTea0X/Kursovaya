@@ -1,6 +1,5 @@
 
-import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useEffect, useCallback } from 'react'
 import './search.css'
 import { searchPopular, searchLogin, searchText, searchTags } from "../../server/requests";
 import { User as UserProfile} from "../../types";
@@ -14,9 +13,8 @@ const SearchPage = () => {
     const [tags, setTags] = useState([]);
     const [searchBy, setSearchBy] = useState("popular");
 
-    const keys = ["first_name", "last_name", "email"]
 
-      const search = async () => {
+      const search = useCallback(async () => {
           let users_;
           switch (searchBy) {
             case "text":
@@ -40,29 +38,32 @@ const SearchPage = () => {
                     users_ = data["items"]
                 });
                 break;
+            default:
+                break;
           }
           users_ = users_.map(function(user) {
               return UserProfile.fromJson(user);
           });
           setUsers(users_);
           
-      };
-      const get_tags = async () => {
+      }, [query, searchBy]);
+
+    const get_tags = useCallback(async () => {
         let user_ids = users.map(user => user.id);
         let range = `${Math.min(...user_ids)}..${Math.max(...user_ids)}`
         setTags(await getManyTagsArray(range));
 
-    };
+    }, [users]);
 
     useEffect(() => {
         search();
-    }, []); // вызываем search() только один раз при загрузке компонента
+    }, [search]); // вызываем search() только один раз при загрузке компонента
 
     useEffect(() => {
         if (users.length > 0) {
           get_tags();
         }
-      }, [users]);
+      }, [users, get_tags]);
 
     const handleSearchByChange = (event) => {
         setSearchBy(event.target.value);

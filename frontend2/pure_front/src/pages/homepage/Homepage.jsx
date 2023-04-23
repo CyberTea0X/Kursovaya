@@ -21,10 +21,10 @@ const Homepage = () => {
       <div className='heading'>
         <h1 className='home-title2'>Добро пожаловать на платформу <br /> от художников для художников</h1>
         
-          <img className='heading-pics' src={Cat} />
-          <img className='heading-pics2' src={CloudDog} />
-          <img className='heading-pics3' src={Corgi} />
-          <img className='heading-pics4' src={GoodBoy} />
+          <img alt="" className='heading-pics' src={Cat} />
+          <img alt="" className='heading-pics2' src={CloudDog} />
+          <img alt="" className='heading-pics3' src={Corgi} />
+          <img alt="" className='heading-pics4' src={GoodBoy} />
         
         
 
@@ -34,17 +34,17 @@ const Homepage = () => {
 
         <h1 className='home-title'>Местный Райан Гослинг <br /> встретит всех с <br /> чашечкой виртуального чая <br /> и лисичками</h1>
         <p className='text'>Для наибольшего комфорта <br /> пользователей <br /> <Link to="https://vk.com/tolya77m">пишите</Link> свои предложения <br /> по улучшению сайта <br/> или внедрению новых фишек.</p>
-        <img className='home-tea' src={Tea} />
-        <img className='home-gosling' src={Gosling} />        
-        <img className='home-fox' src={Fox} />
+        <img alt="" className='home-tea' src={Tea} />
+        <img alt="" className='home-gosling' src={Gosling} />        
+        <img alt="" className='home-fox' src={Fox} />
 
       </div>
 
       <div className='functional'>
         <h1 className='home-title2'>Используйте функционал по полной!</h1>
-        <Link  to="/trends"><img className='func-img1' src={Popular}/></Link>
-        <Link to="/Chat"><img className='func-img2' src={Chat}/></Link>
-        <Link to="/account"><img className='func-img3' src={Profile}/></Link>
+        <Link  to="/trends"><img alt="" className='func-img1' src={Popular}/></Link>
+        <Link to="/Chat"><img alt="" className='func-img2' src={Chat}/></Link>
+        <Link to="/account"><img alt="" className='func-img3' src={Profile}/></Link>
         <p className='text2' style={{	left: '310px', top:'75px'}}>Загляните на вкладку "Популярное" и найдите актуального для себя художника</p>
         <p className='text2' style={{	left: '310px', top:'270px'}}>Общайтесь со своими заказчиками или с теми, у кого заказали картину</p>
         <p className='text2' style={{	left: '310px', top:'444px'}}>Настраивайте свой профиль, выбирайте теги,<br/> под которыми вы рисуете, и Вас обязательно заметят</p>

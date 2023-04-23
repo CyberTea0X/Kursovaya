@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import './profile.css';
 import { FaCog } from 'react-icons/fa';
 import UnknownPerson from "../../img/Unknown_person.jpg";
 import { User } from '../../types';
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
-import { getUserProfile, getTagsArray, getImages, getAvatarImage} from '../../server/requests_handler';
+import { getUserProfile, getTagsArray, getAvatarImage} from '../../server/requests_handler';
 import { create_chat } from '../../server/requests';
 import { visit } from '../../server/requests';
 import { useParams } from 'react-router-dom';
@@ -21,15 +21,15 @@ const Profile = () => {
   const { userId } = useParams();
 
   let navigate = useNavigate(); 
-  const routeChange = (route) =>{ 
+  const routeChange = useCallback((route) =>{ 
       let path = `/${route}`; 
       navigate(path);
-  }
+  }, [navigate])
 
-  const getAccount = async () => {
+  const getAccount = useCallback( async () => {
     let userIdOrEmail;
       try {
-        userIdOrEmail = (userId == "me") ? Cookies.get("email").toLowerCase(): userId;
+        userIdOrEmail = (userId === "me") ? Cookies.get("email").toLowerCase(): userId;
           let user_ = await getUserProfile(userIdOrEmail);
           setUser(user_);
       }
@@ -40,13 +40,13 @@ const Profile = () => {
           }
           alert(error.message);
       }
-  }
+  }, [routeChange, userId]);
 
   const handleMessageUser = () => {
     create_chat(email, pw, user.id);
   }
 
-  const retrieveUserTags = async () => {
+  const retrieveUserTags = useCallback( async () => {
     try {
         let tags_arr = await getTagsArray(user.id);
         if (tags_arr.length > 0) {
@@ -56,32 +56,32 @@ const Profile = () => {
     catch (error) {
         alert(error.message);
     }
-  }
+  }, [user.id])
 
-  const loadAvatar = async () => {
+  const loadAvatar = useCallback(async () => {
     let logo_img = await getAvatarImage(user.id);
     if (logo_img !== undefined) {
       setAvatar(logo_img.url);
     }
-  }
+  }, [user.id]);
 
   useEffect(() => {
     getAccount();
-  }, []);
+  }, [getAccount]);
 
   useEffect(() => {
-    if (user.id == undefined) {
+    if (user.id === undefined) {
       return;
     }
     retrieveUserTags()
-    if (user.id == Cookies.get("id")) {
+    if (user.id === Cookies.get("id")) {
       setIsOwner(true)
     }
     else {
       visit(email, pw, user.id);
     }
     loadAvatar()
-  }, [user]);
+  }, [user, email, loadAvatar, pw, retrieveUserTags]);
 
   // render the profile UI
   return (
