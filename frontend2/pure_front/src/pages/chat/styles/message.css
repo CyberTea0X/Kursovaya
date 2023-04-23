@@ -1,0 +1,19 @@
+/* стили для отправленных сообщений */
+.message_sent {
+    background-color: #0084ff;
+    color: #fff;
+    border-radius: 10px;
+    padding: 10px;
+    margin-bottom: 10px;
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
+}
+    
+    /* стили для полученных сообщений */
+.message_received {
+    background-color: #fff;
+    color: #333;
+    border-radius: 10px;
+    padding: 10px;
+    margin-bottom: 10px;
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
+}

@@ -3,8 +3,7 @@ import "./styles/message_input.css";
 import { FaPaperPlane } from 'react-icons/fa';
 
 
-let MessageInput = ({onSubmit}) => {
-    const [message, setMessage] = useState();
+let MessageInput = ({setMessage, message, onSubmit}) => {
 
     return (
         <div className="chat-message-input-container">
@@ -16,7 +15,7 @@ let MessageInput = ({onSubmit}) => {
                 value={message} 
                 onChange={(event) => setMessage(event.target.value)} 
             />
-            <button className="message-button-send" onClick={onSubmit}>
+            <button className="message-button-send" type="submit">
             <FaPaperPlane />
             </button>
             </form>
