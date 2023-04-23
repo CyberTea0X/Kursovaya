@@ -15,7 +15,6 @@ let Chat = () => {
     const [user1, setUser1] = useState();
     const [user2, setUser2] = useState();
     const [messages, setMessages] = useState([]);
-    const [email, password] = [Cookies.get("email").toLowerCase(), Cookies.get("password")];
     const [message, setMessage] = useState();
     const msgList = useRef(null);
 
@@ -37,10 +36,21 @@ let Chat = () => {
         e.preventDefault();
         msgList.current?.scrollIntoView({ behavior: "smooth" });
         setMessage("");
+        let email = Cookies.get("email").toLowerCase();
+        let password = Cookies.get("passwprd");
         send_message(email, password, userId2, message).then(
             getChatMessages(email, password, userId2).then(messages => setMessages(messages))
         )
     }
+
+    useEffect(() => {
+        let email = Cookies.get("email");
+        let password = Cookies.get("password");
+        if (email === undefined) {
+            routeChange("./Login");
+            return;
+        }
+    }, [])
 
     useEffect(() => {
         getUserProfile(userId1).then(user => setUser1(user))
@@ -48,8 +58,10 @@ let Chat = () => {
     }, [userId1, userId2]);
 
     useEffect(() => {
+        let email = Cookies.get("email").toLowerCase()
+        let password = Cookies.get("password");
         getChatMessages(email, password, userId2).then(messages => setMessages(messages))
-    }, [userId2, email, password]);
+    }, [userId2]);
 
     return (
         <div className="chat-container">

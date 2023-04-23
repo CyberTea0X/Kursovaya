@@ -109,6 +109,7 @@ async fn main() -> std::io::Result<()> {
                     .service(chat::create_chat_service)
                     .service(chat::delete_chat_service)
                     .service(chat::get_user_chats_service)
+                    .service(chat::find_chat_service)
                     .service(chat::is_chat_exists_service),
             )
             .service(

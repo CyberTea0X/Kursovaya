@@ -1,16 +1,10 @@
 import { userProfile, get_tags, get_many_tags, edit_tags, gallery, ip, port, get_avatar, get_image_data, all_user_profiles,
-         get_user_chats, get_chat_messages, read_all_chat_messages } from "./requests.js"
+         get_user_chats, get_chat_messages } from "./requests.js"
 import { User, Image, Chat, Message } from "../types.js"
 
 
-async function getChatMessages(email, password, user2_id, mark_as_read=true) {
-    if (mark_as_read) {
-        let data = await read_all_chat_messages(email, password, user2_id);
-        if (data.status !== "OK") {
-            console.error(Error(data.reason));
-        }
-    }
-    let data = await get_chat_messages(email, password, user2_id);
+async function getChatMessages(email, password, chat_id) {
+    let data = await get_chat_messages(email, password, chat_id);
     if (data.status !== "OK") {
         throw Error(data.reason);
     }
@@ -18,17 +12,23 @@ async function getChatMessages(email, password, user2_id, mark_as_read=true) {
 }
 
 
-async function getUserChats(email, password, include_user2=true) {
+async function getUserChats(email, password, include_user1=true, include_user2=true) {
     let data = await get_user_chats(email, password);
     if (data.status !== "OK") {
         throw Error(data.reason);
     }
     let chats = data["chats"].map((chat) => Chat.fromJson(chat));
-    if (!include_user2) {
-        return chats;
+    if (!include_user1 && !include_user2) {
+        return;
     }
     let users_map = new Map( (await getAllUserProfiles()).map((user) => [user.id, user]));
-    return chats.map((chat) => chat.withUser2(users_map.get(chat.userid2)))
+    if (include_user1) {
+        chats = chats.map((chat) => chat.withUser1(users_map.get(chat.userid1)))
+    }
+    if (include_user2) {
+        chats = chats.map((chat) => chat.withUser2(users_map.get(chat.userid2)))
+    }
+    return chats;
 }
 
 

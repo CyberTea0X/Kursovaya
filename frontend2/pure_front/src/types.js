@@ -101,11 +101,12 @@ class Message {
 }
 
 class Chat {
-  constructor(id=null, userid1=null, userid2=null, created_at=null, user2=null) {
+  constructor(id=null, userid1=null, userid2=null, created_at=null, user1=null, user2=null) {
     this.id = id;
     this.userid1 = userid1;
     this.userid2 = userid2;
     this.created_at = created_at;
+    this.user1 = user1;
     this.user2 = user2;
   }
 
@@ -115,6 +116,17 @@ class Chat {
   }
 
   withUser2(user2) {
+    this.user2 = user2;
+    return this;
+  }
+
+  withUser1(user1) {
+    this.user1 = user1;
+    return this;
+  }
+
+  withUsers(user1, user2) {
+    this.user1 = user1;
     this.user2 = user2;
     return this;
   }

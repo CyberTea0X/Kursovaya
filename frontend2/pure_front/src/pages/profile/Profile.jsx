@@ -13,7 +13,7 @@ import { Gallery } from './Gallery';
 
 
 const Profile = () => {
-  const [email, pw] = [Cookies.get("email").toLowerCase(), Cookies.get("password")];
+  const [email, pw] = [Cookies.get("email")?.toLowerCase(), Cookies.get("password")];
   const [user, setUser] = useState(User.emptyUser());
   const [avatar, setAvatar] = useState(UnknownPerson);
   const [isOwner, setIsOwner] = useState(false);
@@ -74,7 +74,7 @@ const Profile = () => {
       return;
     }
     retrieveUserTags()
-    if (user.id === Cookies.get("id")) {
+    if (user.id === parseInt(Cookies.get("id"))) {
       setIsOwner(true)
     }
     else {

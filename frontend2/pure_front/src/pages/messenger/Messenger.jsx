@@ -1,18 +1,30 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Searchbar } from './Searchbar';
 import { getUserChats } from '../../server/requests_handler';
 import Cookies from 'js-cookie';
 import { Chats } from './Chats';
 import { Header } from './Header';
 import Fuse from 'fuse.js';
+import { useNavigate } from 'react-router-dom';
 
 const Messenger = () => {
     const [chats, setChats] = useState([]);
-    const [email, password] = [Cookies.get("email").toLowerCase(), Cookies.get("password")]
+
+    let navigate = useNavigate(); 
+    const routeChange = useCallback((route) =>{ 
+        let path = `/${route}`; 
+        navigate(path);
+    }, [navigate])
 
     useEffect(() => {
+        let email = Cookies.get("email").toLowerCase()
+        let password = Cookies.get("password");
+        if (email === undefined) {
+            routeChange("./Login");
+            return;
+        }
         getUserChats(email, password).then((chats) => setChats(chats));
-    }, [email, password])
+    }, [])
 
     const handleSearch = (event) => {
         if (chats === undefined) {
@@ -33,7 +45,7 @@ const Messenger = () => {
         <div>
             <Header> Мессенджер </Header>
             <Searchbar onSearch={handleSearch} />
-            <Chats chats={chats}/>
+            <Chats chats={chats} current_user={Cookies.get("id")}/>
         </div>
     )
 
