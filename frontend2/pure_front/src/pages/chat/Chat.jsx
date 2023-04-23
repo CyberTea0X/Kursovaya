@@ -100,7 +100,7 @@ let Chat = () => {
     return (
         <div className="chat-container">
             <ChatHeader user2={other} onBack={goToMessenger} onAvatarClick={() => goToProfile(other.id)}> </ChatHeader>
-            <MessageList ref={msgList} messages={messages} />
+            <MessageList ref={msgList} messages={messages} current_user={current} />
             <MessageInput onSubmit={handleSendMessage} message={message} setMessage={setMessage} />
         </div>
     )
