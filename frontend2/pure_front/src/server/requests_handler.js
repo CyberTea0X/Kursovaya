@@ -1,10 +1,19 @@
 import { userProfile, get_tags, get_many_tags, edit_tags, gallery, ip, port, get_avatar, get_image_data, all_user_profiles,
-         get_user_chats, get_chat_messages } from "./requests.js"
+         get_user_chats, get_chat_messages, find_chat } from "./requests.js"
 import { User, Image, Chat, Message } from "../types.js"
 
 
-async function getChatMessages(email, password, chat_id) {
-    let data = await get_chat_messages(email, password, chat_id);
+async function findChat(email, password, user2_id) {
+    let data = await find_chat(email, password, user2_id);
+    if (data.status !== "OK") {
+        throw Error(data.reason);
+    }
+    return Chat.fromJson(data["chat"]);
+}
+
+
+async function getChatMessages(email, password, user2_id) {
+    let data = await get_chat_messages(email, password, user2_id);
     if (data.status !== "OK") {
         throw Error(data.reason);
     }
@@ -132,4 +141,4 @@ async function editTagsFromStr(email, password, newtags) {
 }
 
 export {getUserProfile, getTagsArray, getManyTagsArray, editTagsFromStr, getImages, getAvatarImage, getAllUserProfiles, getUserChats,
-        getChatMessages}
+        getChatMessages, findChat}

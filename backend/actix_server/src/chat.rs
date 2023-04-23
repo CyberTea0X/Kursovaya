@@ -30,19 +30,19 @@ pub async fn get_user_chats_service(
     })))
 }
 
-#[post("/delete/{email1}/{password}/{id}")]
+#[post("/delete/{email1}/{password}/{user_id}")]
 pub async fn delete_chat_service(
     path: web::Path<(String, String, u32)>,
     db_config: web::Data<DBconfig>,
 ) -> ActxResult<impl Responder> {
     let (status, fail_reason) = (|| {
-        let (email, password, id) = path.into_inner();
+        let (email, password, user_id) = path.into_inner();
         let (user1, mut connection) = match auth_get_user_connect(&email, &password, &db_config, 3)
         {
             Ok((user, connection)) => (user, connection),
             Err(err) => return ("FAILED".to_owned(), err.to_string()),
         };
-        let user2 = match database::find_user_by_id(&mut connection, id) {
+        let user2 = match database::find_user_by_id(&mut connection, user_id) {
             Some(user) => user,
             None => return ("FAILED".to_owned(), "User2 does not exist".to_owned()),
         };
@@ -60,19 +60,19 @@ pub async fn delete_chat_service(
     })))
 }
 
-#[post("/create/{email1}/{password}/{id}")]
+#[post("/create/{email1}/{password}/{user_id}")]
 pub async fn create_chat_service(
     path: web::Path<(String, String, u32)>,
     db_config: web::Data<DBconfig>,
 ) -> ActxResult<impl Responder> {
     let (status, fail_reason) = (|| {
-        let (email, password, id) = path.into_inner();
+        let (email, password, user_id) = path.into_inner();
         let (user1, mut connection) = match auth_get_user_connect(&email, &password, &db_config, 3)
         {
             Ok((user, connection)) => (user, connection),
             Err(err) => return ("FAILED".to_owned(), err.to_string()),
         };
-        let user2 = match database::find_user_by_id(&mut connection, id) {
+        let user2 = match database::find_user_by_id(&mut connection, user_id) {
             Some(user) => user,
             None => return ("FAILED".to_owned(), "User2 does not exist".to_owned()),
         };
@@ -90,19 +90,19 @@ pub async fn create_chat_service(
     })))
 }
 
-#[post("/exists/{email1}/{password}/{id}")]
+#[post("/exists/{email1}/{password}/{user_id}")]
 pub async fn is_chat_exists_service(
     path: web::Path<(String, String, u32)>,
     db_config: web::Data<DBconfig>,
 ) -> ActxResult<impl Responder> {
     let (status, fail_reason) = (|| {
-        let (email, password, id) = path.into_inner();
+        let (email, password, user_id) = path.into_inner();
         let (user1, mut connection) = match auth_get_user_connect(&email, &password, &db_config, 3)
         {
             Ok((user, connection)) => (user, connection),
             Err(err) => return ("FAILED".to_owned(), err.to_string()),
         };
-        let user2 = match database::find_user_by_id(&mut connection, id) {
+        let user2 = match database::find_user_by_id(&mut connection, user_id) {
             Some(user) => user,
             None => return ("FAILED".to_owned(), "User2 does not exist".to_owned()),
         };
@@ -117,19 +117,19 @@ pub async fn is_chat_exists_service(
     })))
 }
 
-#[post("/find/{email1}/{password}/{id}")]
+#[post("/find/{email1}/{password}/{user_id}")]
 pub async fn find_chat_service(
     path: web::Path<(String, String, u32)>,
     db_config: web::Data<DBconfig>,
 ) -> ActxResult<impl Responder> {
     let (status, fail_reason, chat) = (|| {
-        let (email, password, id) = path.into_inner();
+        let (email, password, user_id) = path.into_inner();
         let (user1, mut connection) = match auth_get_user_connect(&email, &password, &db_config, 3)
         {
             Ok((user, connection)) => (user, connection),
             Err(err) => return ("FAILED".to_owned(), err.to_string(), None),
         };
-        let user2 = match database::find_user_by_id(&mut connection, id) {
+        let user2 = match database::find_user_by_id(&mut connection, user_id) {
             Some(user) => user,
             None => return ("FAILED".to_owned(), "User2 does not exist".to_owned(), None),
         };

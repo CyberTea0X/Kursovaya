@@ -13,6 +13,7 @@ const ChatButton = ({chat, current_user}) => {
     }
 
     const handleChatClick = (chat) => {
+      console.log(chat);
         goToChat(chat.userid1, chat.userid2)
     }
 

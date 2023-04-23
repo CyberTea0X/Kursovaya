@@ -14,8 +14,10 @@ let Chat = () => {
     const { userId1, userId2 } = useParams();
     const [user1, setUser1] = useState();
     const [user2, setUser2] = useState();
+    const [current, setCurrent] = useState();
+    const [other, setOther] = useState();
     const [messages, setMessages] = useState([]);
-    const [message, setMessage] = useState();
+    const [message, setMessage] = useState("");
     const msgList = useRef(null);
 
     let navigate = useNavigate(); 
@@ -37,15 +39,23 @@ let Chat = () => {
         msgList.current?.scrollIntoView({ behavior: "smooth" });
         setMessage("");
         let email = Cookies.get("email").toLowerCase();
-        let password = Cookies.get("passwprd");
-        send_message(email, password, userId2, message).then(
-            getChatMessages(email, password, userId2).then(messages => setMessages(messages))
+        let password = Cookies.get("password");
+        send_message(email, password, other.id, message).then(
+            getChatMessages(email, password, other.id).then(messages => setMessages(messages))
         )
+    }
+
+    const recognizeUser = (user) => {
+        if (parseInt(user.id) === parseInt(Cookies.get("id"))) {
+            setCurrent(user);
+        }
+        else {
+            setOther(user)
+        }
     }
 
     useEffect(() => {
         let email = Cookies.get("email");
-        let password = Cookies.get("password");
         if (email === undefined) {
             routeChange("./Login");
             return;
@@ -58,14 +68,38 @@ let Chat = () => {
     }, [userId1, userId2]);
 
     useEffect(() => {
+        if (other === undefined) {
+            return;
+        }
         let email = Cookies.get("email").toLowerCase()
         let password = Cookies.get("password");
-        getChatMessages(email, password, userId2).then(messages => setMessages(messages))
-    }, [userId2]);
+        getChatMessages(email, password, other.id).then(messages => setMessages(messages))
+    }, [other]);
+
+    useEffect(() => {
+        if (user1 !== undefined) {
+            recognizeUser(user1)
+        }
+    }, [user1]);
+
+    useEffect(() => {
+        if (user2 !== undefined) {
+            recognizeUser(user2)
+        }
+    }, [user2]);
+
+    useEffect(() => {
+        if (user1 === undefined || user2 === undefined) {
+            return;
+        }
+        if (user1.id == user2.id) {
+            setOther(user1);
+        }
+    }, [user1, user2]);
 
     return (
         <div className="chat-container">
-            <ChatHeader user2={user2} onBack={goToMessenger} onAvatarClick={() => goToProfile(user2.id)}> </ChatHeader>
+            <ChatHeader user2={other} onBack={goToMessenger} onAvatarClick={() => goToProfile(other.id)}> </ChatHeader>
             <MessageList ref={msgList} messages={messages} />
             <MessageInput onSubmit={handleSendMessage} message={message} setMessage={setMessage} />
         </div>
