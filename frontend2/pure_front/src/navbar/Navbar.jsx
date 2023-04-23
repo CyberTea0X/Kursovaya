@@ -12,14 +12,14 @@ function Header() {
 
 
   return (
-    <div class='navbar'>
+    <div className='navbar'>
 
-      <div class="leftside">
+      <div className="leftside">
          <img src={Logo} style={{width: '60px', margin: '15px', float:'left'}} />  
          <p className='navbar-p'>DeltaArt</p>
       </div>
 
-      <div class="rightside">
+      <div className="rightside">
         
 
         <Link to="/">Главная</Link>
