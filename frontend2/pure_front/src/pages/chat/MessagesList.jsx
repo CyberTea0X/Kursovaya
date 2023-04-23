@@ -8,7 +8,7 @@ const MessageList = React.forwardRef(({messages, current_user}, ref) => {
             {messages.map((msg, id) => (
                 <Message key={id} message={msg} current_user={current_user} />
             ))}
-            <div ref={ref} />
+            <div ref={ref} className="messages-end"/>
         </div>
     )
 });

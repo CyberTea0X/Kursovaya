@@ -18,6 +18,7 @@ let Chat = () => {
     const [other, setOther] = useState();
     const [messages, setMessages] = useState([]);
     const [message, setMessage] = useState("");
+    const [intervalId, setIntervalId] = useState(null);
     const msgList = useRef(null);
 
     let navigate = useNavigate(); 
@@ -36,6 +37,9 @@ let Chat = () => {
 
     const handleSendMessage = (e) => {
         e.preventDefault();
+        if (!message) {
+            return;
+        }
         msgList.current?.scrollIntoView({ behavior: "smooth" });
         setMessage("");
         let email = Cookies.get("email").toLowerCase();
@@ -96,6 +100,22 @@ let Chat = () => {
             setOther(user1);
         }
     }, [user1, user2]);
+
+    useEffect(() => {
+        if (other === undefined) {
+          return;
+        }
+        let email = Cookies.get("email").toLowerCase()
+        let password = Cookies.get("password");
+        getChatMessages(email, password, other.id).then(messages => setMessages(messages));
+        const id = setInterval(() => {
+          getChatMessages(email, password, other.id).then(messages => setMessages(messages));
+        }, 5000); // получение сообщений каждые 5 секунд
+        setIntervalId(id);
+        return () => {
+          clearInterval(id);
+        };
+    }, [other]);
 
     return (
         <div className="chat-container">

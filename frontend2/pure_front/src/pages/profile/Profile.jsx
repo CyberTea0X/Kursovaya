@@ -43,7 +43,8 @@ const Profile = () => {
   }, [routeChange, userId]);
 
   const handleMessageUser = () => {
-    create_chat(email, pw, user.id);
+    let my_id = Cookies.get("id");
+    create_chat(email, pw, user.id).then(routeChange(`./Chat/${my_id}/${user.id}`))
   }
 
   const retrieveUserTags = useCallback( async () => {

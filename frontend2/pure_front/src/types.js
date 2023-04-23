@@ -98,6 +98,17 @@ class Message {
     return new Message(id, chat_id, content, owner_id, owner_name, new Date(send_time), is_read);
   }
 
+  getFormattedTime() {
+    const hours = this.send_time.getHours().toString().padStart(2, '0');
+    const minutes = this.send_time.getMinutes().toString().padStart(2, '0');
+    const seconds = this.send_time.getSeconds().toString().padStart(2, '0');
+    return `${hours}:${minutes}:${seconds}`;
+  }
+
+  isOwner(user) {
+    return this.owner_id == user.id;
+  }
+
 }
 
 class Chat {

@@ -3,3 +3,8 @@
     max-height: 60vh;
     overflow-y: scroll;
 }
+
+.messages-end {
+    clear: both;
+    float: right;
+}
