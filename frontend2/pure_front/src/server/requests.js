@@ -3,9 +3,22 @@ import config from '../config_local.json';
 
 const { "backend-ip": ip, "backend-port": port } = config;
 
-async function read_chat_messages(email, password, chat_id, messages) {
+
+
+async function send_message(email, password, userId2, message) {
+    const query = `?content=${message}`;
+    const url = `http://${ip}:${port}/api/messages/send/${email}/${password}/${userId2}${query}`;
+    return postRequest(url);
+}
+
+async function read_all_chat_messages(email, password, user2_id) {
+    const url = `http://${ip}:${port}/api/messages/readall/${email}/${password}/${user2_id}`;
+    return postRequest(url);
+}
+
+async function read_chat_messages(email, password, user2_id, messages) {
     const xml = new XMLHttpRequest();
-    const url = `http://${ip}:${port}/api/messages/read/${email}/${password}/${chat_id}`;
+    const url = `http://${ip}:${port}/api/messages/read/${email}/${password}/${user2_id}`;
     const options = {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -16,8 +29,8 @@ async function read_chat_messages(email, password, chat_id, messages) {
     return response.json;
 }
 
-async function get_chat_messages(email, password, chat_id) {
-    const url = `http://${ip}:${port}/api/messages/get/${email}/${password}/${chat_id}`
+async function get_chat_messages(email, password, user2_id) {
+    const url = `http://${ip}:${port}/api/messages/get/${email}/${password}/${user2_id}`
     return postRequest(url);
 }
 
@@ -211,4 +224,5 @@ async function getRequest(url) {
 
 export { ip, port, registerUser, login, userProfile, editUser, searchLogin, searchPopular, searchText, get_tags, edit_tags,
          get_many_tags, searchTags, change_image, upload_image, get_image_data, edit_image_data, gallery, delete_image,
-         visit, set_as_avatar, get_avatar, delete_profile, all_user_profiles, get_user_chats, create_chat, get_chat_messages};
+         visit, set_as_avatar, get_avatar, delete_profile, all_user_profiles, get_user_chats, create_chat, get_chat_messages,
+         read_all_chat_messages, read_chat_messages, send_message};

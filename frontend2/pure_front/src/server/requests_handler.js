@@ -1,10 +1,16 @@
 import { userProfile, get_tags, get_many_tags, edit_tags, gallery, ip, port, get_avatar, get_image_data, all_user_profiles,
-         get_user_chats, get_chat_messages } from "./requests.js"
+         get_user_chats, get_chat_messages, read_all_chat_messages } from "./requests.js"
 import { User, Image, Chat, Message } from "../types.js"
 
 
-async function getChatMessages(email, password, chat_id) {
-    let data = await get_chat_messages(email, password, chat_id);
+async function getChatMessages(email, password, user2_id, mark_as_read=true) {
+    if (mark_as_read) {
+        let data = await read_all_chat_messages(email, password, user2_id);
+        if (data.status !== "OK") {
+            console.error(Error(data.reason));
+        }
+    }
+    let data = await get_chat_messages(email, password, user2_id);
     if (data.status !== "OK") {
         throw Error(data.reason);
     }
