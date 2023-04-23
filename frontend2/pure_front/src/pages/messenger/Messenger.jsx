@@ -1,16 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Searchbar } from './Seachbar';
+import { Searchbar } from './Searchbar';
 import { Chat } from '../../types';
 import { getUserChats } from '../../server/requests_handler';
 import Cookies from 'js-cookie';
 import { Chats } from './Chats';
+import { Header } from './Header';
 import Fuse from 'fuse.js';
-
-const chats = [
-    new Chat(1, 1, 2, '2022-01-01'),
-    new Chat(2, 1, 3, '2022-01-02'),
-    new Chat(3, 2, 3, '2022-01-03'),
-];
 
 const Messenger = () => {
     const [chats, setChats] = useState([]);
@@ -24,7 +19,6 @@ const Messenger = () => {
         if (chats === undefined) {
             return;
         }
-        console.log(chats);
         let query = event.target.value;
         const fuse = new Fuse(chats, {
             keys: ['user2.username'],
@@ -38,6 +32,7 @@ const Messenger = () => {
     
     return (
         <div>
+            <Header> Мессенджер </Header>
             <Searchbar onSearch={handleSearch} />
             <Chats chats={chats}/>
         </div>

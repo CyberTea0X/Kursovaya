@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom';
 import { getAvatarImage } from '../../server/requests_handler';
-import UnknownPerson from "../img/Unknown_person.jpg";
+import UnknownPerson from "../../img/Unknown_person.jpg";
 
 const Table = ({ users, tags }) => {
   const [tagsMap, setTagsMap] = useState(new Map());

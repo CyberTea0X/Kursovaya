@@ -11,3 +11,8 @@
     font-size: 1em;
     flex-grow: 1;
   }
+  
+  .search-icon {
+    font-size: 1.2em;
+    margin-right: 10px;
+  }

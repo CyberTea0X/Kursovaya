@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./settings.css"
-import UnknownPerson from "../img/Unknown_person.jpg";
+import UnknownPerson from "../../img/Unknown_person.jpg";
 import { editUser } from "../../server/requests";
 import { User as UserProfile} from "../../types";
 import { getUserProfile, getTagsArray, editTagsFromStr, getAvatarImage  } from "../../server/requests_handler";

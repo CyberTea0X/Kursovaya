@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './profile.css';
 import { FaCog } from 'react-icons/fa';
-import UnknownPerson from "../img/Unknown_person.jpg";
+import UnknownPerson from "../../img/Unknown_person.jpg";
 import { User } from '../../types';
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
