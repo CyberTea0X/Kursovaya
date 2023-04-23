@@ -117,6 +117,7 @@ async fn main() -> std::io::Result<()> {
                     .service(messages::get_messages_service)
                     .service(messages::last_chat_message_service)
                     .service(messages::count_unread_service)
+                    .service(messages::read_all_messages_service)
                     .service(messages::read_messages_service),
             )
             .service(

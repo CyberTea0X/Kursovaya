@@ -101,6 +101,40 @@ pub async fn last_chat_message_service(
     })))
 }
 
+#[post("/readall/{email1}/{password}/{id}")]
+pub async fn read_all_messages_service(
+    path: web::Path<(String, String, u32)>,
+    db_config: web::Data<DBconfig>,
+) -> ActxResult<impl Responder> {
+    let (status, fail_reason) = (|| {
+        let (email, password, id) = path.into_inner();
+        let (user1, mut connection) = match auth_get_user_connect(&email, &password, &db_config, 3)
+        {
+            Ok((user, connection)) => (user, connection),
+            Err(err) => return ("FAILED".to_owned(), err.to_string()),
+        };
+        let user2 = match database::find_user_by_id(&mut connection, id) {
+            Some(user) => user,
+            None => return ("FAILED".to_owned(), "User2 does not exist".to_owned()),
+        };
+        let chat = match database::find_chat(&mut connection, user1.id, user2.id) {
+            Ok(Some(chat)) => chat,
+            Ok(None) => return ("FAILED".to_owned(), "Chat does not exist".to_owned()),
+            Err(_) => return ("FAILED".to_owned(), "Database error".to_owned()),
+        };
+        let result = database::read_all_messages(&mut connection, chat.id, user2.id);
+        if result.is_err() {
+            println!("{:?}", result);
+            return ("FAILED".to_owned(), "Database error".to_owned());
+        }
+        return ("OK".to_owned(), "".to_owned());
+    })();
+    Ok(web::Json(json!({
+        "status": status,
+        "reason": fail_reason,
+    })))
+}
+
 #[post("/read/{email1}/{password}/{id}")]
 pub async fn read_messages_service(
     path: web::Path<(String, String, u32)>,

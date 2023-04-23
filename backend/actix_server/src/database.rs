@@ -418,6 +418,21 @@ pub fn mark_messages_as_read(
     )
 }
 
+pub fn read_all_messages(
+    connection: &mut Conn,
+    chat_id: u32,
+    owner_id: u32,
+) -> Result<(), mysql::Error> {
+    let stmt = "UPDATE `messages` SET is_read=true WHERE chat_id=:chat_id AND owner_id=:owner_id";
+    connection.exec_drop(
+        stmt,
+        params! {
+            chat_id,
+            owner_id
+        },
+    )
+}
+
 pub fn get_messages(
     connection: &mut Conn,
     chat_id: u32,
