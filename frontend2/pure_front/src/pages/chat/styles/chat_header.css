@@ -1,0 +1,47 @@
+.chat-header-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px;
+    background-color: #fff;
+    border-bottom: 1px solid #ccc;
+}
+  
+.chat-button-back {
+    background-color: transparent;
+    border: none;
+    color: #000;
+    font-size: 1.5em;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+    padding: 5px 10px;
+    border-radius: 5px;
+    border: 2px solid #000;
+}
+
+.chat-button-back:hover {
+    background-color: gainsboro;
+    text-decoration: none;
+} 
+
+.chat-button-back:focus {
+    outline: none;
+}
+
+.chat-button-back:active {
+    transform: translateY(2px);
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.3);
+}
+  
+.chat-others-username {
+    margin: 0;
+    font-size: 2em;
+    font-weight: bold;
+}
+
+.chat-others-fullname {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 10px;
+}

@@ -1,0 +1,9 @@
+.chat-container {
+    margin-left: 20%;
+    margin-right: 20%;
+    min-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #ccc;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}

@@ -9,6 +9,7 @@ import {Header} from './navbar/Navbar.jsx';
 import { Login } from './pages/log_in/Login';
 import { Messenger } from './pages/messenger/Messenger';
 import {Settings} from './pages/account-settings/settings.jsx'
+import { Chat } from './pages/chat/Chat';
 
 
 function App() {
@@ -24,7 +25,8 @@ function App() {
             <Route path="/Search" element={<SearchPage/>} />
             <Route path="/Login" element={<Login/>} />
             <Route path="/Settings" element={<Settings/>} />
-            <Route path="/Messenger/*" element={<Messenger/>} />
+            <Route path="/Messenger" element={<Messenger/>} />
+            <Route path="/Chat/:userId1/:userId2" element={<Chat />} />
           </Routes>
       
     </>
