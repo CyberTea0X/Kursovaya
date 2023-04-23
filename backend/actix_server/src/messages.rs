@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use crate::auth::auth_get_user_connect;
-use crate::database::{self, DBconfig};
+use crate::database::{self, DBconfig, Message};
 use actix_web::{post, web, Responder, Result as ActxResult};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -9,6 +9,96 @@ use serde_json::json;
 #[derive(Serialize, Deserialize, Default, Debug)]
 pub struct ReadMessagesRequest {
     pub id_list: Option<Vec<u32>>,
+}
+
+
+
+#[post("/unread/{email1}/{password}/{id}")]
+pub async fn count_unread_service(
+    path: web::Path<(String, String, u32)>,
+    db_config: web::Data<DBconfig>,
+) -> ActxResult<impl Responder> {
+    let (email, password, id) = path.into_inner();
+    let (status, fail_reason, count) = (|| {
+        let (user1, mut connection) = match auth_get_user_connect(&email, &password, &db_config, 3)
+        {
+            Ok((user, connection)) => (user, connection),
+            Err(err) => return ("FAILED".to_owned(), err.to_string(), 0),
+        };
+        let user2 = match database::find_user_by_id(&mut connection, id) {
+            Some(user) => user,
+            None => return ("FAILED".to_owned(), "User2 does not exist".to_owned(), 0),
+        };
+        let chat = match database::find_chat(&mut connection, user1.id, user2.id) {
+            Ok(Some(chat)) => chat,
+            Ok(None) => return ("FAILED".to_owned(), "Chat does not exist".to_owned(), 0),
+            Err(_) => return ("FAILED".to_owned(), "Database error".to_owned(), 0),
+        };
+        match database::count_unread_messages(&mut connection, chat.id) {
+            Ok(count) => return ("OK".to_owned(), "".to_owned(), count),
+            Err(_) => return ("FAILED".to_owned(), "Database error".to_owned(), 0)
+        }
+    })();
+    Ok(web::Json(json!({
+        "status": status,
+        "reason": fail_reason,
+        "count": count
+    })))
+}
+
+#[post("/last/{email1}/{password}/{id}")]
+pub async fn last_chat_message_service(
+    path: web::Path<(String, String, u32)>,
+    db_config: web::Data<DBconfig>,
+) -> ActxResult<impl Responder> {
+    let (status, fail_reason, message) = (|| {
+        let (email, password, id) = path.into_inner();
+        let (user1, mut connection) = match auth_get_user_connect(&email, &password, &db_config, 3)
+        {
+            Ok((user, connection)) => (user, connection),
+            Err(err) => return ("FAILED".to_owned(), err.to_string(), None),
+        };
+        let user2 = match database::find_user_by_id(&mut connection, id) {
+            Some(user) => user,
+            None => {
+                return (
+                    "FAILED".to_owned(),
+                    "User2 does not exist".to_owned(),
+                    None,
+                )
+            }
+        };
+        let chat = match database::find_chat(&mut connection, user1.id, user2.id) {
+            Ok(Some(chat)) => chat,
+            Ok(None) => {
+                return (
+                    "FAILED".to_owned(),
+                    "Chat does not exist".to_owned(),
+                    None,
+                )
+            }
+            Err(_) => return ("FAILED".to_owned(), "Database error".to_owned(), None),
+        };
+        
+        match database::get_last_chat_message(&mut connection, chat.id) {
+            Ok(Some(message)) => return ("OK".to_owned(), "".to_owned(), Some(message)),
+            Ok(None) => return ("FAILED".to_owned(), "Chat is empty".to_owned(), None),
+            Err(_) => return ("FAULED".to_owned(), "Database error".to_owned(), None)
+        }
+        
+    })();
+    if message.is_none() {
+        return Ok(web::Json(json!({
+            "status": status,
+            "reason": fail_reason,
+            "message": "",
+        })))
+    }
+    Ok(web::Json(json!({
+        "status": status,
+        "reason": fail_reason,
+        "message": message.unwrap(),
+    })))
 }
 
 #[post("/read/{email1}/{password}/{id}")]

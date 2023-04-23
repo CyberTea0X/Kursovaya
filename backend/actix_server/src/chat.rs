@@ -5,6 +5,7 @@ use crate::{
 use actix_web::{post, web, Responder, Result as ActxResult};
 use serde_json::json;
 
+
 #[post("/user/{email1}/{password}")]
 pub async fn get_user_chats_service(
     path: web::Path<(String, String)>,

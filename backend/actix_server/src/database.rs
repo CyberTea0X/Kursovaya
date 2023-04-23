@@ -457,6 +457,18 @@ pub fn send_message(
     )
 }
 
+pub fn count_unread_messages(connection: &mut Conn, chat_id: u32) -> Result<u32, mysql::Error> {
+    let query = format!("SELECT * FROM `messages` WHERE chat_id={} AND is_read=false", chat_id);
+    let messages : Vec<mysql::Row> = connection.query(query)?;
+    Ok(messages.len() as u32)
+}
+
+pub fn get_last_chat_message(connection: &mut Conn, chat_id: u32) -> Result<Option<Message>, mysql::Error> {
+    let query = format!("SELECT * FROM `messages` WHERE chat_id={} ORDER BY id DESC LIMIT 1", chat_id);
+    let message = connection.query_first(query)?;
+    Ok(message)
+}
+
 pub fn get_user_chats(connection: &mut Conn, userid1: u32) -> Result<Vec<Chat>, mysql::Error> {
     connection.query_map(
         format!(

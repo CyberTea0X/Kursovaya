@@ -115,6 +115,8 @@ async fn main() -> std::io::Result<()> {
                 web::scope("api/messages")
                     .service(messages::send_message_service)
                     .service(messages::get_messages_service)
+                    .service(messages::last_chat_message_service)
+                    .service(messages::count_unread_service)
                     .service(messages::read_messages_service),
             )
             .service(
