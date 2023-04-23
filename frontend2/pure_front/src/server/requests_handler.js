@@ -1,6 +1,15 @@
 import { userProfile, get_tags, get_many_tags, edit_tags, gallery, ip, port, get_avatar, get_image_data, all_user_profiles,
-         get_user_chats } from "./requests.js"
-import { User, Image, Chat } from "../types.js"
+         get_user_chats, get_chat_messages } from "./requests.js"
+import { User, Image, Chat, Message } from "../types.js"
+
+
+async function getChatMessages(email, password, chat_id) {
+    let data = await get_chat_messages(email, password, chat_id);
+    if (data.status !== "OK") {
+        throw Error(data.reason);
+    }
+    return data["messages"].map((message) => Message.fromJson(message));
+}
 
 
 async function getUserChats(email, password, include_user2=true) {
@@ -116,4 +125,5 @@ async function editTagsFromStr(email, password, newtags) {
     }
 }
 
-export {getUserProfile, getTagsArray, getManyTagsArray, editTagsFromStr, getImages, getAvatarImage, getAllUserProfiles, getUserChats}
+export {getUserProfile, getTagsArray, getManyTagsArray, editTagsFromStr, getImages, getAvatarImage, getAllUserProfiles, getUserChats,
+        getChatMessages}

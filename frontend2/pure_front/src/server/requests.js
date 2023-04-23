@@ -3,6 +3,24 @@ import config from '../config_local.json';
 
 const { "backend-ip": ip, "backend-port": port } = config;
 
+async function read_chat_messages(email, password, chat_id, messages) {
+    const xml = new XMLHttpRequest();
+    const url = `http://${ip}:${port}/api/messages/read/${email}/${password}/${chat_id}`;
+    const options = {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(messages)
+      };
+    const response = await fetch(url, options);
+
+    return response.json;
+}
+
+async function get_chat_messages(email, password, chat_id) {
+    const url = `http://${ip}:${port}/api/messages/get/${email}/${password}/${chat_id}`
+    return postRequest(url);
+}
+
 async function create_chat(email, password, user2id) {
     const url = `http://${ip}:${port}/api/chat/create/${email}/${password}/${user2id}`
     return postRequest(url);
@@ -193,4 +211,4 @@ async function getRequest(url) {
 
 export { ip, port, registerUser, login, userProfile, editUser, searchLogin, searchPopular, searchText, get_tags, edit_tags,
          get_many_tags, searchTags, change_image, upload_image, get_image_data, edit_image_data, gallery, delete_image,
-         visit, set_as_avatar, get_avatar, delete_profile, all_user_profiles, get_user_chats, create_chat};
+         visit, set_as_avatar, get_avatar, delete_profile, all_user_profiles, get_user_chats, create_chat, get_chat_messages};
