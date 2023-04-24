@@ -75,7 +75,7 @@ const Profile = () => {
       return;
     }
     retrieveUserTags()
-    if (user.id === parseInt(Cookies.get("id"))) {
+    if (user.id === Cookies.get("id")) {
       setIsOwner(true)
     }
     else {
