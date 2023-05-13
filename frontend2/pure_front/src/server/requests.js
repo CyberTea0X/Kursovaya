@@ -1,4 +1,4 @@
-import config from '../config.json';
+import config from '../config_local.json';
 
 
 const { "backend-ip": ip, "backend-port": port } = config;
